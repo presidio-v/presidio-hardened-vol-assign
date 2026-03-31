@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Multi-objective volunteer assignment for post-disaster ED staffing (Rabiei et al., ESWA 2023)"
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
     "typer>=0.9",
     "rich>=13",
@@ -36,7 +36,7 @@ packages = ["src/presidio_vol_assign"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP"]
