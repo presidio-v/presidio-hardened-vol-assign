@@ -32,6 +32,7 @@ from __future__ import annotations
 import random as _random
 import time
 from copy import deepcopy
+from typing import Optional
 
 import numpy as np
 from deap import base, creator, tools
@@ -67,7 +68,7 @@ if not hasattr(creator, "PVAIndividual"):
 # ---------------------------------------------------------------------------
 
 # Maps (volunteer_idx, vacancy_idx) -> (importance, preference) | None (infeasible)
-FISCache = dict[tuple[int, int], tuple[float, float] | None]
+FISCache = dict[tuple[int, int], Optional[tuple[float, float]]]
 
 
 # ---------------------------------------------------------------------------

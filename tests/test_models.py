@@ -1,5 +1,7 @@
 """Tests for core data models."""
 
+from __future__ import annotations
+
 from presidio_vol_assign.models import (
     Assignment,
     Metrics,
