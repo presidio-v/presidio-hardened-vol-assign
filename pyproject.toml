@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "presidio-hardened-vol-assign"
+version = "0.1.0"
+description = "Multi-objective volunteer assignment for post-disaster ED staffing (Rabiei et al., ESWA 2023)"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+dependencies = [
+    "typer>=0.9",
+    "rich>=13",
+    "scikit-fuzzy>=0.4",
+    "scipy>=1.10",
+    "networkx>=3.0",
+    "deap>=1.4",
+    "numpy>=1.24",
+    "pandas>=2.0",
+]
+
+[project.scripts]
+pva = "presidio_vol_assign.cli:app"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7",
+    "pytest-cov",
+    "ruff>=0.4",
+    "pip-audit",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/presidio_vol_assign"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+    # scikit-fuzzy uses a numpy 2.x-deprecated positional arg in np.maximum/minimum
+    "ignore::DeprecationWarning:skfuzzy",
+]

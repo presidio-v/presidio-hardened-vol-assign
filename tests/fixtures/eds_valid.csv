@@ -1,0 +1,3 @@
+ed_id,vacancy_type,num_patients,emergency_level
+ED1,triage,40,8.0
+ED2,er_nurse,25,6.5

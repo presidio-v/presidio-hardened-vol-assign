@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+*.so
+
+# uv / venv
+.venv/
+.uv/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Tool outputs
+results/
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Claude
+.claude/
+.specify/
+
+# macOS
+.DS_Store
+
+# Paper PDF (copyright — do not redistribute publicly)
+*.pdf
