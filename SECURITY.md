@@ -8,10 +8,11 @@
 
 ## Reporting a Vulnerability
 
-Please report security vulnerabilities by opening a **private** GitHub Security Advisory
+Please report security vulnerabilities by opening a private GitHub Security Advisory
 (via the "Security" tab → "Report a vulnerability") rather than a public issue.
 
 Include:
+
 - Description of the vulnerability
 - Steps to reproduce
 - Potential impact
@@ -29,3 +30,9 @@ within 30 days of a confirmed vulnerability.
 - **Secure logging** — volunteer IDs only; no names, addresses, or other PII in log output
 - **Dependency audit** — `pip-audit` runs at startup and in CI; unpatched CVEs trigger a warning
 - **No secrets via CLI** — API keys and credentials must be supplied via environment variables, never as CLI flags
+
+## Software Development Lifecycle
+
+This repository is developed under the Presidio hardened-family SDLC. The public report
+— scope, standards mapping, threat-model gates, and supply-chain controls — is at
+<https://github.com/presidio-v/presidio-hardened-docs/blob/main/sdlc/sdlc-report.md>.

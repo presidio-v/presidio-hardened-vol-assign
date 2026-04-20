@@ -25,7 +25,7 @@ pva = "presidio_vol_assign.cli:app"
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7",
+    "pytest>=9.0.3",
     "pytest-cov",
     "ruff>=0.4",
     "pip-audit",
