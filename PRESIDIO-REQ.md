@@ -203,3 +203,8 @@ See **Version Deliberations** below for full rationale.
 - Always commit with clean author name only
 
 <!-- Deliver the complete working project ready for GitHub publish. -->
+
+## SDLC
+
+These requirements are delivered under the family-wide Presidio SDLC:
+<https://github.com/presidio-v/presidio-hardened-docs/blob/main/sdlc/sdlc-report.md>.
