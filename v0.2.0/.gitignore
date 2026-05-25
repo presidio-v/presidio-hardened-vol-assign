@@ -1,0 +1,12 @@
+# latexmk build artifacts
+tex/main.pdf
+tex/*.aux
+tex/*.log
+tex/*.out
+tex/*.toc
+tex/*.bbl
+tex/*.blg
+tex/*.fdb_latexmk
+tex/*.fls
+tex/*.synctex.gz
+tex/sections/*.aux

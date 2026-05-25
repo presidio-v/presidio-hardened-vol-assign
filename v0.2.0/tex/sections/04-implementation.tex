@@ -1,0 +1,44 @@
+\section{Production-Grade Implementation}
+\label{sec:implementation}
+
+% THIS IS THE SI-FIT SECTION. The MDPI Applied Sciences "Innovations in Supply
+% Chain Resilience" call wants digital-technology contributions to risk
+% mitigation. This section argues that production-ready, hardened, open-source
+% optimisation tooling IS the digital-innovation contribution — not a
+% deployment afterthought.
+%
+% Outline (target ~2500-3500 words; this is one of the two largest sections):
+%
+% 4.1 Design goals
+%   - Reproducibility, auditability, security posture, deployability.
+%   - Why these matter for SC resilience adoption (vs research-grade scripts).
+%
+% 4.2 Architecture
+%   - Package layout: src/pva/, with parallel modules for volunteer assignment
+%     (v0.1.0, Rabiei et al. ESWA 2023) and affected-people allocation (v0.2.0,
+%     this paper).
+%   - FIS engine, EA engine, CLI surface.
+%   - Pluggable index/objective interfaces.
+%
+% 4.3 Engineering controls
+%   - Security: PRESIDIO-REQ.md threat model; CodeQL v4 in CI; SECURITY.md
+%     vulnerability disclosure; unified SDLC pointer.
+%   - Reproducibility: uv.lock for deterministic Python dependency resolution;
+%     fixed Python floor (>=3.10); deterministic RNG seeding for EAs.
+%   - Distribution: PyPI package, semantic versioning (v0.1.0 -> v0.2.0
+%     reflects the addition of affected-people allocation), OSS license.
+%   - Documentation: README, instruction PRESIDIO-REQ.md, type hints, doctests.
+%
+% 4.4 The v0.2.0 extension (this paper's tooling delta)
+%   - New module: src/pva/affected_people/
+%   - Three new FIS implementations (FLPP, TFL, CABL).
+%   - New CLI subcommand: `pva allocate-people`.
+%   - New test fixtures: small (5 RCs / 150 people) and large (10 RCs / 300
+%     people) cases matching Section 5.
+%
+% 4.5 Reproducibility contract
+%   - The data/ folder in this manuscript's source tree ships the exact
+%     fixtures used to generate every figure and table. `pva allocate-people
+%     --config v0.2.0/data/large-case/config.yaml` reproduces Table N.
+
+TODO.

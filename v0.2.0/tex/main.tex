@@ -1,0 +1,67 @@
+% main.tex — entry point for the MDPI Applied Sciences SI submission.
+%
+% TODO(template): replace `\documentclass{article}` below with `\documentclass[applsci,article]{mdpi}`
+% once you've dropped MDPI's official template files into this directory:
+%   - applsci.cls (or the umbrella mdpi.cls)
+%   - mdpi.bst
+%   - any companion .sty files MDPI ships
+% Download from https://www.mdpi.com/authors/latex (requires a browser session;
+% the public CDN 403s curl). Then update \bibliographystyle below to "mdpi".
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{authblk}
+\usepackage{microtype}
+
+\graphicspath{{../figures/}}
+
+\title{From Methodology to Practice: A Production-Grade Decision Support Tool
+for Multi-Objective Humanitarian Allocation in Resilient Supply Chains}
+
+\author[1]{Payman Rabiei}
+\author[2]{Daniel Arias-Aranda}
+\author[3]{Vladimir Stantchev\thanks{Corresponding author. \texttt{vladimir@presidio-group.eu}}}
+\affil[1]{TODO affiliation}
+\affil[2]{Universidad de Granada, Spain}
+\affil[3]{TODO affiliation}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+TODO: ~250 word abstract. Frame the work as a supply-chain-resilience
+contribution: humanitarian allocation under disaster as a multi-tier
+resilience problem; combine three Mamdani Fuzzy Inference Systems with
+NSGA-II / NRGA evolutionary optimisation; deliver a production-grade,
+security-hardened, open-source Python CLI (presidio-hardened-vol-assign)
+as the digital-technology innovation supporting risk-mitigation practice.
+\end{abstract}
+
+\noindent\textbf{Keywords:} supply chain resilience; humanitarian logistics;
+fuzzy inference systems; multi-objective optimisation; NSGA-II; NRGA;
+decision support systems; open-source tooling
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-methodology}
+\input{sections/04-implementation}
+\input{sections/05-evaluation}
+\input{sections/06-discussion}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plain}  % TODO(template): swap to "mdpi" after template swap
+\bibliography{../bib/references}
+
+\end{document}
