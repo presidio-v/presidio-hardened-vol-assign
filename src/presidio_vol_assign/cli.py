@@ -172,6 +172,86 @@ def metrics(
 
 
 # ---------------------------------------------------------------------------
+# pva benchmark
+# ---------------------------------------------------------------------------
+
+
+@app.command()
+def benchmark(
+    model: str = typer.Option(
+        "humanitarian", "--model", show_default=True, help="Model to benchmark."
+    ),
+    size: str = typer.Option(
+        "both", "--size", show_default=True, help="Instance size: small, large, or both."
+    ),
+    instances: int = typer.Option(
+        10, "--instances", show_default=True, help="Random instances per size class."
+    ),
+    solver: str = typer.Option("both", "--solver", show_default=True, help="Solver(s) to run."),
+    seed: int = typer.Option(42, "--seed", show_default=True, help="Base seed (instances+solver)."),
+    pop_size: int = typer.Option(100, "--pop-size", show_default=True, help="GA population size."),
+    generations: int = typer.Option(
+        200, "--generations", show_default=True, help="Number of generations."
+    ),
+    check_repro: bool = typer.Option(
+        False, "--check-repro", help="Re-run each instance and report bit-for-bit REP."
+    ),
+    output: Path = typer.Option(
+        Path("./results"), "--output", show_default=True, help="Output directory."
+    ),
+) -> None:
+    """Generate the paper's instances, run the solver(s), and summarise metrics."""
+    from presidio_vol_assign.benchmark import (
+        resolve_sizes,
+        run_benchmark,
+        write_benchmark_summary,
+    )
+
+    try:
+        get_domain(model)  # validate model early
+        sizes = resolve_sizes(size)
+    except ValueError as exc:
+        err_console.print(f"[red]Error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    try:
+        out_dir = guard_output_path(output)
+    except ValueError as exc:
+        err_console.print(f"[red]Security:[/red] {exc}")
+        raise typer.Exit(code=1)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    config = RunConfig(
+        solver=solver,
+        pop_size=pop_size,
+        generations=generations,
+        seed=seed,
+        output_dir=str(out_dir),
+    )
+    try:
+        validate_run_config(config)
+    except ValueError as exc:
+        err_console.print(f"[red]Config error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    console.print(
+        f"Benchmark: [bold]{model}[/bold] | sizes: {', '.join(sizes)} "
+        f"| instances/size: {instances} | solver: {solver} | pop: {pop_size} gen: {generations}"
+        + ("  (+reproducibility check)" if check_repro else "")
+    )
+
+    with console.status("[bold green]Running benchmark…[/bold green]"):
+        rows = run_benchmark(
+            model, sizes, instances, config, base_seed=seed, check_repro=check_repro
+        )
+
+    _print_benchmark_table(model, rows, check_repro)
+    csv_path, json_path = write_benchmark_summary(rows, out_dir)
+    console.print(f"  Summary CSV  → [cyan]{csv_path}[/cyan]")
+    console.print(f"  Summary JSON → [cyan]{json_path}[/cyan]")
+
+
+# ---------------------------------------------------------------------------
 # pva version
 # ---------------------------------------------------------------------------
 
@@ -190,6 +270,34 @@ def version() -> None:
 # ---------------------------------------------------------------------------
 # Shared display helper
 # ---------------------------------------------------------------------------
+
+
+def _print_benchmark_table(model: str, rows: list, check_repro: bool) -> None:
+    """Render the Table-3-style mean±std benchmark summary."""
+    table = Table(title=f"Benchmark summary — {model}", show_header=True, header_style="bold")
+    table.add_column("Size", style="dim")
+    table.add_column("Solver", style="dim")
+    table.add_column("N", justify="right")
+    for col in ("NNS", "MID", "SM", "HV", "CPU (s)"):
+        table.add_column(col, justify="right")
+    if check_repro:
+        table.add_column("REP", justify="right")
+
+    for r in rows:
+        cells = [
+            r.size,
+            r.solver,
+            str(r.n_instances),
+            f"{r.nns_mean:.1f} ± {r.nns_std:.1f}",
+            f"{r.mid_mean:.3f} ± {r.mid_std:.3f}",
+            f"{r.sm_mean:.4f} ± {r.sm_std:.4f}",
+            f"{r.hv_mean:.3f} ± {r.hv_std:.3f}",
+            f"{r.cpu_mean:.2f} ± {r.cpu_std:.2f}",
+        ]
+        if check_repro:
+            cells.append("—" if r.rep is None else f"{r.rep:.2f}")
+        table.add_row(*cells)
+    console.print(table)
 
 
 def _problem_size(problem: object) -> str:

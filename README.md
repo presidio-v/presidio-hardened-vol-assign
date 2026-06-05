@@ -189,7 +189,30 @@ pva assign   [--model  ed-staffing|humanitarian]   (default: ed-staffing)
 
 pva metrics  --pareto <csv>     (auto-detects 2- or 3-objective fronts)
 
+pva benchmark [--model humanitarian|ed-staffing]
+              [--size  small|large|both]   (default: both)
+              [--instances <int>]          (default: 10, per size)
+              [--solver nsga2|nrga|both]
+              [--seed <int>]               (default: 42)
+              [--pop-size <int>] [--generations <int>]
+              [--check-repro]              (report bit-for-bit REP)
+              [--output <dir>]
+
 pva version
+```
+
+### Benchmarking & reproducibility
+
+`pva benchmark` generates the paper's instance sizes deterministically
+(humanitarian: 5 centres/150 people and 10/300; ed-staffing: 5/75 and 10/150),
+runs the solver(s) on each, and prints a Table-3-style **mean ± std** summary for
+NNS, MID, SM, HV, and CPU time, written to `benchmark_<ts>.{csv,json}`. With
+`--check-repro` each instance is solved twice and the fraction of **bit-for-bit
+identical** results is reported as **REP** — treating reproducibility on stock
+hardware as a first-class resilience criterion.
+
+```bash
+pva benchmark --model humanitarian --instances 10 --seed 42 --check-repro
 ```
 
 ---
