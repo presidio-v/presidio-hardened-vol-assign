@@ -115,6 +115,34 @@ def test_unknown_model_errors(tmp_path: Path) -> None:
     assert result.exit_code == 1
 
 
+def test_allocate_people_alias(tmp_path: Path) -> None:
+    # `allocate-people` == `assign --model humanitarian`; exercise --solver nrga-ranked.
+    result = runner.invoke(
+        app,
+        [
+            "allocate-people",
+            "--people",
+            PEOPLE,
+            "--centers",
+            CENTERS,
+            "--solver",
+            "nrga-ranked",
+            "--output",
+            str(tmp_path),
+        ]
+        + ["--pop-size", "8", "--generations", "4", "--seed", "42"],
+    )
+    assert result.exit_code == 0, result.output + (result.stderr or "")
+    pareto = next(tmp_path.glob("pareto_nrga-ranked_*.csv"))
+    df = pd.read_csv(pareto)
+    assert {"z1", "z2", "z3"} <= set(df.columns)
+
+
+def test_allocate_people_missing_inputs_errors(tmp_path: Path) -> None:
+    result = runner.invoke(app, ["allocate-people", "--output", str(tmp_path)] + FAST)
+    assert result.exit_code == 1
+
+
 def test_ed_model_still_default(tmp_path: Path) -> None:
     # No --model flag → ed-staffing; humanitarian inputs absent is fine.
     vol = str(FIXTURES / "volunteers_valid.csv")

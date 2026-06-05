@@ -52,12 +52,12 @@ def ensure_creator_types(domain: Domain) -> tuple[type, type]:
 
 
 # ---------------------------------------------------------------------------
-# NRGA selection (replaces crowding distance with uniform random sampling)
+# NRGA selection variants
 # ---------------------------------------------------------------------------
 
 
 def sel_nrga(individuals: list, k: int) -> list:
-    """NRGA survivor selection.
+    """Lightweight NRGA survivor selection (``--solver nrga``).
 
     Fills the next generation front-by-front (non-domination rank order). When a
     front would overflow the quota, the remaining spots are filled by uniform
@@ -75,6 +75,48 @@ def sel_nrga(individuals: list, k: int) -> list:
     return chosen
 
 
+def sel_nrga_ranked(individuals: list, k: int) -> list:
+    """Canonical NRGA survivor selection (``--solver nrga-ranked``).
+
+    Implements the Non-dominated Ranked Genetic Algorithm of Al Jadaan, Rajamani
+    & Rao (2008): individuals are sorted into non-dominated fronts, concatenated
+    best-front-first into a global rank order, and assigned a linear rank weight
+    (the best-ranked individual gets weight ``n``, the worst gets ``1``). The ``k``
+    survivors are then drawn by **rank-biased roulette-wheel sampling without
+    replacement** — better-ranked individuals are more likely to survive, but
+    selection is stochastic rather than the strict crowding-distance elitism of
+    NSGA-II. Seeded, hence reproducible.
+    """
+    fronts = tools.sortNondominated(individuals, len(individuals))
+    ordered = [ind for front in fronts for ind in front]
+    n = len(ordered)
+    if k >= n:
+        return ordered
+
+    pool = list(ordered)
+    weights = [float(n - idx) for idx in range(n)]  # linear ranking, best first
+    chosen: list = []
+    for _ in range(k):
+        total = sum(weights)
+        r = _random.random() * total
+        upto = 0.0
+        for i, w in enumerate(weights):
+            upto += w
+            if upto >= r:
+                chosen.append(pool.pop(i))
+                weights.pop(i)
+                break
+    return chosen
+
+
+# Survivor-selection strategy per solver type.
+_SELECTORS = {
+    SolverType.NSGA2: tools.selNSGA2,
+    SolverType.NRGA: sel_nrga,
+    SolverType.NRGA_RANKED: sel_nrga_ranked,
+}
+
+
 # ---------------------------------------------------------------------------
 # Evolutionary loop (shared by NSGA-II and NRGA)
 # ---------------------------------------------------------------------------
@@ -86,9 +128,12 @@ def _evolve(
     domain: Domain,
     cache: object,
     individual_cls: type,
-    use_nrga: bool,
+    select,
 ) -> list:
-    """Run (mu + lambda) evolution.  Returns the final population."""
+    """Run (mu + lambda) evolution.  Returns the final population.
+
+    ``select`` is the survivor-selection operator (one of the ``_SELECTORS``).
+    """
     if config.seed is not None:
         _random.seed(config.seed)
         np.random.seed(config.seed)
@@ -99,8 +144,6 @@ def _evolve(
     # Evaluate initial population
     for ind in population:
         ind.fitness.values = domain.evaluate(ind, cache, problem)
-
-    select = sel_nrga if use_nrga else tools.selNSGA2
 
     for _ in range(config.generations):
         # Clone population to produce offspring
@@ -155,21 +198,26 @@ def _extract_pareto_front(
 # ---------------------------------------------------------------------------
 
 
+def _solvers_for(solver_val: str) -> list[SolverType]:
+    """Expand a ``--solver`` value into the ordered list of solvers to run."""
+    if solver_val == "both":
+        return [SolverType.NSGA2, SolverType.NRGA]
+    if solver_val == "all":
+        return [SolverType.NSGA2, SolverType.NRGA, SolverType.NRGA_RANKED]
+    return [SolverType(solver_val)]
+
+
 def run(problem: ProblemInstance, config: RunConfig, domain: Domain) -> list[ParetoFront]:
     """Run the configured solver(s) for *domain* and return one front per solver.
 
-    ``config.solver`` may be ``"nsga2"``, ``"nrga"``, or ``"both"``.
+    ``config.solver`` may be ``"nsga2"``, ``"nrga"``, ``"nrga-ranked"``,
+    ``"both"`` (nsga2 + nrga), or ``"all"`` (all three).
     """
     _fitness_cls, individual_cls = ensure_creator_types(domain)
     cache = domain.precompute(problem)
 
     solver_val = config.solver if isinstance(config.solver, str) else config.solver.value
-    if solver_val == "both":
-        solvers_to_run = [SolverType.NSGA2, SolverType.NRGA]
-    elif solver_val == SolverType.NSGA2 or solver_val == "nsga2":
-        solvers_to_run = [SolverType.NSGA2]
-    else:
-        solvers_to_run = [SolverType.NRGA]
+    solvers_to_run = _solvers_for(solver_val)
 
     results: list[ParetoFront] = []
     for solver_type in solvers_to_run:
@@ -180,7 +228,7 @@ def run(problem: ProblemInstance, config: RunConfig, domain: Domain) -> list[Par
             domain,
             cache,
             individual_cls,
-            use_nrga=(solver_type == SolverType.NRGA),
+            select=_SELECTORS[solver_type],
         )
         elapsed = time.monotonic() - t0
         results.append(
