@@ -37,8 +37,32 @@
 %     people) cases matching Section 5.
 %
 % 4.5 Reproducibility contract
-%   - The data/ folder in this manuscript's source tree ships the exact
-%     fixtures used to generate every figure and table. `pva allocate-people
-%     --config v0.2.0/data/large-case/config.yaml` reproduces Table N.
+%   - NOTE (consistency): the shipped tool reproduces results from CSV fixtures
+%     via deterministic seeding, NOT a --config YAML. Use one of:
+%       pva benchmark --model humanitarian --size large --seed 42 --check-repro
+%       pva allocate-people --people <people.csv> --centers <centers.csv> \
+%                           --solver nrga-ranked --seed 42 --output results/
+%     Either repoint this contract to `pva benchmark` + the committed
+%     `examples/` datasets, or ship the promised `v0.2.0/data/` fixtures.
+%     See v0.2.0/consistency-notes.md.
 
 TODO.
+
+\subsection{Command-line interface}
+\label{sec:cli}
+
+The affected-people allocation model is exposed as the \texttt{pva
+allocate-people} subcommand (a convenience alias for \texttt{pva assign
+--model humanitarian}). A complete run, including the canonical NRGA solver of
+Section~\ref{sec:solvers}, is invoked as:
+%
+\begin{quote}\small\ttfamily
+pva allocate-people --people people.csv --centers centers.csv \\
+\hspace*{2em}--solver nrga-ranked --seed 42 --output results/
+\end{quote}
+%
+The \texttt{--solver} flag accepts \texttt{nsga2}, \texttt{nrga} (lightweight
+variant), \texttt{nrga-ranked} (canonical, rank-biased roulette; used for the
+reported NRGA results), \texttt{both} (\texttt{nsga2}+\texttt{nrga}), and
+\texttt{all}. The \texttt{--seed} flag fixes the RNG for the bit-for-bit
+reproducibility evaluation of Section~\ref{sec:evaluation}.

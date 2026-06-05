@@ -28,4 +28,37 @@
 % Revisions vs ATRES: tighten exposition, clarify any reviewer-flagged
 % ambiguities, ensure notation is consistent with Section 4's implementation.
 
-TODO.
+TODO: 3.1--3.3.
+
+\subsection{Evolutionary Solvers}
+\label{sec:solvers}
+
+Both objective spaces are explored with a shared $(\mu+\lambda)$ generational
+loop over an integer chromosome that maps each affected person to a relief
+centre. Offspring are produced by two-point crossover and uniform-integer
+mutation; the only difference between the two algorithms is the survivor
+selection operator.
+
+\paragraph{NSGA-II.} Survivors are chosen by the elitist non-dominated sorting
+of Deb et al., with crowding distance breaking ties within the last accepted
+front, exactly as in the reference implementation.
+
+\paragraph{NRGA.} The Non-dominated Ranked Genetic Algorithm of Al~Jadaan,
+Rajamani \& Rao replaces crowding-distance elitism with \emph{rank-biased
+roulette-wheel} survival. The combined parent--offspring population is sorted
+into non-dominated fronts; concatenating the fronts best-first yields a global
+rank order in which the $i$-th individual ($i=0$ for the best) receives a linear
+rank weight $w_i = n - i$, where $n$ is the population size. The $\mu$ survivors
+are then drawn by roulette-wheel sampling \emph{without replacement} with
+probability proportional to $w_i$. Selection is therefore biased toward
+better-ranked individuals but remains stochastic, in contrast to NSGA-II's
+deterministic elitism.
+
+In the reference implementation this canonical NRGA is invoked with
+\texttt{--solver nrga-ranked} (Section~\ref{sec:implementation}); a lightweight
+front-fill variant with uniform random tie-breaking is also provided as
+\texttt{--solver nrga}. All experiments in Section~\ref{sec:evaluation} that
+report ``NRGA'' use \texttt{nrga-ranked}.
+
+\paragraph{Stopping criteria and parameters.} TODO: population size,
+generations, crossover/mutation rates; cross-reference Section~5.1.
