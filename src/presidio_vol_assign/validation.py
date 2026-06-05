@@ -17,6 +17,9 @@ from pathlib import Path
 import pandas as pd
 
 from presidio_vol_assign.models import (
+    Center,
+    HumanitarianProblem,
+    Person,
     ProblemInstance,
     RunConfig,
     SkillType,
@@ -35,6 +38,11 @@ _VOL_REQUIRED_COLS = {"volunteer_id", "skill_type", "skill_level", "difficulty_t
 _ED_REQUIRED_COLS = {"ed_id", "vacancy_type", "num_patients", "emergency_level"}
 
 _DISTANCE_COL_PREFIX = "distance_ed_"
+
+# Humanitarian model
+_PEOPLE_REQUIRED_COLS = {"person_id", "vulnerability", "mobility"}
+_CENTER_REQUIRED_COLS = {"center_id", "capacity", "service_level", "road_accessibility"}
+_DISTANCE_CENTER_PREFIX = "distance_center_"
 
 
 # ---------------------------------------------------------------------------
@@ -64,6 +72,31 @@ def load_problem(volunteers_path: Path, eds_path: Path) -> ProblemInstance:
     _check_assignment_feasibility(volunteers, vacancies)
 
     return ProblemInstance(volunteers=volunteers, vacancies=vacancies)
+
+
+def load_humanitarian_problem(people_path: Path, centers_path: Path) -> HumanitarianProblem:
+    """Parse and validate the people + centres CSVs into a HumanitarianProblem.
+
+    Distance columns in people.csv must follow ``distance_center_<center_id>``
+    where ``<center_id>`` matches a value in the ``center_id`` column of
+    centers.csv. ``group_size`` is optional (defaults to 1).
+
+    Raises:
+        FileNotFoundError: If either CSV file does not exist.
+        ValueError: If any schema, range, or constraint check fails.
+    """
+    _require_file(people_path, "people")
+    _require_file(centers_path, "centers")
+
+    centers_df = _load_csv(centers_path, "centers")
+    people_df = _load_csv(people_path, "people")
+
+    centers = _parse_centers(centers_df)
+    people = _parse_people(people_df, center_ids=[c.center_id for c in centers])
+
+    _check_capacity_feasibility(people, centers)
+
+    return HumanitarianProblem(people=people, centers=centers)
 
 
 def validate_run_config(config: RunConfig) -> None:
@@ -196,8 +229,114 @@ def _parse_volunteers(df: pd.DataFrame, ed_ids: list[str]) -> list[Volunteer]:
 
 
 # ---------------------------------------------------------------------------
+# Internal helpers — Centres (humanitarian model)
+# ---------------------------------------------------------------------------
+
+
+def _parse_centers(df: pd.DataFrame) -> list[Center]:
+    _require_columns(df, _CENTER_REQUIRED_COLS, source="centers")
+    centers: list[Center] = []
+    seen_ids: set[str] = set()
+
+    for idx, row in df.iterrows():
+        row_label = f"centers row {idx}"
+
+        center_id = _require_nonempty_str(row["center_id"], "center_id", row_label)
+        if center_id in seen_ids:
+            raise ValueError(f"{row_label}: duplicate center_id {center_id!r}")
+        seen_ids.add(center_id)
+
+        capacity = _require_int_range(row["capacity"], "capacity", 1, 5000, row_label)
+        service_level = _require_float_range(
+            row["service_level"], "service_level", 0.0, 10.0, row_label
+        )
+        road_accessibility = _require_float_range(
+            row["road_accessibility"], "road_accessibility", 0.0, 10.0, row_label
+        )
+
+        centers.append(
+            Center(
+                center_id=center_id,
+                capacity=capacity,
+                service_level=service_level,
+                road_accessibility=road_accessibility,
+            )
+        )
+
+    if not centers:
+        raise ValueError("centers CSV contains no rows — at least one centre is required")
+
+    return centers
+
+
+# ---------------------------------------------------------------------------
+# Internal helpers — People (humanitarian model)
+# ---------------------------------------------------------------------------
+
+
+def _parse_people(df: pd.DataFrame, center_ids: list[str]) -> list[Person]:
+    _require_columns(df, _PEOPLE_REQUIRED_COLS, source="people")
+
+    expected_dist_cols = {f"{_DISTANCE_CENTER_PREFIX}{cid}" for cid in center_ids}
+    _require_columns(df, expected_dist_cols, source="people (distance columns)")
+
+    has_group_size = "group_size" in df.columns
+    people: list[Person] = []
+    seen_ids: set[str] = set()
+
+    for idx, row in df.iterrows():
+        row_label = f"people row {idx}"
+
+        person_id = _require_nonempty_str(row["person_id"], "person_id", row_label)
+        if person_id in seen_ids:
+            raise ValueError(f"{row_label}: duplicate person_id {person_id!r}")
+        seen_ids.add(person_id)
+
+        vulnerability = _require_float_range(
+            row["vulnerability"], "vulnerability", 0.0, 10.0, row_label
+        )
+        mobility = _require_float_range(row["mobility"], "mobility", 0.0, 10.0, row_label)
+        group_size = (
+            _require_int_range(row["group_size"], "group_size", 1, 20, row_label)
+            if has_group_size
+            else 1
+        )
+
+        distances: dict[str, float] = {}
+        for cid in center_ids:
+            col = f"{_DISTANCE_CENTER_PREFIX}{cid}"
+            distances[cid] = _require_float_range(row[col], col, 0.0, 100.0, row_label)
+
+        people.append(
+            Person(
+                person_id=person_id,
+                vulnerability=vulnerability,
+                mobility=mobility,
+                group_size=group_size,
+                distances=distances,
+            )
+        )
+
+    if not people:
+        raise ValueError("people CSV contains no rows")
+
+    return people
+
+
+# ---------------------------------------------------------------------------
 # Internal helpers — cross-file constraint checks
 # ---------------------------------------------------------------------------
+
+
+def _check_capacity_feasibility(people: list[Person], centers: list[Center]) -> None:
+    """Verify total centre capacity can hold everyone (soft-overcrowding model)."""
+    total_demand = sum(p.group_size for p in people)
+    total_capacity = sum(c.capacity for c in centers)
+    if total_capacity < total_demand:
+        raise ValueError(
+            f"Infeasible: total centre capacity {total_capacity} < total demand "
+            f"{total_demand} (sum of group sizes). Add capacity or reduce demand."
+        )
 
 
 def _check_assignment_feasibility(volunteers: list[Volunteer], vacancies: list[Vacancy]) -> None:
