@@ -146,6 +146,19 @@ class HumanitarianDomain(Domain):
             util_lut=util_lut,
         )
 
+    def perturb(self, cache: _HumCache, factor: float) -> _HumCache:
+        scale = 1.0 + factor
+        pairs = {
+            key: (min(max(f * scale, 0.0), 1.0), min(max(t * scale, 0.0), 1.0))
+            for key, (f, t) in cache.pairs.items()
+        }
+        return _HumCache(
+            pairs=pairs,
+            group_sizes=cache.group_sizes,
+            capacities=cache.capacities,
+            util_lut=np.clip(cache.util_lut * scale, 0.0, 1.0),
+        )
+
     def init_individual(self, problem: HumanitarianProblem, individual_cls: type) -> list:
         n_centers = problem.n_centers
         return individual_cls(_random.randrange(n_centers) for _ in range(problem.n_people))

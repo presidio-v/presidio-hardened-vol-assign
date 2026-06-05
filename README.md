@@ -204,7 +204,28 @@ pva benchmark [--model humanitarian|ed-staffing]
               [--check-repro]              (report bit-for-bit REP)
               [--output <dir>]
 
+pva sensitivity [--model humanitarian|ed-staffing]
+              # inputs as for `assign` (--people/--centers or --volunteers/--eds)
+              [--factors <csv>]            (default: -0.2,-0.1,0,0.1,0.2)
+              [--solver ...] [--seed <int>] [--pop-size <int>] [--generations <int>]
+              [--output <dir>]
+
 pva version
+```
+
+### Sensitivity analysis
+
+`pva sensitivity` probes how robust the Pareto front is to FIS rule-base
+specification uncertainty: it rescales the FIS output scores by each
+`--factors` perturbation (e.g. ±10 %, ±20 %), re-runs the solver(s), and writes
+`sensitivity_<ts>.csv` with `(factor, solver, NNS, MID, SM, HV, cpu_time_sec)`.
+The unperturbed FIS scores are computed once, so the sweep is cheap and
+deterministic under `--seed`.
+
+```bash
+pva sensitivity --model humanitarian \
+  --people people.csv --centers centers.csv \
+  --factors -0.2,-0.1,0,0.1,0.2 --solver both --seed 42 --output results/
 ```
 
 ### Solvers
@@ -340,8 +361,8 @@ See [PRESIDIO-REQ.md](PRESIDIO-REQ.md) for full version deliberations.
 | Version | Status | Description |
 |---------|--------|-------------|
 | v0.1.0 | Released | MVP: FIS + NSGA-II + NRGA, CSV I/O, Pareto metrics (ED-staffing model) |
-| v0.2.0 | In progress | Humanitarian allocation model (3 new FIS, 3 objectives) **side by side** with the ED model; N-D metrics + reproducibility metric; `benchmark` + figure export. See [docs/v0.2.0-plan.md](docs/v0.2.0-plan.md) |
-| v0.3.0 | Planned | Sensitivity analysis + interactive Pareto explorer + real-world data connectors |
+| v0.2.0 | In progress | Humanitarian allocation model (3 new FIS, 3 objectives) **side by side** with the ED model; N-D metrics + reproducibility metric; `benchmark` + `sensitivity` + figure export. See [docs/v0.2.0-plan.md](docs/v0.2.0-plan.md) |
+| v0.3.0 | Planned | Interactive Pareto explorer + real-world data connectors |
 
 ---
 

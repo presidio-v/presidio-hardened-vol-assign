@@ -134,8 +134,8 @@ Both implemented via DEAP:
 | Version | Status | Description |
 |---------|--------|-------------|
 | v0.1.0 | Released | MVP: FIS (scikit-fuzzy) + NSGA-II + NRGA (DEAP), CSV I/O, Pareto metrics (ED-staffing model) |
-| v0.2.0 | In progress | Humanitarian allocation model (3 new FIS, 3 objectives) side by side with the ED model; N-D metrics + reproducibility metric; `pva benchmark` + `pva show` figure export |
-| v0.3.0 | Planned | Sensitivity analysis (`pva sensitivity`) + interactive Pareto explorer + real-world data connectors (`pva import`) |
+| v0.2.0 | In progress | Humanitarian allocation model (3 new FIS, 3 objectives) side by side with the ED model; N-D metrics + reproducibility metric; `pva benchmark` + `pva sensitivity` + `pva show` figure export |
+| v0.3.0 | Planned | Interactive Pareto explorer + real-world data connectors (`pva import`) |
 
 See **Version Deliberations** below for full rationale, and
 [docs/v0.2.0-plan.md](docs/v0.2.0-plan.md) for the detailed v0.2.0 implementation plan.
