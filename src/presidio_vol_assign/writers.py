@@ -38,6 +38,25 @@ if TYPE_CHECKING:
 
 _Z_COL_RE = re.compile(r"z\d+$")
 
+# Characters a spreadsheet may interpret as the start of a formula.
+_CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _csv_safe(value: object) -> object:
+    """Neutralise CSV/spreadsheet formula injection in string cells.
+
+    Record IDs come from untrusted input CSVs and are validated for shell
+    metacharacters but may still begin with a spreadsheet formula trigger
+    (e.g. ``=cmd|'/C calc'!A1``). Prefix such strings with a single quote so a
+    spreadsheet treats them as literal text. Non-string values pass through
+    unchanged. The tool never re-ingests the assignments CSV, so this does not
+    affect any round-trip.
+    """
+    if isinstance(value, str) and value.startswith(_CSV_FORMULA_PREFIXES):
+        return "'" + value
+    return value
+
+
 # ---------------------------------------------------------------------------
 # Writers
 # ---------------------------------------------------------------------------
@@ -73,7 +92,8 @@ def write_assignments_csv(front: ParetoFront, output_dir: Path, domain: Domain) 
     rows = []
     for i, sol in enumerate(front.solutions):
         for asgn in sol.assignments:
-            rows.append({"solution_id": i, **domain.assignment_row(asgn)})
+            row = {"solution_id": i, **domain.assignment_row(asgn)}
+            rows.append({k: _csv_safe(v) for k, v in row.items()})
     columns = ["solution_id", *domain.assignment_fieldnames]
     pd.DataFrame(rows, columns=columns).to_csv(path, index=False)
     return path

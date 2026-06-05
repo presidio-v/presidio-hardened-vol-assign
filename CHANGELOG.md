@@ -39,6 +39,9 @@ Stantchev). The ED-staffing model is unchanged and remains the default.
 - The mandatory on-run dependency audit (Presidio extension #4) and
   security-event log (#5) now run on **every** command — `metrics`, `benchmark`,
   and `show` previously skipped them. Centralised in a shared CLI preamble.
+- CSV formula-injection hardening: record IDs written to `assignments_*.csv` are
+  quote-prefixed when they begin with a spreadsheet formula trigger
+  (`= + - @`, tab, CR). Closes a latent issue that predated v0.2.0.
 
 ### Notes
 - The humanitarian FIS membership functions and rule bases are structural

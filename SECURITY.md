@@ -27,6 +27,7 @@ within 30 days of a confirmed vulnerability.
 `presidio-hardened-vol-assign` applies the following hardening measures:
 
 - **CSV input sanitization** — all input files are validated for schema, types, and value ranges before processing
+- **CSV output safety** — record IDs written to result CSVs are neutralised against spreadsheet formula injection (a leading `'` is added to cells beginning with `= + - @`)
 - **Path traversal guard** — `--output` paths are resolved to absolute form; `..` traversal is rejected
 - **Secure logging** — record IDs only (volunteer/person); no names, addresses, or other PII in log output
 - **Dependency audit** — `pip-audit` runs at startup and in CI; unpatched CVEs trigger a warning
