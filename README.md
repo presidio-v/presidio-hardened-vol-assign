@@ -16,7 +16,7 @@ pip install presidio-hardened-vol-assign
 uv add presidio-hardened-vol-assign
 ```
 
-**Requirements:** Python 3.9+
+**Requirements:** Python 3.10+
 
 ---
 
@@ -145,7 +145,7 @@ solution_id,volunteer_id,ed_id,vacancy_type,fis1_score,fis2_score,fis3_score
 **`pva.log`** — structured JSON-lines security event log (no PII):
 
 ```json
-{"ts": "2024-01-01T12:00:00+00:00", "level": "INFO", "version": "0.1.0", "event": "presidio-hardened-vol-assign loaded", "audit_status": "ok", "n_vulnerabilities": 0}
+{"ts": "2024-01-01T12:00:00+00:00", "level": "INFO", "version": "0.2.0", "event": "presidio-hardened-vol-assign loaded", "audit_status": "ok", "n_vulnerabilities": 0}
 ```
 
 ---
@@ -165,7 +165,7 @@ pva version
 ```
 
 ```
-presidio-hardened-vol-assign 0.1.0
+presidio-hardened-vol-assign 0.2.0
 Dependency audit: OK (last checked: 2024-01-01 12:00 UTC, 0 vulnerabilities)
 ```
 
@@ -174,16 +174,136 @@ Dependency audit: OK (last checked: 2024-01-01 12:00 UTC, 0 vulnerabilities)
 ## CLI reference
 
 ```
-pva assign   --volunteers <csv>  --eds <csv>
-             [--solver  nsga2|nrga|both]   (default: both)
+pva assign   [--model  ed-staffing|humanitarian]   (default: ed-staffing)
+
+             # ed-staffing model inputs:
+             --volunteers <csv>  --eds <csv>
+             # humanitarian model inputs:
+             --people <csv>      --centers <csv>
+
+             [--solver  nsga2|nrga|nrga-ranked|both|all]   (default: both)
              [--seed    <int>]              (reproducibility)
              [--pop-size <int>]             (default: 100)
              [--generations <int>]          (default: 200)
              [--output  <dir>]              (default: ./results)
 
-pva metrics  --pareto <csv>
+pva allocate-people  --people <csv> --centers <csv>   [solver/seed/... as above]
+             # convenience alias for `assign --model humanitarian`
+
+pva metrics  --pareto <csv>     (auto-detects 2- or 3-objective fronts)
+
+pva show     --pareto <csv> [--pareto <csv> ...]   (overlay solvers)
+             [--output <png|svg>] [--title <str>]
+
+pva benchmark [--model humanitarian|ed-staffing]
+              [--size  small|large|both]   (default: both)
+              [--instances <int>]          (default: 10, per size)
+              [--solver nsga2|nrga|nrga-ranked|both|all]
+              [--seed <int>]               (default: 42)
+              [--pop-size <int>] [--generations <int>]
+              [--check-repro]              (report bit-for-bit REP)
+              [--output <dir>]
 
 pva version
+```
+
+### Solvers
+
+| `--solver` | Algorithm |
+|---|---|
+| `nsga2` | NSGA-II (crowding-distance elitism) |
+| `nrga` | Lightweight NRGA — front-fill with uniform random tie-break |
+| `nrga-ranked` | Canonical NRGA — rank-biased roulette-wheel survival (Al Jadaan et al., 2008); use this for results comparable to the NRGA literature |
+| `both` | `nsga2` + `nrga` |
+| `all` | `nsga2` + `nrga` + `nrga-ranked` |
+
+### Benchmarking & reproducibility
+
+`pva benchmark` generates the paper's instance sizes deterministically
+(humanitarian: 5 centres/150 people and 10/300; ed-staffing: 5/75 and 10/150),
+runs the solver(s) on each, and prints a Table-3-style **mean ± std** summary for
+NNS, MID, SM, HV, and CPU time, written to `benchmark_<ts>.{csv,json}`. With
+`--check-repro` each instance is solved twice and the fraction of **bit-for-bit
+identical** results is reported as **REP** — treating reproducibility on stock
+hardware as a first-class resilience criterion.
+
+```bash
+pva benchmark --model humanitarian --instances 10 --seed 42 --check-repro
+```
+
+### Figures
+
+`pva show` renders publication-quality Pareto figures from the `pareto_*.csv`
+files. Two-objective fronts give a Z1–Z2 scatter; three-objective fronts give the
+three pairwise projections (Z1–Z2, Z1–Z3, Z2–Z3) plus a 3-D scatter, with
+solvers overlaid. Requires the `viz` extra (`pip install
+'presidio-hardened-vol-assign[viz]'`).
+
+```bash
+pva show --pareto results/pareto_nsga2_*.csv --pareto results/pareto_nrga_*.csv \
+         --output results/fronts.png --title "Humanitarian allocation"
+```
+
+---
+
+## Humanitarian allocation model (v0.2.0)
+
+A second model allocates **affected people to relief centres**, optimising three
+objectives via three new Fuzzy Inference Systems. It runs through the same CLI,
+**side by side** with the ED-staffing model:
+
+```bash
+pva assign --model humanitarian \
+  --people people.csv --centers centers.csv \
+  --solver both --seed 42 --output results/
+
+# equivalently, via the convenience alias (and the canonical NRGA variant):
+pva allocate-people \
+  --people people.csv --centers centers.csv \
+  --solver nrga-ranked --seed 42 --output results/
+```
+
+**`people.csv`** — one row per affected person:
+
+| Column | Description | Range |
+|--------|-------------|-------|
+| `person_id` | Unique identifier | string |
+| `vulnerability` | Priority/need (elderly, injured, children) | 0–10 |
+| `mobility` | Personal transport access (0 = immobile) | 0–10 |
+| `group_size` | People moved together (optional, default 1) | 1–20 |
+| `distance_center_<center_id>` | Distance to each centre (km) | 0–100 |
+
+**`centers.csv`** — one row per relief centre:
+
+| Column | Description | Range |
+|--------|-------------|-------|
+| `center_id` | Unique centre identifier | string |
+| `capacity` | Nominal capacity (people) | 1–5000 |
+| `service_level` | Resource/quality level | 0–10 |
+| `road_accessibility` | Route condition / access | 0–10 |
+
+**Objectives (all minimised):**
+
+| | Objective | FIS |
+|---|-----------|-----|
+| `z1` | Unfairness of people prioritisation | Fairness FIS |
+| `z2` | Transportation infeasibility | Transportation Feasibility FIS |
+| `z3` | Centre overcrowding / imbalance | Center Allocation Balance FIS |
+
+The output `pareto_*.csv` carries `z1,z2,z3`; `assignments_*.csv` carries
+`person_id, center_id, fairness, transport, overcrowding`.
+
+The membership functions and the explicit Mamdani rule tables for all three FIS
+are documented — with a fully worked numeric example — in
+[docs/fis-worked-example.md](docs/fis-worked-example.md). Ready-to-run synthetic
+datasets live under [`examples/`](examples/) (`small/` = 12 people / 3 centres,
+`paper_scale/` = 150 / 5); regenerate them with `python examples/generate_examples.py`.
+
+```bash
+pva assign --model humanitarian \
+  --people examples/paper_scale/people.csv \
+  --centers examples/paper_scale/centers.csv \
+  --solver both --seed 42 --output results/
 ```
 
 ---
@@ -219,12 +339,19 @@ See [PRESIDIO-REQ.md](PRESIDIO-REQ.md) for full version deliberations.
 
 | Version | Status | Description |
 |---------|--------|-------------|
-| v0.1.0 | In progress | MVP: FIS + NSGA-II + NRGA, CSV I/O, Pareto metrics |
-| v0.2.0 | Planned | Sensitivity analysis + interactive Pareto explorer |
-| v0.3.0 | Planned | Benchmark reproducibility + real-world data connectors |
+| v0.1.0 | Released | MVP: FIS + NSGA-II + NRGA, CSV I/O, Pareto metrics (ED-staffing model) |
+| v0.2.0 | In progress | Humanitarian allocation model (3 new FIS, 3 objectives) **side by side** with the ED model; N-D metrics + reproducibility metric; `benchmark` + figure export. See [docs/v0.2.0-plan.md](docs/v0.2.0-plan.md) |
+| v0.3.0 | Planned | Sensitivity analysis + interactive Pareto explorer + real-world data connectors |
 
 ---
 
 ## License
 
 MIT
+
+---
+
+## SDLC
+
+This repository is developed under the Presidio hardened-family SDLC:
+<https://github.com/presidio-v/presidio-hardened-docs/blob/main/sdlc/sdlc-report.md>.

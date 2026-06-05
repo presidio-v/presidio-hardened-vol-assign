@@ -163,10 +163,11 @@ class StructuredLogger:
     """Append-only JSON-lines logger.
 
     Each log entry is one JSON object per line:
-        {"ts": "<ISO8601>", "level": "INFO", "event": "...", "version": "0.1.0", ...}
+        {"ts": "<ISO8601>", "level": "INFO", "event": "...", "version": "0.2.0", ...}
 
-    PII rule: never pass volunteer names, addresses, or contact details as
-    keyword arguments. Use volunteer_id (opaque identifier) and numeric aggregates only.
+    PII rule: never pass names, addresses, or contact details as keyword
+    arguments. Use opaque record IDs (volunteer_id / person_id) and numeric
+    aggregates only.
     """
 
     def __init__(self, log_path: Path) -> None:

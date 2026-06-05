@@ -31,7 +31,7 @@ pva metrics --pareto results/pareto_nsga2_20240101T120000.csv
 
 ## Technical Requirements
 
-- **Language:** Python 3.9+
+- **Language:** Python 3.10+
 - **Build system:** `pyproject.toml` with `hatchling` backend; `uv` for dependency management
 - **Project layout:** `src/presidio_vol_assign/` (src-layout)
 - **CLI framework:** Typer + rich (terminal tables and progress bars)
@@ -42,7 +42,7 @@ pva metrics --pareto results/pareto_nsga2_20240101T120000.csv
 - **Linting/formatting:** ruff (`ruff format` + `ruff check --fix`)
 - **Documentation:** README.md with side-by-side CSV input → Pareto output example
 - **License:** MIT
-- **Version:** 0.1.0
+- **Version:** 0.2.0
 
 ---
 
@@ -133,11 +133,12 @@ Both implemented via DEAP:
 
 | Version | Status | Description |
 |---------|--------|-------------|
-| v0.1.0 | Planned | MVP: FIS (scikit-fuzzy) + NSGA-II + NRGA (DEAP), CSV I/O, Pareto metrics |
-| v0.2.0 | Planned | Sensitivity analysis (`pva sensitivity`) + interactive Pareto explorer (`pva show`) |
-| v0.3.0 | Planned | Benchmark reproducibility (`pva benchmark`) + real-world data connectors (`pva import`) |
+| v0.1.0 | Released | MVP: FIS (scikit-fuzzy) + NSGA-II + NRGA (DEAP), CSV I/O, Pareto metrics (ED-staffing model) |
+| v0.2.0 | In progress | Humanitarian allocation model (3 new FIS, 3 objectives) side by side with the ED model; N-D metrics + reproducibility metric; `pva benchmark` + `pva show` figure export |
+| v0.3.0 | Planned | Sensitivity analysis (`pva sensitivity`) + interactive Pareto explorer + real-world data connectors (`pva import`) |
 
-See **Version Deliberations** below for full rationale.
+See **Version Deliberations** below for full rationale, and
+[docs/v0.2.0-plan.md](docs/v0.2.0-plan.md) for the detailed v0.2.0 implementation plan.
 
 ---
 
@@ -158,7 +159,21 @@ See **Version Deliberations** below for full rationale.
 - No visualization — deferred to v0.2.0
 - No paper benchmark instance regeneration — deferred to v0.3.0
 
-### v0.2.0 — Sensitivity Analysis + Pareto Explorer
+### v0.2.0 — Humanitarian Allocation Model (current)
+
+Adds a second optimisation model — humanitarian allocation of affected people to
+relief centres — **side by side** with the ED-staffing model above, supporting
+the in-preparation paper *"From Methodology to Practice"*. Three new Mamdani FIS
+(Fairness in People Prioritization, Transportation Feasibility, Center Allocation
+Balance), three objectives, N-dimensional Pareto metrics, a reproducibility
+(bit-for-bit) metric, `pva benchmark`, and `pva show` figure export. Full detail
+in [docs/v0.2.0-plan.md](docs/v0.2.0-plan.md).
+
+> The sensitivity-analysis and Pareto-explorer work originally planned for
+> v0.2.0 (below) has been renumbered to **v0.3.0**; data connectors follow in
+> v0.3.0+.
+
+### v0.3.0 — Sensitivity Analysis + Pareto Explorer (renumbered from v0.2.0)
 
 **Sensitivity analysis (`pva sensitivity`):**
 - Vary FIS rule output weights ±10% and ±20% in a grid sweep
@@ -172,7 +187,7 @@ See **Version Deliberations** below for full rationale.
 - `--solver both` shows overlaid NSGA-II and NRGA fronts with distinct colors
 - Rationale: practitioners need to navigate the trade-off and select a preferred solution; researchers need to compare solvers visually
 
-### v0.3.0 — Benchmark Reproducibility + Data Connectors
+### v0.3.0+ — Benchmark Reproducibility + Data Connectors (renumbered from v0.3.0)
 
 **Benchmark reproducibility (`pva benchmark`):**
 - Regenerate all 30 small-size and 30 large-size problem instances using the paper's documented random seed procedure
@@ -203,3 +218,8 @@ See **Version Deliberations** below for full rationale.
 - Always commit with clean author name only
 
 <!-- Deliver the complete working project ready for GitHub publish. -->
+
+## SDLC
+
+These requirements are delivered under the family-wide Presidio SDLC:
+<https://github.com/presidio-v/presidio-hardened-docs/blob/main/sdlc/sdlc-report.md>.
