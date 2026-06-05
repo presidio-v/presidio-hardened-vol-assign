@@ -35,6 +35,11 @@ Stantchev). The ED-staffing model is unchanged and remains the default.
   ed-staffing invocations are unchanged.
 - Minimum Python is 3.10.
 
+### Security
+- The mandatory on-run dependency audit (Presidio extension #4) and
+  security-event log (#5) now run on **every** command — `metrics`, `benchmark`,
+  and `show` previously skipped them. Centralised in a shared CLI preamble.
+
 ### Notes
 - The humanitarian FIS membership functions and rule bases are structural
   **placeholders** pending the paper's final Tables 1–2; the model shape is final.

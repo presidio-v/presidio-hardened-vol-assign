@@ -27,6 +27,10 @@ def test_show_2d_writes_png(tmp_path: Path) -> None:
     result = runner.invoke(app, ["show", "--pareto", str(pareto), "--output", str(out)])
     assert result.exit_code == 0, result.output + (result.stderr or "")
     assert out.exists()
+    # SDLC #5: a security-event log is emitted next to the figure
+    log = out.parent / "pva.log"
+    assert log.exists()
+    assert "loaded" in log.read_text()
 
 
 def test_show_3d_writes_png(tmp_path: Path) -> None:

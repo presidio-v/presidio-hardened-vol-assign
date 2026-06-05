@@ -43,6 +43,11 @@ def test_benchmark_ed_small_writes_summary(tmp_path: Path) -> None:
     df = pd.read_csv(csv_files[0])
     assert {"nsga2", "nrga"} == set(df["solver"])
 
+    # SDLC #4/#5: on-run audit + security-event log emitted for benchmark too
+    log = tmp_path / "pva.log"
+    assert log.exists()
+    assert "loaded" in log.read_text()
+
 
 @pytest.mark.slow
 def test_benchmark_check_repro_reports_rep(tmp_path: Path) -> None:

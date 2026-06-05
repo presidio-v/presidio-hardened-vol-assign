@@ -13,7 +13,14 @@ from presidio_vol_assign.domains import get_domain
 from presidio_vol_assign.engine import run as run_solvers
 from presidio_vol_assign.metrics import compute_metrics
 from presidio_vol_assign.models import RunConfig
-from presidio_vol_assign.security import AuditStatus, get_logger, log_startup, run_audit
+from presidio_vol_assign.security import (
+    AuditResult,
+    AuditStatus,
+    StructuredLogger,
+    get_logger,
+    log_startup,
+    run_audit,
+)
 from presidio_vol_assign.validation import guard_output_path, validate_run_config
 from presidio_vol_assign.writers import (
     load_pareto_csv,
@@ -33,6 +40,28 @@ app = typer.Typer(
 )
 console = Console()
 err_console = Console(stderr=True)
+
+
+# ---------------------------------------------------------------------------
+# Shared security preamble (Presidio extensions #4 on-run CVE check, #5 event log)
+# ---------------------------------------------------------------------------
+
+
+def _run_security_preamble(log_dir: Path | None = None) -> tuple[StructuredLogger, AuditResult]:
+    """Run the mandatory per-invocation security checks for any command.
+
+    Emits the "loaded" security-event banner to ``pva.log`` (in *log_dir* when the
+    command has an output directory, otherwise the working directory), runs the
+    on-run dependency audit, and surfaces a warning when the audit found
+    vulnerabilities. Returns the logger and audit result so the caller can log
+    further events.
+    """
+    logger = get_logger((log_dir / "pva.log") if log_dir is not None else None)
+    audit = run_audit()
+    log_startup(logger, audit=audit)
+    if audit.status == AuditStatus.VULNERABLE:
+        err_console.print(f"[yellow]Warning:[/yellow] dependency audit: {audit.summary()}")
+    return logger, audit
 
 
 # ---------------------------------------------------------------------------
@@ -84,12 +113,7 @@ def assign(
         raise typer.Exit(code=1)
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    logger = get_logger(out_dir / "pva.log")
-    audit = run_audit()
-    log_startup(logger, audit=audit)
-
-    if audit.status == AuditStatus.VULNERABLE:
-        err_console.print(f"[yellow]Warning:[/yellow] dependency audit: {audit.summary()}")
+    logger, _audit = _run_security_preamble(out_dir)
 
     # ---- Select + validate inputs for this model ----
     provided = {"volunteers": volunteers, "eds": eds, "people": people, "centers": centers}
@@ -161,6 +185,8 @@ def metrics(
     pareto: Path = typer.Option(..., "--pareto", help="Path to a Pareto front CSV."),
 ) -> None:
     """Compute NNS, MID, SM, and HV for a Pareto front CSV."""
+    logger, _audit = _run_security_preamble()
+
     try:
         front = load_pareto_csv(pareto)
     except (FileNotFoundError, ValueError) as exc:
@@ -168,6 +194,7 @@ def metrics(
         raise typer.Exit(code=1)
 
     m = compute_metrics(front)
+    logger.info("metrics computed", solver=front.solver.value, nns=m.nns)
     _print_run_summary(front.solver.value.upper(), m)
 
 
@@ -220,6 +247,7 @@ def benchmark(
         err_console.print(f"[red]Security:[/red] {exc}")
         raise typer.Exit(code=1)
     out_dir.mkdir(parents=True, exist_ok=True)
+    logger, _audit = _run_security_preamble(out_dir)
 
     config = RunConfig(
         solver=solver,
@@ -247,6 +275,13 @@ def benchmark(
 
     _print_benchmark_table(model, rows, check_repro)
     csv_path, json_path = write_benchmark_summary(rows, out_dir)
+    logger.info(
+        "benchmark completed",
+        model=model,
+        sizes=",".join(sizes),
+        instances=instances,
+        n_rows=len(rows),
+    )
     console.print(f"  Summary CSV  → [cyan]{csv_path}[/cyan]")
     console.print(f"  Summary JSON → [cyan]{json_path}[/cyan]")
 
@@ -280,6 +315,8 @@ def show(
         err_console.print(f"[red]Security:[/red] {exc}")
         raise typer.Exit(code=1)
 
+    logger, _audit = _run_security_preamble(out_path.parent)
+
     try:
         from presidio_vol_assign.viz import plot_fronts
     except ImportError:
@@ -296,6 +333,7 @@ def show(
         err_console.print(f"[red]Error:[/red] {exc}")
         raise typer.Exit(code=1)
 
+    logger.info("figure rendered", n_fronts=len(pareto), output=str(saved))
     console.print(f"  Figure → [cyan]{saved}[/cyan]")
 
 
