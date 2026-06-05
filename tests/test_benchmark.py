@@ -76,6 +76,7 @@ def test_resolve_sizes() -> None:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.slow
 def test_run_benchmark_ed_small() -> None:
     rows = run_benchmark("ed-staffing", ["small"], n_instances=2, config=_tiny_cfg())
     solvers = {r.solver for r in rows}
@@ -86,6 +87,7 @@ def test_run_benchmark_ed_small() -> None:
         assert r.rep is None  # no repro check requested
 
 
+@pytest.mark.slow
 def test_run_benchmark_repro_flag() -> None:
     rows = run_benchmark(
         "ed-staffing", ["small"], n_instances=2, config=_tiny_cfg("nsga2"), check_repro=True
@@ -93,6 +95,7 @@ def test_run_benchmark_repro_flag() -> None:
     assert all(r.rep == 1.0 for r in rows)
 
 
+@pytest.mark.slow
 def test_run_benchmark_humanitarian_smoke() -> None:
     rows = run_benchmark("humanitarian", ["small"], n_instances=1, config=_tiny_cfg("nsga2"))
     assert len(rows) == 1

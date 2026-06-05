@@ -31,7 +31,7 @@ pva metrics --pareto results/pareto_nsga2_20240101T120000.csv
 
 ## Technical Requirements
 
-- **Language:** Python 3.9+
+- **Language:** Python 3.10+
 - **Build system:** `pyproject.toml` with `hatchling` backend; `uv` for dependency management
 - **Project layout:** `src/presidio_vol_assign/` (src-layout)
 - **CLI framework:** Typer + rich (terminal tables and progress bars)
@@ -42,7 +42,7 @@ pva metrics --pareto results/pareto_nsga2_20240101T120000.csv
 - **Linting/formatting:** ruff (`ruff format` + `ruff check --fix`)
 - **Documentation:** README.md with side-by-side CSV input → Pareto output example
 - **License:** MIT
-- **Version:** 0.1.0
+- **Version:** 0.2.0
 
 ---
 

@@ -16,7 +16,7 @@ pip install presidio-hardened-vol-assign
 uv add presidio-hardened-vol-assign
 ```
 
-**Requirements:** Python 3.9+
+**Requirements:** Python 3.10+
 
 ---
 
@@ -145,7 +145,7 @@ solution_id,volunteer_id,ed_id,vacancy_type,fis1_score,fis2_score,fis3_score
 **`pva.log`** — structured JSON-lines security event log (no PII):
 
 ```json
-{"ts": "2024-01-01T12:00:00+00:00", "level": "INFO", "version": "0.1.0", "event": "presidio-hardened-vol-assign loaded", "audit_status": "ok", "n_vulnerabilities": 0}
+{"ts": "2024-01-01T12:00:00+00:00", "level": "INFO", "version": "0.2.0", "event": "presidio-hardened-vol-assign loaded", "audit_status": "ok", "n_vulnerabilities": 0}
 ```
 
 ---
@@ -165,7 +165,7 @@ pva version
 ```
 
 ```
-presidio-hardened-vol-assign 0.1.0
+presidio-hardened-vol-assign 0.2.0
 Dependency audit: OK (last checked: 2024-01-01 12:00 UTC, 0 vulnerabilities)
 ```
 

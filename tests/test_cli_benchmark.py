@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import pandas as pd
+import pytest
 from typer.testing import CliRunner
 
 from presidio_vol_assign.cli import app
@@ -15,6 +16,7 @@ runner = CliRunner()
 FAST = ["--instances", "1", "--pop-size", "6", "--generations", "2", "--seed", "7"]
 
 
+@pytest.mark.slow
 def test_benchmark_ed_small_writes_summary(tmp_path: Path) -> None:
     result = runner.invoke(
         app,
@@ -42,6 +44,7 @@ def test_benchmark_ed_small_writes_summary(tmp_path: Path) -> None:
     assert {"nsga2", "nrga"} == set(df["solver"])
 
 
+@pytest.mark.slow
 def test_benchmark_check_repro_reports_rep(tmp_path: Path) -> None:
     result = runner.invoke(
         app,

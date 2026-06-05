@@ -4,7 +4,8 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.1.x   | Yes       |
+| 0.2.x   | Yes       |
+| 0.1.x   | No        |
 
 ## Reporting a Vulnerability
 
@@ -27,7 +28,7 @@ within 30 days of a confirmed vulnerability.
 
 - **CSV input sanitization** — all input files are validated for schema, types, and value ranges before processing
 - **Path traversal guard** — `--output` paths are resolved to absolute form; `..` traversal is rejected
-- **Secure logging** — volunteer IDs only; no names, addresses, or other PII in log output
+- **Secure logging** — record IDs only (volunteer/person); no names, addresses, or other PII in log output
 - **Dependency audit** — `pip-audit` runs at startup and in CI; unpatched CVEs trigger a warning
 - **No secrets via CLI** — API keys and credentials must be supplied via environment variables, never as CLI flags
 
