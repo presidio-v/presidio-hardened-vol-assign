@@ -4,14 +4,16 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.1.x   | Yes       |
+| 0.2.x   | Yes       |
+| 0.1.x   | No        |
 
 ## Reporting a Vulnerability
 
-Please report security vulnerabilities by opening a **private** GitHub Security Advisory
+Please report security vulnerabilities by opening a private GitHub Security Advisory
 (via the "Security" tab → "Report a vulnerability") rather than a public issue.
 
 Include:
+
 - Description of the vulnerability
 - Steps to reproduce
 - Potential impact
@@ -25,7 +27,14 @@ within 30 days of a confirmed vulnerability.
 `presidio-hardened-vol-assign` applies the following hardening measures:
 
 - **CSV input sanitization** — all input files are validated for schema, types, and value ranges before processing
+- **CSV output safety** — record IDs written to result CSVs are neutralised against spreadsheet formula injection (a leading `'` is added to cells beginning with `= + - @`)
 - **Path traversal guard** — `--output` paths are resolved to absolute form; `..` traversal is rejected
-- **Secure logging** — volunteer IDs only; no names, addresses, or other PII in log output
+- **Secure logging** — record IDs only (volunteer/person); no names, addresses, or other PII in log output
 - **Dependency audit** — `pip-audit` runs at startup and in CI; unpatched CVEs trigger a warning
 - **No secrets via CLI** — API keys and credentials must be supplied via environment variables, never as CLI flags
+
+## Software Development Lifecycle
+
+This repository is developed under the Presidio hardened-family SDLC. The public report
+— scope, standards mapping, threat-model gates, and supply-chain controls — is at
+<https://github.com/presidio-v/presidio-hardened-docs/blob/main/sdlc/sdlc-report.md>.

@@ -19,19 +19,43 @@ Public API:
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 
 from presidio_vol_assign.models import (
-    Assignment,
     Metrics,
     ParetoFront,
-    SkillType,
     Solution,
     SolverType,
 )
+
+if TYPE_CHECKING:
+    from presidio_vol_assign.domains.base import Domain
+
+_Z_COL_RE = re.compile(r"z\d+$")
+
+# Characters a spreadsheet may interpret as the start of a formula.
+_CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _csv_safe(value: object) -> object:
+    """Neutralise CSV/spreadsheet formula injection in string cells.
+
+    Record IDs come from untrusted input CSVs and are validated for shell
+    metacharacters but may still begin with a spreadsheet formula trigger
+    (e.g. ``=cmd|'/C calc'!A1``). Prefix such strings with a single quote so a
+    spreadsheet treats them as literal text. Non-string values pass through
+    unchanged. The tool never re-ingests the assignments CSV, so this does not
+    affect any round-trip.
+    """
+    if isinstance(value, str) and value.startswith(_CSV_FORMULA_PREFIXES):
+        return "'" + value
+    return value
+
 
 # ---------------------------------------------------------------------------
 # Writers
@@ -39,43 +63,39 @@ from presidio_vol_assign.models import (
 
 
 def write_pareto_csv(front: ParetoFront, output_dir: Path) -> Path:
-    """Write Pareto-front objective values to CSV. Returns the file path."""
+    """Write Pareto-front objective values to CSV. Returns the file path.
+
+    Emits one ``z<k>`` column per objective, so the schema adapts to 2- or
+    3-objective fronts automatically.
+    """
     ts = _timestamp()
     path = output_dir / f"pareto_{front.solver.value}_{ts}.csv"
 
-    rows = [
-        {
-            "solver": front.solver.value,
-            "solution_id": i,
-            "z1": round(sol.z1, 6),
-            "z2": round(sol.z2, 6),
-        }
-        for i, sol in enumerate(front.solutions)
-    ]
+    rows = []
+    for i, sol in enumerate(front.solutions):
+        row = {"solver": front.solver.value, "solution_id": i}
+        for k, value in enumerate(sol.objectives, start=1):
+            row[f"z{k}"] = round(value, 6)
+        rows.append(row)
     pd.DataFrame(rows).to_csv(path, index=False)
     return path
 
 
-def write_assignments_csv(front: ParetoFront, output_dir: Path) -> Path:
-    """Write per-assignment details to CSV. Returns the file path."""
+def write_assignments_csv(front: ParetoFront, output_dir: Path, domain: Domain) -> Path:
+    """Write per-assignment details to CSV, using the domain's column schema.
+
+    Returns the file path.
+    """
     ts = _timestamp()
     path = output_dir / f"assignments_{front.solver.value}_{ts}.csv"
 
     rows = []
     for i, sol in enumerate(front.solutions):
         for asgn in sol.assignments:
-            rows.append(
-                {
-                    "solution_id": i,
-                    "volunteer_id": asgn.volunteer_id,
-                    "ed_id": asgn.ed_id,
-                    "vacancy_type": asgn.vacancy_type.value,
-                    "fis1_score": round(asgn.fis1_score, 6),
-                    "fis2_score": round(asgn.fis2_score, 6),
-                    "fis3_score": round(asgn.fis3_score, 6),
-                }
-            )
-    pd.DataFrame(rows).to_csv(path, index=False)
+            row = {"solution_id": i, **domain.assignment_row(asgn)}
+            rows.append({k: _csv_safe(v) for k, v in row.items()})
+    columns = ["solution_id", *domain.assignment_fieldnames]
+    pd.DataFrame(rows, columns=columns).to_csv(path, index=False)
     return path
 
 
@@ -92,6 +112,8 @@ def write_metrics_json(m: Metrics, output_dir: Path) -> Path:
         "hv": round(m.hv, 6),
         "cpu_time_sec": round(m.cpu_time_sec, 3),
     }
+    if m.rep is not None:
+        data["rep"] = round(m.rep, 6)
     path.write_text(json.dumps(data, indent=2))
     return path
 
@@ -102,9 +124,10 @@ def write_metrics_json(m: Metrics, output_dir: Path) -> Path:
 
 
 def load_pareto_csv(path: Path) -> ParetoFront:
-    """Load a pareto CSV back into a ParetoFront (z1/z2 only; no assignments).
+    """Load a pareto CSV back into a ParetoFront (objectives only; no assignments).
 
-    The solver column in the CSV determines the SolverType.
+    Detects ``z1, z2, ... zk`` objective columns automatically, so both 2- and
+    3-objective fronts round-trip. The solver column determines the SolverType.
 
     Raises:
         ValueError: If the file is missing required columns or has an unknown solver.
@@ -114,7 +137,17 @@ def load_pareto_csv(path: Path) -> ParetoFront:
         raise FileNotFoundError(f"Pareto CSV not found: {path}")
 
     df = pd.read_csv(path)
-    _require_cols(df, {"solver", "solution_id", "z1", "z2"}, str(path))
+    _require_cols(df, {"solver", "solution_id"}, str(path))
+
+    z_cols = sorted(
+        (c for c in df.columns if _Z_COL_RE.fullmatch(c)),
+        key=lambda c: int(c[1:]),
+    )
+    if not z_cols:
+        raise ValueError(
+            f"{path}: no objective columns found (expected at least 'z1'). "
+            f"Found: {sorted(df.columns)}"
+        )
 
     try:
         solver = SolverType(str(df["solver"].iloc[0]).strip())
@@ -125,17 +158,7 @@ def load_pareto_csv(path: Path) -> ParetoFront:
         )
 
     solutions = [
-        Solution(
-            assignments=[
-                Assignment(
-                    volunteer_id="",
-                    ed_id="",
-                    vacancy_type=SkillType.TRIAGE,  # placeholder; metrics need only z1/z2
-                )
-            ],
-            z1=float(row["z1"]),
-            z2=float(row["z2"]),
-        )
+        Solution(assignments=[], objectives=tuple(float(row[c]) for c in z_cols))
         for _, row in df.iterrows()
     ]
     return ParetoFront(solver=solver, solutions=solutions)

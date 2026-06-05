@@ -1,28 +1,59 @@
-"""Pareto-front quality metrics matching paper Table 3.
+"""Pareto-front quality metrics, generalised to any number of objectives.
 
-All functions are pure (no side effects).
+All functions are pure (no side effects) and read each solution's canonical
+``objectives`` vector, so they work for both the 2-objective ED-staffing model
+and the 3-objective humanitarian model.
+
+Metric definitions:
+    NNS — Number of Non-dominated Solutions (front size).
+    MID — Mean Ideal Distance: mean Euclidean distance from each solution to the
+          ideal point (default = origin).
+    SM  — Spacing Metric (Schott): standard deviation of each solution's
+          nearest-neighbour distance to the rest of the front. Dimension-
+          agnostic; lower = more uniform spread. (This replaces the v0.1.0
+          sort-by-z1 consecutive-distance definition, which only worked in 2-D.)
+    HV  — Hypervolume dominated relative to a reference point (default = all
+          ones), computed with DEAP's n-dimensional implementation.
+    REP — Reproducibility: 1.0 when repeated seeded runs yield bit-for-bit
+          identical fronts (see ``reproducibility_score`` / ``front_signature``).
 
 Public API:
-    compute_metrics(front: ParetoFront) -> Metrics
+    compute_metrics(front) -> Metrics
+    front_signature(front) -> str
+    reproducibility_score(signatures) -> float
 """
 
 from __future__ import annotations
 
+import hashlib
 import math
+from collections.abc import Sequence
 
 import numpy as np
+from deap.tools._hypervolume import hv as _pyhv
 
 from presidio_vol_assign.models import Metrics, ParetoFront, Solution
 
 
-def compute_metrics(front: ParetoFront) -> Metrics:
-    """Compute NNS, MID, SM, and HV for a ParetoFront."""
+def compute_metrics(
+    front: ParetoFront,
+    *,
+    ideal_point: tuple[float, ...] | None = None,
+    reference_point: tuple[float, ...] | None = None,
+) -> Metrics:
+    """Compute NNS, MID, SM, and HV for a ParetoFront.
+
+    ``ideal_point`` / ``reference_point`` default to the origin and the all-ones
+    point of the front's objective dimension respectively (both objective
+    families normalise objectives to [0, 1]).
+    """
+    sols = front.solutions
     return Metrics(
         solver=front.solver,
-        nns=_nns(front.solutions),
-        mid=_mid(front.solutions),
-        sm=_sm(front.solutions),
-        hv=_hv(front.solutions),
+        nns=_nns(sols),
+        mid=_mid(sols, ideal=ideal_point),
+        sm=_sm(sols),
+        hv=_hv(sols, ref=reference_point),
         cpu_time_sec=front.cpu_time_sec,
     )
 
@@ -37,56 +68,83 @@ def _nns(solutions: list[Solution]) -> int:
     return len(solutions)
 
 
-def _mid(solutions: list[Solution]) -> float:
-    """Mean Ideal Distance — mean Euclidean distance from each solution to (0, 0)."""
+def _mid(solutions: list[Solution], ideal: tuple[float, ...] | None = None) -> float:
+    """Mean Ideal Distance — mean Euclidean distance to the ideal point.
+
+    Defaults to the origin of the appropriate dimension.
+    """
     if not solutions:
         return 0.0
-    distances = [math.hypot(s.z1, s.z2) for s in solutions]
+    vectors = [s.objectives for s in solutions]
+    if ideal is None:
+        ideal = (0.0,) * len(vectors[0])
+    distances = [math.dist(v, ideal) for v in vectors]
     return float(np.mean(distances))
 
 
 def _sm(solutions: list[Solution]) -> float:
-    """Spacing Metric — std-dev of consecutive distances on the sorted front.
+    """Schott spacing metric — std-dev of nearest-neighbour distances.
 
-    Solutions are sorted by z1 before computing adjacent distances.
-    Returns 0.0 for fronts with fewer than two solutions.
+    For each solution, take the Euclidean distance to its closest neighbour on
+    the front; SM is the standard deviation of those distances. Works in any
+    dimension. Returns 0.0 for fronts with fewer than two solutions.
     """
     if len(solutions) < 2:
         return 0.0
-    sorted_sols = sorted(solutions, key=lambda s: s.z1)
-    dists = [
-        math.hypot(
-            sorted_sols[i].z1 - sorted_sols[i - 1].z1, sorted_sols[i].z2 - sorted_sols[i - 1].z2
-        )
-        for i in range(1, len(sorted_sols))
-    ]
-    return float(np.std(dists))
+    vectors = [s.objectives for s in solutions]
+    nearest: list[float] = []
+    for i, vi in enumerate(vectors):
+        nn = min(math.dist(vi, vj) for j, vj in enumerate(vectors) if j != i)
+        nearest.append(nn)
+    return float(np.std(nearest))
 
 
-def _hv(solutions: list[Solution], ref: tuple[float, float] = (1.0, 1.0)) -> float:
-    """2-D Hypervolume dominated by the front relative to reference point *ref*.
+def _hv(solutions: list[Solution], ref: tuple[float, ...] | None = None) -> float:
+    """Hypervolume dominated by the front relative to reference point *ref*.
 
-    Uses a sweep-line algorithm (O(n log n)).
-    Reference point default (1, 1) assumes both objectives are in [0, 1].
-    Returns 0.0 for empty fronts or fronts that do not dominate the reference.
+    Uses DEAP's n-dimensional hypervolume. ``ref`` defaults to the all-ones
+    point (both objective families have objectives in [0, 1]). Only solutions
+    strictly inside the reference box contribute; returns 0.0 for empty fronts
+    or fronts that do not dominate the reference point.
     """
     if not solutions:
         return 0.0
-
-    # Keep only solutions that are within the reference box
-    pts = [(s.z1, s.z2) for s in solutions if s.z1 < ref[0] and s.z2 < ref[1]]
+    vectors = [s.objectives for s in solutions]
+    dim = len(vectors[0])
+    if ref is None:
+        ref = (1.0,) * dim
+    pts = [v for v in vectors if all(v[k] < ref[k] for k in range(dim))]
     if not pts:
         return 0.0
+    return float(_pyhv.hypervolume(np.array(pts, dtype=float), np.array(ref, dtype=float)))
 
-    # Sort by z1 ascending; break ties by z2 ascending
-    pts.sort(key=lambda p: (p[0], p[1]))
 
-    hv = 0.0
-    current_z2 = ref[1]
+# ---------------------------------------------------------------------------
+# Reproducibility (REP)
+# ---------------------------------------------------------------------------
 
-    for z1, z2 in pts:
-        if z2 < current_z2:
-            hv += (ref[0] - z1) * (current_z2 - z2)
-            current_z2 = z2
 
-    return float(hv)
+def front_signature(front: ParetoFront, precision: int = 9) -> str:
+    """Return a stable SHA-256 signature of a front's objective vectors.
+
+    Objective vectors are rounded to *precision* decimals and sorted, so the
+    signature is invariant to solution ordering but sensitive to any numeric
+    drift — the basis for the bit-for-bit reproducibility check.
+    """
+    rounded = sorted(tuple(round(x, precision) for x in s.objectives) for s in front.solutions)
+    payload = repr(rounded).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def fronts_signature(fronts: Sequence[ParetoFront], precision: int = 9) -> str:
+    """Combined signature over an ordered collection of fronts (e.g. both solvers)."""
+    combined = "|".join(f"{f.solver.value}:{front_signature(f, precision)}" for f in fronts)
+    return hashlib.sha256(combined.encode("utf-8")).hexdigest()
+
+
+def reproducibility_score(signatures: Sequence[str]) -> float:
+    """1.0 if all run signatures are identical (bit-for-bit), else 0.0."""
+    if not signatures:
+        return 0.0
+    first = signatures[0]
+    return 1.0 if all(s == first for s in signatures) else 0.0

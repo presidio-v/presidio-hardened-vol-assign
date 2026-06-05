@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "presidio-hardened-vol-assign"
-version = "0.1.0"
-description = "Multi-objective volunteer assignment for post-disaster ED staffing (Rabiei et al., ESWA 2023)"
+version = "0.2.0"
+description = "Multi-objective post-disaster assignment: ED volunteer staffing (Rabiei et al., ESWA 2023) and humanitarian people-to-centre allocation"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
@@ -24,11 +24,15 @@ dependencies = [
 pva = "presidio_vol_assign.cli:app"
 
 [project.optional-dependencies]
+viz = [
+    "matplotlib>=3.7",
+]
 dev = [
-    "pytest>=7",
+    "pytest>=9.0.3",
     "pytest-cov",
     "ruff>=0.4",
     "pip-audit",
+    "matplotlib>=3.7",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -51,6 +55,11 @@ show_missing = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    # Tests that run the full-size FIS precompute / benchmark instances.
+    # Skip locally with: pytest -m "not slow"
+    "slow: marks slower end-to-end tests (deselect with '-m \"not slow\"')",
+]
 filterwarnings = [
     # scikit-fuzzy uses a numpy 2.x-deprecated positional arg in np.maximum/minimum
     "ignore::DeprecationWarning:skfuzzy",

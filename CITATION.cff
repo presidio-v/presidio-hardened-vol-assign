@@ -1,0 +1,47 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "presidio-hardened-vol-assign"
+abstract: >-
+  Multi-objective post-disaster assignment tool: emergency-department volunteer
+  staffing (Rabiei et al., ESWA 2023) and humanitarian people-to-centre
+  allocation, combining fuzzy inference systems with the NSGA-II and NRGA
+  evolutionary algorithms.
+type: software
+version: 0.2.0
+date-released: 2026-06-05
+license: MIT
+repository-code: "https://github.com/presidio-v/presidio-hardened-vol-assign"
+keywords:
+  - multi-objective optimization
+  - NSGA-II
+  - NRGA
+  - fuzzy inference systems
+  - humanitarian logistics
+  - disaster response
+authors:
+  - family-names: Rabiei
+    given-names: Peyman
+    affiliation: "University of Granada"
+  - family-names: Arias-Aranda
+    given-names: Daniel
+    affiliation: "University of Granada"
+  - family-names: Stantchev
+    given-names: Vladimir
+    affiliation: "SRH University Heidelberg"
+references:
+  - type: article
+    title: >-
+      Introducing a novel multi-objective optimization model for volunteer
+      assignment in the post-disaster phase: Combining fuzzy inference systems
+      with NSGA-II and NRGA
+    authors:
+      - family-names: Rabiei
+        given-names: Peyman
+      - family-names: Arias-Aranda
+        given-names: Daniel
+      - family-names: Stantchev
+        given-names: Vladimir
+    journal: "Expert Systems With Applications"
+    volume: 226
+    year: 2023
+    doi: "10.1016/j.eswa.2023.120142"
