@@ -11,18 +11,27 @@
 %   - Algorithm parameters (population, generations, crossover/mutation rates).
 %
 % 5.2 Solver comparison: NSGA-II vs NRGA
-%   - Convergence (MID), diversity (Spacing), hypervolume.
+%   - Convergence (MID), diversity (Spacing), hypervolume; from `pva benchmark`
+%     (Table-3-style mean +/- std over the seeded instances).
 %   - Computational time (small vs large case scaling).
-%   - Statistical tests: Shapiro-Wilk normality, paired t-tests where applicable.
+%   - Statistical tests (Shapiro-Wilk normality, paired t-tests) are computed as
+%     post-processing on the emitted benchmark_*.csv (standard SciPy routines);
+%     the tool produces the per-instance metrics, the tests are applied to them.
 %
 % 5.3 Solution quality at the Pareto level
-%   - Trade-off visualisations across the three objectives.
-%   - Sensitivity of solutions to FIS rule-base perturbations.
+%   - Trade-off visualisations across the three objectives (`pva show`:
+%     pairwise Z1-Z2/Z1-Z3/Z2-Z3 projections + a 3-D scatter).
+%   - Sensitivity of solutions to FIS rule-base perturbations, produced by
+%     `pva sensitivity` (multiplicative +/-10%/+/-20% perturbation of the FIS
+%     output scores; reports the shift in NNS/MID/SM/HV).
 %
 % 5.4 Reproducibility evaluation (NEW vs ATRES)
 %   - Fresh-machine deployment time (from `git clone` to first `pva allocate-people`
-%     output) on stock macOS / Linux.
-%   - Bit-for-bit output reproducibility across machines.
+%     output) on a stock Linux environment.
+%   - Bit-for-bit output reproducibility for a fixed seed within an environment
+%     (the REP metric / `--check-repro`). NOTE: cross-architecture float
+%     identity is not asserted; if a macOS/Linux cross-platform claim is wanted,
+%     it must be backed by an explicit cross-platform experiment.
 %   - Argue these as SCR-relevant metrics: tooling that cannot be re-deployed
 %     under operational pressure has zero resilience value.
 
