@@ -144,19 +144,44 @@ class Assignment:
 class Solution:
     """One Pareto-optimal solution: a complete assignment mapping + objective values.
 
+    The canonical objective representation is the ``objectives`` tuple, which has
+    one entry per objective and so supports both the 2-objective ED-staffing
+    model and the 3-objective humanitarian model. ``z1`` / ``z2`` are retained as
+    backward-compatible views on the first two objectives.
+
+    Construct either way:
+        Solution(assignments=..., z1=0.3, z2=0.4)            # 2-objective
+        Solution(assignments=..., objectives=(0.3, 0.4, 0.5))  # N-objective
+
     Attributes:
-        assignments: One Assignment per vacancy (complete coverage).
-        z1: Mean importance of unmet needs across all vacancies (objective 1, minimise).
-        z2: Mean degree of unsatisfied volunteer preferences (objective 2, minimise).
+        assignments: One Assignment per filled vacancy / allocated unit.
+        z1: First objective value (minimise).
+        z2: Second objective value (minimise).
+        objectives: Full objective vector (length = number of objectives).
     """
 
     assignments: list[Assignment]
-    z1: float
-    z2: float
+    z1: float = 0.0
+    z2: float = 0.0
+    objectives: tuple[float, ...] = ()
+
+    def __post_init__(self) -> None:
+        if not self.objectives:
+            # 2-objective construction path: derive the vector from z1/z2.
+            self.objectives = (self.z1, self.z2)
+        else:
+            # N-objective path: expose the first two objectives as z1/z2.
+            self.z1 = self.objectives[0]
+            if len(self.objectives) > 1:
+                self.z2 = self.objectives[1]
 
     @property
     def n_assignments(self) -> int:
         return len(self.assignments)
+
+    @property
+    def n_objectives(self) -> int:
+        return len(self.objectives)
 
 
 @dataclass
@@ -193,6 +218,8 @@ class Metrics:
         hv: Hypervolume — volume of objective space dominated by the front
             (higher = better coverage).
         cpu_time_sec: Wall-clock solver time.
+        rep: Reproducibility score in [0, 1] — 1.0 when repeated seeded runs
+            produce bit-for-bit identical fronts. None when not assessed.
     """
 
     solver: SolverType
@@ -201,3 +228,21 @@ class Metrics:
     sm: float
     hv: float
     cpu_time_sec: float
+    rep: float | None = None
+
+
+@dataclass
+class ReproReport:
+    """Outcome of a bit-for-bit reproducibility check across repeated runs.
+
+    Attributes:
+        n_runs: How many times the same seeded configuration was executed.
+        rep: 1.0 if every run produced an identical front signature, else 0.0.
+        signature: SHA-256 signature of the first run's combined fronts.
+        identical: Convenience flag, ``rep == 1.0``.
+    """
+
+    n_runs: int
+    rep: float
+    signature: str
+    identical: bool
