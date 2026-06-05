@@ -27,6 +27,11 @@ Stantchev). The ED-staffing model is unchanged and remains the default.
   optional REP column (`--check-repro`).
 - **`pva show`**: publication-quality Pareto figures (2-D scatter or three
   pairwise projections + 3-D scatter), solvers overlaid. Requires the `viz` extra.
+- **`pva allocate-people`**: convenience alias for `assign --model humanitarian`.
+- **Canonical NRGA** (`--solver nrga-ranked`): rank-biased roulette-wheel survival
+  (Al Jadaan et al., 2008), matching the NRGA literature; the existing `nrga`
+  remains as a lightweight uniform-tie-break variant. New `--solver all` runs all
+  three solvers.
 
 ### Changed
 - Pareto CSV now carries `z1..zk` objective columns (adds `z3` for the

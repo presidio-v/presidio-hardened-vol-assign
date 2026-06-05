@@ -31,7 +31,7 @@ from presidio_vol_assign.models import (
 # Constants
 # ---------------------------------------------------------------------------
 
-_VALID_SOLVERS = {"nsga2", "nrga", "both"}
+_VALID_SOLVERS = {"nsga2", "nrga", "nrga-ranked", "both", "all"}
 _SKILL_TYPES = {s.value for s in SkillType}
 
 _VOL_REQUIRED_COLS = {"volunteer_id", "skill_type", "skill_level", "difficulty_tolerance"}

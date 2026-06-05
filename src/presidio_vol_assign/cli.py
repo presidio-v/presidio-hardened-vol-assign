@@ -69,43 +69,22 @@ def _run_security_preamble(log_dir: Path | None = None) -> tuple[StructuredLogge
 # ---------------------------------------------------------------------------
 
 
-@app.command()
-def assign(
-    model: str = typer.Option(
-        "ed-staffing",
-        "--model",
-        show_default=True,
-        help="Problem model: ed-staffing (2 objectives) or humanitarian (3 objectives).",
-    ),
-    volunteers: Path = typer.Option(
-        None, "--volunteers", help="[ed-staffing] Volunteer roster CSV."
-    ),
-    eds: Path = typer.Option(
-        None, "--eds", help="[ed-staffing] Emergency Department vacancies CSV."
-    ),
-    people: Path = typer.Option(None, "--people", help="[humanitarian] Affected-people CSV."),
-    centers: Path = typer.Option(None, "--centers", help="[humanitarian] Relief-centres CSV."),
-    solver: str = typer.Option(
-        "both", "--solver", show_default=True, help="Solver: nsga2, nrga, or both."
-    ),
-    seed: int = typer.Option(None, "--seed", help="Random seed for reproducibility."),
-    pop_size: int = typer.Option(100, "--pop-size", show_default=True, help="GA population size."),
-    generations: int = typer.Option(
-        200, "--generations", show_default=True, help="Number of generations."
-    ),
-    output: Path = typer.Option(
-        Path("./results"), "--output", show_default=True, help="Output directory."
-    ),
-) -> None:
-    """Run assignment optimisation and write Pareto front + metrics."""
-    # ---- Resolve model ----
-    try:
-        domain = get_domain(model)
-    except ValueError as exc:
-        err_console.print(f"[red]Model error:[/red] {exc}")
-        raise typer.Exit(code=1)
+_SOLVER_HELP = "Solver: nsga2, nrga, nrga-ranked, both (nsga2+nrga), or all."
 
-    # ---- Security ----
+
+def _execute_assignment(
+    domain,
+    primary: Path | None,
+    secondary: Path | None,
+    *,
+    solver: str,
+    seed: int | None,
+    pop_size: int,
+    generations: int,
+    output: Path,
+    model_label: str,
+) -> None:
+    """Shared body for ``assign`` / ``allocate-people``: validate, solve, write."""
     try:
         out_dir = guard_output_path(output)
     except ValueError as exc:
@@ -115,13 +94,10 @@ def assign(
     out_dir.mkdir(parents=True, exist_ok=True)
     logger, _audit = _run_security_preamble(out_dir)
 
-    # ---- Select + validate inputs for this model ----
-    provided = {"volunteers": volunteers, "eds": eds, "people": people, "centers": centers}
     primary_name, secondary_name = domain.required_inputs
-    primary, secondary = provided[primary_name], provided[secondary_name]
     if primary is None or secondary is None:
         err_console.print(
-            f"[red]Input error:[/red] model {model!r} requires "
+            f"[red]Input error:[/red] model {model_label!r} requires "
             f"--{primary_name} and --{secondary_name}."
         )
         raise typer.Exit(code=1)
@@ -146,16 +122,14 @@ def assign(
         raise typer.Exit(code=1)
 
     console.print(
-        f"Problem: [bold]{model}[/bold] | {_problem_size(problem)}  "
+        f"Problem: [bold]{model_label}[/bold] | {_problem_size(problem)}  "
         f"| solver: [bold]{solver}[/bold]  "
         f"| pop: {pop_size}  gen: {generations}"
     )
 
-    # ---- Solve ----
     with console.status("[bold green]Running solver(s)…[/bold green]"):
         fronts = run_solvers(problem, config, domain)
 
-    # ---- Write outputs + print summary ----
     for front in fronts:
         pareto_path = write_pareto_csv(front, out_dir)
         assign_path = write_assignments_csv(front, out_dir, domain)
@@ -173,6 +147,85 @@ def assign(
         console.print(f"  Pareto CSV  → [cyan]{pareto_path}[/cyan]")
         console.print(f"  Assignments → [cyan]{assign_path}[/cyan]")
         console.print(f"  Metrics     → [cyan]{metrics_path}[/cyan]")
+
+
+@app.command()
+def assign(
+    model: str = typer.Option(
+        "ed-staffing",
+        "--model",
+        show_default=True,
+        help="Problem model: ed-staffing (2 objectives) or humanitarian (3 objectives).",
+    ),
+    volunteers: Path = typer.Option(
+        None, "--volunteers", help="[ed-staffing] Volunteer roster CSV."
+    ),
+    eds: Path = typer.Option(
+        None, "--eds", help="[ed-staffing] Emergency Department vacancies CSV."
+    ),
+    people: Path = typer.Option(None, "--people", help="[humanitarian] Affected-people CSV."),
+    centers: Path = typer.Option(None, "--centers", help="[humanitarian] Relief-centres CSV."),
+    solver: str = typer.Option("both", "--solver", show_default=True, help=_SOLVER_HELP),
+    seed: int = typer.Option(None, "--seed", help="Random seed for reproducibility."),
+    pop_size: int = typer.Option(100, "--pop-size", show_default=True, help="GA population size."),
+    generations: int = typer.Option(
+        200, "--generations", show_default=True, help="Number of generations."
+    ),
+    output: Path = typer.Option(
+        Path("./results"), "--output", show_default=True, help="Output directory."
+    ),
+) -> None:
+    """Run assignment optimisation and write Pareto front + metrics."""
+    try:
+        domain = get_domain(model)
+    except ValueError as exc:
+        err_console.print(f"[red]Model error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    provided = {"volunteers": volunteers, "eds": eds, "people": people, "centers": centers}
+    primary_name, secondary_name = domain.required_inputs
+    _execute_assignment(
+        domain,
+        provided[primary_name],
+        provided[secondary_name],
+        solver=solver,
+        seed=seed,
+        pop_size=pop_size,
+        generations=generations,
+        output=output,
+        model_label=model,
+    )
+
+
+@app.command(name="allocate-people")
+def allocate_people(
+    people: Path = typer.Option(None, "--people", help="Affected-people CSV."),
+    centers: Path = typer.Option(None, "--centers", help="Relief-centres CSV."),
+    solver: str = typer.Option("both", "--solver", show_default=True, help=_SOLVER_HELP),
+    seed: int = typer.Option(None, "--seed", help="Random seed for reproducibility."),
+    pop_size: int = typer.Option(100, "--pop-size", show_default=True, help="GA population size."),
+    generations: int = typer.Option(
+        200, "--generations", show_default=True, help="Number of generations."
+    ),
+    output: Path = typer.Option(
+        Path("./results"), "--output", show_default=True, help="Output directory."
+    ),
+) -> None:
+    """Allocate affected people to relief centres (humanitarian model).
+
+    Convenience alias for ``assign --model humanitarian``.
+    """
+    _execute_assignment(
+        get_domain("humanitarian"),
+        people,
+        centers,
+        solver=solver,
+        seed=seed,
+        pop_size=pop_size,
+        generations=generations,
+        output=output,
+        model_label="humanitarian",
+    )
 
 
 # ---------------------------------------------------------------------------

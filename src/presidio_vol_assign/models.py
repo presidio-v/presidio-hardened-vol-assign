@@ -22,10 +22,16 @@ class SkillType(str, Enum):
 
 
 class SolverType(str, Enum):
-    """Available metaheuristic solvers."""
+    """Available metaheuristic solvers.
+
+    NRGA is the lightweight variant (front-fill with uniform random tie-break);
+    NRGA_RANKED is the canonical Non-dominated Ranked Genetic Algorithm with
+    rank-biased roulette-wheel survival (Al Jadaan et al., 2008).
+    """
 
     NSGA2 = "nsga2"
     NRGA = "nrga"
+    NRGA_RANKED = "nrga-ranked"
 
 
 # ---------------------------------------------------------------------------

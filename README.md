@@ -181,11 +181,14 @@ pva assign   [--model  ed-staffing|humanitarian]   (default: ed-staffing)
              # humanitarian model inputs:
              --people <csv>      --centers <csv>
 
-             [--solver  nsga2|nrga|both]   (default: both)
+             [--solver  nsga2|nrga|nrga-ranked|both|all]   (default: both)
              [--seed    <int>]              (reproducibility)
              [--pop-size <int>]             (default: 100)
              [--generations <int>]          (default: 200)
              [--output  <dir>]              (default: ./results)
+
+pva allocate-people  --people <csv> --centers <csv>   [solver/seed/... as above]
+             # convenience alias for `assign --model humanitarian`
 
 pva metrics  --pareto <csv>     (auto-detects 2- or 3-objective fronts)
 
@@ -195,7 +198,7 @@ pva show     --pareto <csv> [--pareto <csv> ...]   (overlay solvers)
 pva benchmark [--model humanitarian|ed-staffing]
               [--size  small|large|both]   (default: both)
               [--instances <int>]          (default: 10, per size)
-              [--solver nsga2|nrga|both]
+              [--solver nsga2|nrga|nrga-ranked|both|all]
               [--seed <int>]               (default: 42)
               [--pop-size <int>] [--generations <int>]
               [--check-repro]              (report bit-for-bit REP)
@@ -203,6 +206,16 @@ pva benchmark [--model humanitarian|ed-staffing]
 
 pva version
 ```
+
+### Solvers
+
+| `--solver` | Algorithm |
+|---|---|
+| `nsga2` | NSGA-II (crowding-distance elitism) |
+| `nrga` | Lightweight NRGA — front-fill with uniform random tie-break |
+| `nrga-ranked` | Canonical NRGA — rank-biased roulette-wheel survival (Al Jadaan et al., 2008); use this for results comparable to the NRGA literature |
+| `both` | `nsga2` + `nrga` |
+| `all` | `nsga2` + `nrga` + `nrga-ranked` |
 
 ### Benchmarking & reproducibility
 
@@ -243,6 +256,11 @@ objectives via three new Fuzzy Inference Systems. It runs through the same CLI,
 pva assign --model humanitarian \
   --people people.csv --centers centers.csv \
   --solver both --seed 42 --output results/
+
+# equivalently, via the convenience alias (and the canonical NRGA variant):
+pva allocate-people \
+  --people people.csv --centers centers.csv \
+  --solver nrga-ranked --seed 42 --output results/
 ```
 
 **`people.csv`** — one row per affected person:
