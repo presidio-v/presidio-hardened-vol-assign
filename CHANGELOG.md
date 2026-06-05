@@ -32,6 +32,9 @@ Stantchev). The ED-staffing model is unchanged and remains the default.
   (Al Jadaan et al., 2008), matching the NRGA literature; the existing `nrga`
   remains as a lightweight uniform-tie-break variant. New `--solver all` runs all
   three solvers.
+- **`pva sensitivity`**: sweeps FIS-output perturbations (default ±10 %, ±20 %)
+  and reports how NNS/MID/SM/HV shift, to gauge robustness to FIS rule-base
+  uncertainty (`Domain.perturb`; `engine.run` accepts a pre-computed cache).
 
 ### Changed
 - Pareto CSV now carries `z1..zk` objective columns (adds `z3` for the

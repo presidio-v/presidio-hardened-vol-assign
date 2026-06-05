@@ -76,6 +76,16 @@ class Domain(ABC):
         ``evaluate`` / ``to_solution``.
         """
 
+    def perturb(self, cache: Any, factor: float) -> Any:
+        """Return a copy of *cache* with FIS output scores scaled by ``1 + factor``.
+
+        Used by the sensitivity analysis to probe robustness to FIS rule-base
+        specification uncertainty. ``factor`` is a signed fraction (e.g. -0.1 for
+        -10 %); scaled scores are clipped to [0, 1]. The default returns the cache
+        unchanged; domains with FIS scores override it.
+        """
+        return cache
+
     @abstractmethod
     def init_individual(self, problem: Any, individual_cls: type) -> list:
         """Create one random feasible individual wrapped in ``individual_cls``."""

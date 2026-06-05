@@ -391,6 +391,102 @@ def show(
 
 
 # ---------------------------------------------------------------------------
+# pva sensitivity
+# ---------------------------------------------------------------------------
+
+
+@app.command()
+def sensitivity(
+    model: str = typer.Option(
+        "humanitarian", "--model", show_default=True, help="Problem model to analyse."
+    ),
+    volunteers: Path = typer.Option(None, "--volunteers", help="[ed-staffing] Volunteer CSV."),
+    eds: Path = typer.Option(None, "--eds", help="[ed-staffing] ED vacancies CSV."),
+    people: Path = typer.Option(None, "--people", help="[humanitarian] Affected-people CSV."),
+    centers: Path = typer.Option(None, "--centers", help="[humanitarian] Relief-centres CSV."),
+    factors: str = typer.Option(
+        "-0.2,-0.1,0,0.1,0.2",
+        "--factors",
+        show_default=True,
+        help="Comma-separated FIS-output perturbations (signed fractions).",
+    ),
+    solver: str = typer.Option("both", "--solver", show_default=True, help=_SOLVER_HELP),
+    seed: int = typer.Option(42, "--seed", show_default=True, help="Random seed."),
+    pop_size: int = typer.Option(100, "--pop-size", show_default=True, help="GA population size."),
+    generations: int = typer.Option(
+        200, "--generations", show_default=True, help="Number of generations."
+    ),
+    output: Path = typer.Option(
+        Path("./results"), "--output", show_default=True, help="Output directory."
+    ),
+) -> None:
+    """Sweep FIS rule-base perturbations and report how the Pareto metrics shift."""
+    from presidio_vol_assign.sensitivity import (
+        parse_factors,
+        run_sensitivity,
+        write_sensitivity_csv,
+    )
+
+    try:
+        domain = get_domain(model)
+        factor_values = parse_factors(factors)
+    except ValueError as exc:
+        err_console.print(f"[red]Error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    try:
+        out_dir = guard_output_path(output)
+    except ValueError as exc:
+        err_console.print(f"[red]Security:[/red] {exc}")
+        raise typer.Exit(code=1)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    logger, _audit = _run_security_preamble(out_dir)
+
+    provided = {"volunteers": volunteers, "eds": eds, "people": people, "centers": centers}
+    primary_name, secondary_name = domain.required_inputs
+    primary, secondary = provided[primary_name], provided[secondary_name]
+    if primary is None or secondary is None:
+        err_console.print(
+            f"[red]Input error:[/red] model {model!r} requires "
+            f"--{primary_name} and --{secondary_name}."
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        problem = domain.load(primary, secondary)
+    except (FileNotFoundError, ValueError) as exc:
+        err_console.print(f"[red]Input error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    config = RunConfig(
+        solver=solver,
+        pop_size=pop_size,
+        generations=generations,
+        seed=seed,
+        output_dir=str(out_dir),
+    )
+    try:
+        validate_run_config(config)
+    except ValueError as exc:
+        err_console.print(f"[red]Config error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    factor_str = ", ".join(f"{f:+g}" for f in factor_values)
+    console.print(
+        f"Sensitivity: [bold]{model}[/bold] | factors: {factor_str} "
+        f"| solver: {solver} | pop: {pop_size} gen: {generations}"
+    )
+
+    with console.status("[bold green]Running sensitivity sweep…[/bold green]"):
+        rows = run_sensitivity(domain, problem, config, factor_values)
+
+    _print_sensitivity_table(model, rows)
+    csv_path = write_sensitivity_csv(rows, out_dir)
+    logger.info("sensitivity completed", model=model, n_rows=len(rows))
+    console.print(f"  Sensitivity CSV → [cyan]{csv_path}[/cyan]")
+
+
+# ---------------------------------------------------------------------------
 # pva version
 # ---------------------------------------------------------------------------
 
@@ -436,6 +532,26 @@ def _print_benchmark_table(model: str, rows: list, check_repro: bool) -> None:
         if check_repro:
             cells.append("—" if r.rep is None else f"{r.rep:.2f}")
         table.add_row(*cells)
+    console.print(table)
+
+
+def _print_sensitivity_table(model: str, rows: list) -> None:
+    """Render the FIS-perturbation sensitivity sweep."""
+    table = Table(title=f"Sensitivity sweep — {model}", show_header=True, header_style="bold")
+    table.add_column("Perturb", justify="right", style="dim")
+    table.add_column("Solver", style="dim")
+    for col in ("NNS", "MID", "SM", "HV", "CPU (s)"):
+        table.add_column(col, justify="right")
+    for r in rows:
+        table.add_row(
+            f"{r.factor:+.0%}",
+            r.solver,
+            str(r.nns),
+            f"{r.mid:.4f}",
+            f"{r.sm:.4f}",
+            f"{r.hv:.4f}",
+            f"{r.cpu_time_sec:.2f}",
+        )
     console.print(table)
 
 

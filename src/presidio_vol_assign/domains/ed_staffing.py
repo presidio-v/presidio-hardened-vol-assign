@@ -217,6 +217,17 @@ class EDStaffingDomain(Domain):
     def precompute(self, problem: ProblemInstance) -> FISCache:
         return precompute_fis(problem)
 
+    def perturb(self, cache: FISCache, factor: float) -> FISCache:
+        scale = 1.0 + factor
+        out: FISCache = {}
+        for key, entry in cache.items():
+            if entry is None:
+                out[key] = None
+            else:
+                imp, pref = entry
+                out[key] = (min(max(imp * scale, 0.0), 1.0), min(max(pref * scale, 0.0), 1.0))
+        return out
+
     def init_individual(self, problem: ProblemInstance, individual_cls: type) -> list:
         n = problem.n_volunteers
         return individual_cls(_random.sample(range(n), n))

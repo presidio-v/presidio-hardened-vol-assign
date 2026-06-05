@@ -207,14 +207,24 @@ def _solvers_for(solver_val: str) -> list[SolverType]:
     return [SolverType(solver_val)]
 
 
-def run(problem: ProblemInstance, config: RunConfig, domain: Domain) -> list[ParetoFront]:
+def run(
+    problem: ProblemInstance,
+    config: RunConfig,
+    domain: Domain,
+    *,
+    cache: object | None = None,
+) -> list[ParetoFront]:
     """Run the configured solver(s) for *domain* and return one front per solver.
 
     ``config.solver`` may be ``"nsga2"``, ``"nrga"``, ``"nrga-ranked"``,
     ``"both"`` (nsga2 + nrga), or ``"all"`` (all three).
+
+    If *cache* is provided it is used directly (e.g. a perturbed cache from the
+    sensitivity analysis); otherwise it is computed via ``domain.precompute``.
     """
     _fitness_cls, individual_cls = ensure_creator_types(domain)
-    cache = domain.precompute(problem)
+    if cache is None:
+        cache = domain.precompute(problem)
 
     solver_val = config.solver if isinstance(config.solver, str) else config.solver.value
     solvers_to_run = _solvers_for(solver_val)
