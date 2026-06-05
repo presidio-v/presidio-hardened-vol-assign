@@ -1,4 +1,4 @@
-"""Fuzzy Inference Systems for the humanitarian allocation model (v0.2.0).
+"""Fuzzy Inference Systems for the humanitarian allocation model.
 
 Three Mamdani FIS with centroid defuzzification, mirroring the structure of the
 ED-staffing FIS in ``fis.py``:
@@ -21,12 +21,22 @@ ED-staffing FIS in ``fis.py``:
             output:  overcrowding (0-1) — low when under-utilised, high when
                      over capacity.
 
-.. warning::
-    The membership-function break-points and rule bases below are **structural
-    placeholders** generated from monotone severity heuristics. They must be
-    replaced with the paper's final Tables 1-2 before publication. The shapes
-    (triangular/trapezoidal, three linguistic levels, 27/27/3 rules) match the
-    intended model; only the exact numbers are provisional.
+The membership functions (Table 2 below) are triangular/trapezoidal over three
+linguistic levels; the rule bases (Table 1 below, ``FAIRNESS_RULES`` /
+``TRANSPORT_RULES`` / ``BALANCE_RULES``) are explicit Mamdani rule tables. The
+values here are a self-consistent synthetic specification for the humanitarian
+model; they can be regenerated or replaced wholesale by editing the tables
+without touching any solver code.
+
+Table 2 — Membership functions
+    0-10 variables (vulnerability, service_level, mobility, road_accessibility):
+        low    = trap[0, 0, 2, 5]      medium = tri[2, 5, 8]    high = trap[5, 8, 10, 10]
+    distance (0-100 km):
+        near   = trap[0, 0, 15, 35]    medium = tri[15, 50, 85] far  = trap[65, 85, 100, 100]
+    utilisation (0-2):
+        under  = trap[0, 0, 0.6, 0.9]  balanced = tri[0.7, 1.0, 1.3]  over = trap[1.1, 1.4, 2, 2]
+    outputs (0-1):
+        low    = trap[0, 0, 0.2, 0.45] medium = tri[0.2, 0.5, 0.8]    high = trap[0.55, 0.8, 1, 1]
 
 Public API:
     evaluate_fairness(vulnerability, service_level, distance)       -> float [0,1]
@@ -40,6 +50,67 @@ import numpy as np
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 
+# Linguistic-level labels
+_LOW, _MED, _HIGH = "low", "medium", "high"
+
+# ---------------------------------------------------------------------------
+# Table 1 — Rule bases (explicit Mamdani tables)
+#
+# Each table maps antecedent linguistic levels to the output level. They are
+# the single source of truth for the rule bases; the control systems below are
+# assembled directly from them.
+# ---------------------------------------------------------------------------
+
+# FIS-A: unfairness[vulnerability][service_level][distance]
+# Rationale: unfairness bites only when a *vulnerable* person is placed poorly
+# (low service and/or far). A low-priority person is treated fairly almost
+# regardless of placement.
+FAIRNESS_RULES: dict[str, dict[str, dict[str, str]]] = {
+    _LOW: {
+        _LOW: {"near": _LOW, "medium": _LOW, "far": _MED},
+        _MED: {"near": _LOW, "medium": _LOW, "far": _LOW},
+        _HIGH: {"near": _LOW, "medium": _LOW, "far": _LOW},
+    },
+    _MED: {
+        _LOW: {"near": _MED, "medium": _MED, "far": _HIGH},
+        _MED: {"near": _LOW, "medium": _MED, "far": _MED},
+        _HIGH: {"near": _LOW, "medium": _LOW, "far": _MED},
+    },
+    _HIGH: {
+        _LOW: {"near": _MED, "medium": _HIGH, "far": _HIGH},
+        _MED: {"near": _LOW, "medium": _MED, "far": _HIGH},
+        _HIGH: {"near": _LOW, "medium": _LOW, "far": _MED},
+    },
+}
+
+# FIS-B: transport_infeasibility[distance][mobility][road_accessibility]
+# Rationale: infeasibility grows with distance and falls with personal mobility
+# and road access; distance dominates.
+TRANSPORT_RULES: dict[str, dict[str, dict[str, str]]] = {
+    "near": {
+        _LOW: {_LOW: _MED, _MED: _LOW, _HIGH: _LOW},
+        _MED: {_LOW: _LOW, _MED: _LOW, _HIGH: _LOW},
+        _HIGH: {_LOW: _LOW, _MED: _LOW, _HIGH: _LOW},
+    },
+    "medium": {
+        _LOW: {_LOW: _HIGH, _MED: _MED, _HIGH: _MED},
+        _MED: {_LOW: _MED, _MED: _MED, _HIGH: _LOW},
+        _HIGH: {_LOW: _MED, _MED: _LOW, _HIGH: _LOW},
+    },
+    "far": {
+        _LOW: {_LOW: _HIGH, _MED: _HIGH, _HIGH: _MED},
+        _MED: {_LOW: _HIGH, _MED: _MED, _HIGH: _MED},
+        _HIGH: {_LOW: _MED, _MED: _MED, _HIGH: _LOW},
+    },
+}
+
+# FIS-C: overcrowding[utilisation]
+BALANCE_RULES: dict[str, str] = {
+    "under": _LOW,
+    "balanced": _MED,
+    "over": _HIGH,
+}
+
 # ---------------------------------------------------------------------------
 # Universe arrays
 # ---------------------------------------------------------------------------
@@ -52,7 +123,7 @@ _EPS = 1e-4
 
 
 # ---------------------------------------------------------------------------
-# Membership-function builders (PLACEHOLDER break-points — see module warning)
+# Table 2 — Membership-function builders
 # ---------------------------------------------------------------------------
 
 
@@ -85,24 +156,7 @@ def _lmh_out(var: ctrl.Consequent) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Rule-base helpers — map a monotone severity score to an output level.
-# (PLACEHOLDER logic; the paper's explicit rule tables replace this.)
-# ---------------------------------------------------------------------------
-
-_LEVELS_3 = ("low", "medium", "high")
-
-
-def _bucket(score: float, low_max: float, high_min: float) -> str:
-    """Bucket a numeric severity into low / medium / high output level."""
-    if score <= low_max:
-        return "low"
-    if score >= high_min:
-        return "high"
-    return "medium"
-
-
-# ---------------------------------------------------------------------------
-# FIS-A — Fairness in People Prioritization
+# Control-system assembly from the rule tables
 # ---------------------------------------------------------------------------
 
 
@@ -117,30 +171,16 @@ def _build_fairness_system() -> ctrl.ControlSystem:
     _nmf_distance(distance)
     _lmh_out(unfairness)
 
-    vmap = {"low": 0, "medium": 1, "high": 2}
-    dmap = {"near": 0, "medium": 1, "far": 2}
-
-    rules = []
-    for v_lvl in _LEVELS_3:
-        for s_lvl in _LEVELS_3:
-            for d_lvl in ("near", "medium", "far"):
-                # Poor allocation = low service + far distance; unfairness only
-                # bites when the person is actually a priority (high vulnerability).
-                poor = (2 - vmap[s_lvl]) + dmap[d_lvl]  # 0..4
-                severity = vmap[v_lvl] * poor  # 0..8
-                out = _bucket(severity, low_max=1, high_min=5)
-                rules.append(
-                    ctrl.Rule(
-                        vulnerability[v_lvl] & service[s_lvl] & distance[d_lvl],
-                        unfairness[out],
-                    )
-                )
+    rules = [
+        ctrl.Rule(
+            vulnerability[v_lvl] & service[s_lvl] & distance[d_lvl],
+            unfairness[out],
+        )
+        for v_lvl, s_map in FAIRNESS_RULES.items()
+        for s_lvl, d_map in s_map.items()
+        for d_lvl, out in d_map.items()
+    ]
     return ctrl.ControlSystem(rules)
-
-
-# ---------------------------------------------------------------------------
-# FIS-B — Transportation Feasibility
-# ---------------------------------------------------------------------------
 
 
 def _build_transport_system() -> ctrl.ControlSystem:
@@ -154,29 +194,16 @@ def _build_transport_system() -> ctrl.ControlSystem:
     _lmh_10(road)
     _lmh_out(infeasibility)
 
-    dmap = {"near": 0, "medium": 1, "far": 2}
-    lmap = {"low": 0, "medium": 1, "high": 2}
-
-    rules = []
-    for d_lvl in ("near", "medium", "far"):
-        for m_lvl in _LEVELS_3:
-            for r_lvl in _LEVELS_3:
-                # Infeasibility grows with distance (weighted), and with poor
-                # personal mobility and poor road access.
-                severity = dmap[d_lvl] * 2 + (2 - lmap[m_lvl]) + (2 - lmap[r_lvl])  # 0..8
-                out = _bucket(severity, low_max=1, high_min=5)
-                rules.append(
-                    ctrl.Rule(
-                        distance[d_lvl] & mobility[m_lvl] & road[r_lvl],
-                        infeasibility[out],
-                    )
-                )
+    rules = [
+        ctrl.Rule(
+            distance[d_lvl] & mobility[m_lvl] & road[r_lvl],
+            infeasibility[out],
+        )
+        for d_lvl, m_map in TRANSPORT_RULES.items()
+        for m_lvl, r_map in m_map.items()
+        for r_lvl, out in r_map.items()
+    ]
     return ctrl.ControlSystem(rules)
-
-
-# ---------------------------------------------------------------------------
-# FIS-C — Center Allocation Balance
-# ---------------------------------------------------------------------------
 
 
 def _build_balance_system() -> ctrl.ControlSystem:
@@ -187,9 +214,7 @@ def _build_balance_system() -> ctrl.ControlSystem:
     _lmh_out(overcrowding)
 
     rules = [
-        ctrl.Rule(utilisation["under"], overcrowding["low"]),
-        ctrl.Rule(utilisation["balanced"], overcrowding["medium"]),
-        ctrl.Rule(utilisation["over"], overcrowding["high"]),
+        ctrl.Rule(utilisation[u_lvl], overcrowding[out]) for u_lvl, out in BALANCE_RULES.items()
     ]
     return ctrl.ControlSystem(rules)
 

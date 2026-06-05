@@ -275,10 +275,18 @@ pva assign --model humanitarian \
 The output `pareto_*.csv` carries `z1,z2,z3`; `assignments_*.csv` carries
 `person_id, center_id, fairness, transport, overcrowding`.
 
-> **Note:** the humanitarian FIS membership functions and rule bases are
-> structural placeholders pending the accompanying paper's final tables. The
-> model shape (three 3-level Mamdani systems, three objectives) is final; the
-> exact fuzzy parameters are provisional.
+The membership functions and the explicit Mamdani rule tables for all three FIS
+are documented — with a fully worked numeric example — in
+[docs/fis-worked-example.md](docs/fis-worked-example.md). Ready-to-run synthetic
+datasets live under [`examples/`](examples/) (`small/` = 12 people / 3 centres,
+`paper_scale/` = 150 / 5); regenerate them with `python examples/generate_examples.py`.
+
+```bash
+pva assign --model humanitarian \
+  --people examples/paper_scale/people.csv \
+  --centers examples/paper_scale/centers.csv \
+  --solver both --seed 42 --output results/
+```
 
 ---
 

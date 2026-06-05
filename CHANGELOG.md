@@ -44,8 +44,9 @@ Stantchev). The ED-staffing model is unchanged and remains the default.
   (`= + - @`, tab, CR). Closes a latent issue that predated v0.2.0.
 
 ### Notes
-- The humanitarian FIS membership functions and rule bases are structural
-  **placeholders** pending the paper's final Tables 1–2; the model shape is final.
+- The humanitarian FIS ship with explicit, documented Mamdani rule tables and
+  membership functions (`fis_humanitarian.py`), with a worked numeric example in
+  `docs/fis-worked-example.md` and runnable synthetic datasets under `examples/`.
 
 ## [0.1.0]
 

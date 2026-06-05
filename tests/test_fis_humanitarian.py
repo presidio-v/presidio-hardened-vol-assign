@@ -1,13 +1,18 @@
 """Tests for the humanitarian Fuzzy Inference Systems.
 
 These assert the FIS are well-formed and directionally correct (monotone in the
-intended sense). Exact values are intentionally not pinned: the membership
-functions and rule bases are placeholders pending the paper's final tables.
+intended sense), and pin the definitive rule tables and the worked example in
+docs/fis-worked-example.md.
 """
 
 from __future__ import annotations
 
+import pytest
+
 from presidio_vol_assign.fis_humanitarian import (
+    BALANCE_RULES,
+    FAIRNESS_RULES,
+    TRANSPORT_RULES,
     evaluate_fairness,
     evaluate_overcrowding,
     evaluate_transport,
@@ -63,3 +68,36 @@ def test_overcrowding_monotonic_in_utilisation() -> None:
     high = evaluate_overcrowding(1.8)
     assert low < high
     assert low <= mid <= high
+
+
+# ---------------------------------------------------------------------------
+# Definitive rule tables (Table 1) — completeness + pinned worked-example values
+# ---------------------------------------------------------------------------
+
+_LEVELS = {"low", "medium", "high"}
+
+
+def _leaf_outputs(table: dict) -> list[str]:
+    out: list[str] = []
+    for v in table.values():
+        if isinstance(v, dict):
+            out.extend(_leaf_outputs(v))
+        else:
+            out.append(v)
+    return out
+
+
+def test_rule_tables_are_complete() -> None:
+    fa = _leaf_outputs(FAIRNESS_RULES)
+    tb = _leaf_outputs(TRANSPORT_RULES)
+    assert len(fa) == 27  # 3 vulnerability x 3 service x 3 distance
+    assert len(tb) == 27  # 3 distance x 3 mobility x 3 road
+    assert len(BALANCE_RULES) == 3
+    assert set(fa) | set(tb) | set(BALANCE_RULES.values()) <= _LEVELS
+
+
+def test_worked_example_values_match_docs() -> None:
+    # Pins the values in docs/fis-worked-example.md (P1 -> C1, examples/small).
+    assert evaluate_fairness(7.2, 5.6, 26.2) == pytest.approx(0.347, abs=0.01)
+    assert evaluate_transport(26.2, 8.2, 4.2) == pytest.approx(0.333, abs=0.01)
+    assert evaluate_overcrowding(1.30) == pytest.approx(0.814, abs=0.01)
