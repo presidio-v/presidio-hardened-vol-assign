@@ -9,11 +9,12 @@ from rich.console import Console
 from rich.table import Table
 
 from presidio_vol_assign import __version__
+from presidio_vol_assign.domains import get_domain
+from presidio_vol_assign.engine import run as run_solvers
 from presidio_vol_assign.metrics import compute_metrics
 from presidio_vol_assign.models import RunConfig
 from presidio_vol_assign.security import AuditStatus, get_logger, log_startup, run_audit
-from presidio_vol_assign.solvers import solve
-from presidio_vol_assign.validation import guard_output_path, load_problem, validate_run_config
+from presidio_vol_assign.validation import guard_output_path, validate_run_config
 from presidio_vol_assign.writers import (
     load_pareto_csv,
     write_assignments_csv,
@@ -23,7 +24,11 @@ from presidio_vol_assign.writers import (
 
 app = typer.Typer(
     name="pva",
-    help="Multi-objective volunteer assignment for post-disaster ED staffing.",
+    help=(
+        "Multi-objective post-disaster assignment. Two models: ed-staffing "
+        "(volunteer -> ED, 2 objectives) and humanitarian (people -> relief "
+        "centres, 3 objectives)."
+    ),
     add_completion=False,
 )
 console = Console()
@@ -37,8 +42,20 @@ err_console = Console(stderr=True)
 
 @app.command()
 def assign(
-    volunteers: Path = typer.Option(..., "--volunteers", help="Volunteer roster CSV."),
-    eds: Path = typer.Option(..., "--eds", help="Emergency Department vacancies CSV."),
+    model: str = typer.Option(
+        "ed-staffing",
+        "--model",
+        show_default=True,
+        help="Problem model: ed-staffing (2 objectives) or humanitarian (3 objectives).",
+    ),
+    volunteers: Path = typer.Option(
+        None, "--volunteers", help="[ed-staffing] Volunteer roster CSV."
+    ),
+    eds: Path = typer.Option(
+        None, "--eds", help="[ed-staffing] Emergency Department vacancies CSV."
+    ),
+    people: Path = typer.Option(None, "--people", help="[humanitarian] Affected-people CSV."),
+    centers: Path = typer.Option(None, "--centers", help="[humanitarian] Relief-centres CSV."),
     solver: str = typer.Option(
         "both", "--solver", show_default=True, help="Solver: nsga2, nrga, or both."
     ),
@@ -51,7 +68,14 @@ def assign(
         Path("./results"), "--output", show_default=True, help="Output directory."
     ),
 ) -> None:
-    """Run volunteer assignment optimisation and write Pareto front + metrics."""
+    """Run assignment optimisation and write Pareto front + metrics."""
+    # ---- Resolve model ----
+    try:
+        domain = get_domain(model)
+    except ValueError as exc:
+        err_console.print(f"[red]Model error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
     # ---- Security ----
     try:
         out_dir = guard_output_path(output)
@@ -67,9 +91,19 @@ def assign(
     if audit.status == AuditStatus.VULNERABLE:
         err_console.print(f"[yellow]Warning:[/yellow] dependency audit: {audit.summary()}")
 
-    # ---- Validate inputs ----
+    # ---- Select + validate inputs for this model ----
+    provided = {"volunteers": volunteers, "eds": eds, "people": people, "centers": centers}
+    primary_name, secondary_name = domain.required_inputs
+    primary, secondary = provided[primary_name], provided[secondary_name]
+    if primary is None or secondary is None:
+        err_console.print(
+            f"[red]Input error:[/red] model {model!r} requires "
+            f"--{primary_name} and --{secondary_name}."
+        )
+        raise typer.Exit(code=1)
+
     try:
-        problem = load_problem(volunteers, eds)
+        problem = domain.load(primary, secondary)
     except (FileNotFoundError, ValueError) as exc:
         err_console.print(f"[red]Input error:[/red] {exc}")
         raise typer.Exit(code=1)
@@ -88,20 +122,19 @@ def assign(
         raise typer.Exit(code=1)
 
     console.print(
-        f"Problem: [bold]{problem.n_volunteers}[/bold] volunteers, "
-        f"[bold]{problem.n_vacancies}[/bold] vacancies  "
+        f"Problem: [bold]{model}[/bold] | {_problem_size(problem)}  "
         f"| solver: [bold]{solver}[/bold]  "
         f"| pop: {pop_size}  gen: {generations}"
     )
 
     # ---- Solve ----
     with console.status("[bold green]Running solver(s)…[/bold green]"):
-        fronts = solve(problem, config)
+        fronts = run_solvers(problem, config, domain)
 
     # ---- Write outputs + print summary ----
     for front in fronts:
         pareto_path = write_pareto_csv(front, out_dir)
-        assign_path = write_assignments_csv(front, out_dir)
+        assign_path = write_assignments_csv(front, out_dir, domain)
         m = compute_metrics(front)
         metrics_path = write_metrics_json(m, out_dir)
 
@@ -157,6 +190,15 @@ def version() -> None:
 # ---------------------------------------------------------------------------
 # Shared display helper
 # ---------------------------------------------------------------------------
+
+
+def _problem_size(problem: object) -> str:
+    """Human-readable size description, model-agnostic."""
+    if hasattr(problem, "n_volunteers"):
+        return f"{problem.n_volunteers} volunteers, {problem.n_vacancies} vacancies"
+    if hasattr(problem, "n_people"):
+        return f"{problem.n_people} people, {problem.n_centers} centres"
+    return "unknown size"
 
 
 def _print_run_summary(solver_label: str, m: Metrics) -> None:  # noqa: F821

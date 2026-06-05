@@ -174,17 +174,72 @@ Dependency audit: OK (last checked: 2024-01-01 12:00 UTC, 0 vulnerabilities)
 ## CLI reference
 
 ```
-pva assign   --volunteers <csv>  --eds <csv>
+pva assign   [--model  ed-staffing|humanitarian]   (default: ed-staffing)
+
+             # ed-staffing model inputs:
+             --volunteers <csv>  --eds <csv>
+             # humanitarian model inputs:
+             --people <csv>      --centers <csv>
+
              [--solver  nsga2|nrga|both]   (default: both)
              [--seed    <int>]              (reproducibility)
              [--pop-size <int>]             (default: 100)
              [--generations <int>]          (default: 200)
              [--output  <dir>]              (default: ./results)
 
-pva metrics  --pareto <csv>
+pva metrics  --pareto <csv>     (auto-detects 2- or 3-objective fronts)
 
 pva version
 ```
+
+---
+
+## Humanitarian allocation model (v0.2.0)
+
+A second model allocates **affected people to relief centres**, optimising three
+objectives via three new Fuzzy Inference Systems. It runs through the same CLI,
+**side by side** with the ED-staffing model:
+
+```bash
+pva assign --model humanitarian \
+  --people people.csv --centers centers.csv \
+  --solver both --seed 42 --output results/
+```
+
+**`people.csv`** — one row per affected person:
+
+| Column | Description | Range |
+|--------|-------------|-------|
+| `person_id` | Unique identifier | string |
+| `vulnerability` | Priority/need (elderly, injured, children) | 0–10 |
+| `mobility` | Personal transport access (0 = immobile) | 0–10 |
+| `group_size` | People moved together (optional, default 1) | 1–20 |
+| `distance_center_<center_id>` | Distance to each centre (km) | 0–100 |
+
+**`centers.csv`** — one row per relief centre:
+
+| Column | Description | Range |
+|--------|-------------|-------|
+| `center_id` | Unique centre identifier | string |
+| `capacity` | Nominal capacity (people) | 1–5000 |
+| `service_level` | Resource/quality level | 0–10 |
+| `road_accessibility` | Route condition / access | 0–10 |
+
+**Objectives (all minimised):**
+
+| | Objective | FIS |
+|---|-----------|-----|
+| `z1` | Unfairness of people prioritisation | Fairness FIS |
+| `z2` | Transportation infeasibility | Transportation Feasibility FIS |
+| `z3` | Centre overcrowding / imbalance | Center Allocation Balance FIS |
+
+The output `pareto_*.csv` carries `z1,z2,z3`; `assignments_*.csv` carries
+`person_id, center_id, fairness, transport, overcrowding`.
+
+> **Note:** the humanitarian FIS membership functions and rule bases are
+> structural placeholders pending the accompanying paper's final tables. The
+> model shape (three 3-level Mamdani systems, three objectives) is final; the
+> exact fuzzy parameters are provisional.
 
 ---
 

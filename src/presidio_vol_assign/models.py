@@ -246,3 +246,89 @@ class ReproReport:
     rep: float
     signature: str
     identical: bool
+
+
+# ---------------------------------------------------------------------------
+# Humanitarian allocation model (v0.2.0) — affected people -> relief centres
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class Person:
+    """One affected person (or household) awaiting allocation to a relief centre.
+
+    Attributes:
+        person_id: Unique string identifier (no PII).
+        vulnerability: Priority/need score in [0, 10] (FIS-A input).
+        mobility: Personal transport-access score in [0, 10] (FIS-B input;
+            0 = immobile, 10 = fully mobile).
+        group_size: People moved together as a unit, int [1, 20]; the load this
+            person contributes to a centre (FIS-C utilisation).
+        distances: Mapping from centre id to distance in km [0, 100].
+    """
+
+    person_id: str
+    vulnerability: float
+    mobility: float
+    group_size: int
+    distances: dict[str, float]
+
+    def distance_to(self, center_id: str) -> float:
+        """Return distance in km to a specific relief centre."""
+        return self.distances[center_id]
+
+
+@dataclass
+class Center:
+    """One relief centre that affected people can be allocated to.
+
+    Attributes:
+        center_id: Unique centre identifier.
+        capacity: Nominal capacity in people, int [1, 5000] (FIS-C input).
+        service_level: Resource/quality level in [0, 10] (FIS-A input).
+        road_accessibility: Route condition / access score in [0, 10] (FIS-B input).
+    """
+
+    center_id: str
+    capacity: int
+    service_level: float
+    road_accessibility: float
+
+
+@dataclass
+class HumanitarianProblem:
+    """A complete humanitarian-allocation problem instance.
+
+    Invariant (checked in validation.py):
+        sum(centre capacities) >= sum(person group sizes)  — enough room overall.
+    """
+
+    people: list[Person]
+    centers: list[Center]
+
+    @property
+    def n_people(self) -> int:
+        return len(self.people)
+
+    @property
+    def n_centers(self) -> int:
+        return len(self.centers)
+
+
+@dataclass
+class CenterAssignment:
+    """One person-to-centre allocation within a humanitarian solution.
+
+    Attributes:
+        person_id: The allocated person.
+        center_id: The target relief centre.
+        fairness: FIS-A output for this pairing (unfairness of prioritisation).
+        transport: FIS-B output for this pairing (transportation infeasibility).
+        overcrowding: FIS-C output for the assigned centre (balance/overcrowding).
+    """
+
+    person_id: str
+    center_id: str
+    fairness: float = 0.0
+    transport: float = 0.0
+    overcrowding: float = 0.0

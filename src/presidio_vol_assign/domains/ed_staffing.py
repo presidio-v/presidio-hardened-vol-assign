@@ -23,6 +23,8 @@ Public functions (re-exported by ``solvers.py`` for backward compatibility):
 from __future__ import annotations
 
 import random as _random
+from pathlib import Path
+from typing import Any
 
 import numpy as np
 from deap import tools
@@ -186,6 +188,31 @@ class EDStaffingDomain(Domain):
     weights = (-1.0, -1.0)
     fitness_attr = "PVAFitness"
     individual_attr = "PVAIndividual"
+    required_inputs = ("volunteers", "eds")
+    assignment_fieldnames = (
+        "volunteer_id",
+        "ed_id",
+        "vacancy_type",
+        "fis1_score",
+        "fis2_score",
+        "fis3_score",
+    )
+
+    def load(self, primary: Path, secondary: Path) -> ProblemInstance:
+        # Imported here to avoid a circular import (validation -> models only).
+        from presidio_vol_assign.validation import load_problem
+
+        return load_problem(primary, secondary)
+
+    def assignment_row(self, assignment: Any) -> dict[str, Any]:
+        return {
+            "volunteer_id": assignment.volunteer_id,
+            "ed_id": assignment.ed_id,
+            "vacancy_type": assignment.vacancy_type.value,
+            "fis1_score": round(assignment.fis1_score, 6),
+            "fis2_score": round(assignment.fis2_score, 6),
+            "fis3_score": round(assignment.fis3_score, 6),
+        }
 
     def precompute(self, problem: ProblemInstance) -> FISCache:
         return precompute_fis(problem)

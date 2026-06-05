@@ -15,10 +15,12 @@ from __future__ import annotations
 
 from presidio_vol_assign.domains.base import Domain
 from presidio_vol_assign.domains.ed_staffing import EDStaffingDomain
+from presidio_vol_assign.domains.humanitarian import HumanitarianDomain
 
 # Registry mapping the CLI --model value to its domain factory.
 _DOMAINS: dict[str, type[Domain]] = {
     EDStaffingDomain.name: EDStaffingDomain,
+    HumanitarianDomain.name: HumanitarianDomain,
 }
 
 
@@ -30,4 +32,4 @@ def get_domain(name: str) -> Domain:
         raise ValueError(f"unknown model {name!r}; available: {sorted(_DOMAINS)!r}") from None
 
 
-__all__ = ["Domain", "EDStaffingDomain", "get_domain"]
+__all__ = ["Domain", "EDStaffingDomain", "HumanitarianDomain", "get_domain"]

@@ -15,6 +15,7 @@ chromosome encoding.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any
 
 from presidio_vol_assign.models import Solution
@@ -34,9 +35,34 @@ class Domain(ABC):
     fitness_attr: str = ""
     individual_attr: str = ""
 
+    # CLI input-file roles, in the order ``load`` expects them
+    # (e.g. ("volunteers", "eds") or ("people", "centers")).
+    required_inputs: tuple[str, str] = ()
+
+    # Column order for the per-assignment CSV this domain writes.
+    assignment_fieldnames: tuple[str, ...] = ()
+
     @property
     def n_objectives(self) -> int:
         return len(self.objective_names)
+
+    # ------------------------------------------------------------------
+    # I/O hooks
+    # ------------------------------------------------------------------
+
+    @abstractmethod
+    def load(self, primary: Path, secondary: Path) -> Any:
+        """Parse and validate the two input CSVs into a problem instance.
+
+        ``primary`` / ``secondary`` correspond to ``required_inputs[0]`` and
+        ``required_inputs[1]`` respectively.
+        """
+
+    @abstractmethod
+    def assignment_row(self, assignment: Any) -> dict[str, Any]:
+        """Serialise one assignment to a CSV row dict keyed by
+        ``assignment_fieldnames`` (excluding ``solution_id``, which the writer
+        prepends)."""
 
     # ------------------------------------------------------------------
     # Evolutionary hooks

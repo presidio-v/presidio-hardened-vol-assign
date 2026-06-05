@@ -1,0 +1,7 @@
+person_id,vulnerability,mobility,group_size,distance_center_C1,distance_center_C2,distance_center_C3
+P1,9.0,2.0,3,5.0,18.0,30.0
+P2,4.0,7.0,1,12.0,6.0,22.0
+P3,7.5,4.0,2,25.0,9.0,4.0
+P4,2.0,9.0,1,8.0,40.0,15.0
+P5,8.5,1.5,4,3.0,33.0,28.0
+P6,5.0,6.0,2,20.0,11.0,7.0
