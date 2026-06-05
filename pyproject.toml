@@ -24,11 +24,15 @@ dependencies = [
 pva = "presidio_vol_assign.cli:app"
 
 [project.optional-dependencies]
+viz = [
+    "matplotlib>=3.7",
+]
 dev = [
     "pytest>=9.0.3",
     "pytest-cov",
     "ruff>=0.4",
     "pip-audit",
+    "matplotlib>=3.7",
 ]
 
 [tool.hatch.build.targets.wheel]

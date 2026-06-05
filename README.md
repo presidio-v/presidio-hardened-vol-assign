@@ -189,6 +189,9 @@ pva assign   [--model  ed-staffing|humanitarian]   (default: ed-staffing)
 
 pva metrics  --pareto <csv>     (auto-detects 2- or 3-objective fronts)
 
+pva show     --pareto <csv> [--pareto <csv> ...]   (overlay solvers)
+             [--output <png|svg>] [--title <str>]
+
 pva benchmark [--model humanitarian|ed-staffing]
               [--size  small|large|both]   (default: both)
               [--instances <int>]          (default: 10, per size)
@@ -213,6 +216,19 @@ hardware as a first-class resilience criterion.
 
 ```bash
 pva benchmark --model humanitarian --instances 10 --seed 42 --check-repro
+```
+
+### Figures
+
+`pva show` renders publication-quality Pareto figures from the `pareto_*.csv`
+files. Two-objective fronts give a Z1–Z2 scatter; three-objective fronts give the
+three pairwise projections (Z1–Z2, Z1–Z3, Z2–Z3) plus a 3-D scatter, with
+solvers overlaid. Requires the `viz` extra (`pip install
+'presidio-hardened-vol-assign[viz]'`).
+
+```bash
+pva show --pareto results/pareto_nsga2_*.csv --pareto results/pareto_nrga_*.csv \
+         --output results/fronts.png --title "Humanitarian allocation"
 ```
 
 ---

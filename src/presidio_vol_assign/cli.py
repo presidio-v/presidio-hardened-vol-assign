@@ -252,6 +252,54 @@ def benchmark(
 
 
 # ---------------------------------------------------------------------------
+# pva show
+# ---------------------------------------------------------------------------
+
+
+@app.command()
+def show(
+    pareto: list[Path] = typer.Option(
+        ..., "--pareto", help="Pareto CSV(s) to plot; repeat to overlay solvers."
+    ),
+    output: Path = typer.Option(
+        Path("./results/pareto.png"),
+        "--output",
+        show_default=True,
+        help="Image path (.png or .svg by extension).",
+    ),
+    title: str = typer.Option(None, "--title", help="Optional figure title."),
+) -> None:
+    """Render publication-quality Pareto-front figures from one or more CSVs.
+
+    Two-objective fronts produce a Z1-Z2 scatter; three-objective fronts produce
+    the three pairwise projections plus a 3-D scatter, with solvers overlaid.
+    """
+    try:
+        out_path = guard_output_path(output)
+    except ValueError as exc:
+        err_console.print(f"[red]Security:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    try:
+        from presidio_vol_assign.viz import plot_fronts
+    except ImportError:
+        err_console.print(
+            "[red]Error:[/red] plotting requires matplotlib. "
+            "Install it with: pip install 'presidio-hardened-vol-assign[viz]'"
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        fronts = [load_pareto_csv(p) for p in pareto]
+        saved = plot_fronts(fronts, out_path, title=title)
+    except (FileNotFoundError, ValueError) as exc:
+        err_console.print(f"[red]Error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    console.print(f"  Figure → [cyan]{saved}[/cyan]")
+
+
+# ---------------------------------------------------------------------------
 # pva version
 # ---------------------------------------------------------------------------
 
