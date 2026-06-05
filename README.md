@@ -219,9 +219,9 @@ See [PRESIDIO-REQ.md](PRESIDIO-REQ.md) for full version deliberations.
 
 | Version | Status | Description |
 |---------|--------|-------------|
-| v0.1.0 | In progress | MVP: FIS + NSGA-II + NRGA, CSV I/O, Pareto metrics |
-| v0.2.0 | Planned | Sensitivity analysis + interactive Pareto explorer |
-| v0.3.0 | Planned | Benchmark reproducibility + real-world data connectors |
+| v0.1.0 | Released | MVP: FIS + NSGA-II + NRGA, CSV I/O, Pareto metrics (ED-staffing model) |
+| v0.2.0 | In progress | Humanitarian allocation model (3 new FIS, 3 objectives) **side by side** with the ED model; N-D metrics + reproducibility metric; `benchmark` + figure export. See [docs/v0.2.0-plan.md](docs/v0.2.0-plan.md) |
+| v0.3.0 | Planned | Sensitivity analysis + interactive Pareto explorer + real-world data connectors |
 
 ---
 
