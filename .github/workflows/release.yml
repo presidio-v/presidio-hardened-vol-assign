@@ -1,0 +1,46 @@
+name: Release
+
+# Publishing is gated on a *published* GitHub Release (not merely a tag push), so
+# the maintainer controls release timing. The job builds the sdist + wheel and
+# uploads to PyPI via Trusted Publishing (OIDC) — no API token is stored in the
+# repository. Enable the trusted publisher for this project on PyPI once:
+# https://docs.pypi.org/trusted-publishers/
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write # required for PyPI Trusted Publishing
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Verify tag matches package version
+        run: |
+          PKG_VERSION="$(uv run python -c 'import tomllib,pathlib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text())["project"]["version"])')"
+          TAG="${GITHUB_REF_NAME#v}"
+          echo "package=$PKG_VERSION tag=$TAG"
+          test "$PKG_VERSION" = "$TAG"
+
+      - name: Run fast test lane
+        run: |
+          uv sync --extra dev
+          uv run pytest -q -m "not slow"
+
+      - name: Build sdist + wheel
+        run: uv build
+
+      - name: Publish to PyPI (Trusted Publishing)
+        uses: pypa/gh-action-pypi-publish@release/v1
