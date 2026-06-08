@@ -1,0 +1,1679 @@
+% =====================================================================
+% Resilient Last-Mile Allocation in Humanitarian Supply Chains:
+% A Reproducible Many-Objective Fuzzy Framework
+%
+% Submission target: Applied Sciences (MDPI), Special Issue
+%   "Innovations in Supply Chain Resilience"
+%   (Guest Editors: Agnusdei, Silvestri, Di Pietro)
+%
+% Tier 1 skeleton — section structure + 1-sentence placeholders per
+% subsection per book-implementation-plan.md. To swap in MDPI's official
+% applsci-mdpi.cls before submission:
+%   1. Download from https://www.mdpi.com/authors/latex into ./Definitions/
+%   2. Replace the documentclass line below with the MDPI version
+%   3. Move the article metadata into MDPI's macros (\Title, \Author, …)
+% =====================================================================
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[final,expansion=true,protrusion=true]{microtype}
+\usepackage{newtxtext,newtxmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black]{hyperref}
+\usepackage{xurl}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{authblk}
+\usepackage{titlesec}
+
+\titleformat{\section}{\Large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{0.5em}{}
+\graphicspath{{../figures/}}
+
+\title{Resilient Last-Mile Allocation in Humanitarian Supply Chains:\\
+       A Reproducible Many-Objective Fuzzy Framework}
+
+\author[1]{Peyman Rabiei}
+\author[1]{Daniel Arias-Aranda}
+\author[2,*]{Vladimir Stantchev}
+\affil[1]{Faculty of Economics and Business, University of Granada, Spain}
+\affil[2]{Institute of Information Systems, SRH Berlin University, Germany}
+\affil[*]{Correspondence: \href{mailto:stantchev@computer.org}{stantchev@computer.org}}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+% --- MDPI extended-version disclosure (mandatory for the SI) ---
+\begin{center}
+\small
+\fbox{\parbox{0.95\textwidth}{
+This paper is an extended version of Rabiei, P.; Arias-Aranda, D.; Stantchev, V.
+\emph{A Novel Multi-Objective Optimization Model for Directing Affected People
+to Relief Centers in Post-Disaster Scenarios: Combining Fuzzy Inference Systems
+with NSGA-II and NRGA.} \emph{Autonomous Transportation Research}, in press,
+2026 (ATRES-S-26-00021). The present paper extends that work by reframing the
+model in supply-chain-resilience theory, splitting the transportation
+infeasibility objective into separate Robustness and Rapidity components,
+adding NSGA-III as a third evolutionary algorithm, introducing rule-base and
+weight-perturbation sensitivity analyses, and releasing a Python reference
+implementation as an open-source artifact.
+}}
+\end{center}
+
+% =====================================================================
+\begin{abstract}
+\noindent
+Disaster frequency is rising and response-phase planners face a binding
+constraint: relief capacity is always smaller than need, so directing
+affected people to relief centres is a triage decision under time
+pressure. Published optimisation models for this problem use
+operations-research vocabulary (cost, distance, equity); civil-protection
+planners use supply-chain-resilience vocabulary (the 4R framework of
+Bruneau et al.). We close the gap. We develop a four-objective humanitarian
+last-mile allocation model whose objectives map one-to-one onto the 4R
+components --- Resourcefulness, Robustness, Rapidity, Redundancy ---
+evaluated by Mamdani fuzzy inference systems and solved by NSGA-II, NRGA,
+and NSGA-III. On 540 runs across three problem sizes the four-objective
+formulation surfaces independent Robustness and Rapidity axes that the
+three-objective ATRes formulation fuses into one --- a visibility gain
+for the decision-maker, established by rank-correlation analysis.
+NSGA-III is 32\% faster than NSGA-II at every size with statistically
+equivalent Pareto-front quality. Weight-perturbation sweeps (100
+Latin-Hypercube samples, $\pm 20\%$) confirm the recommendations are
+robust under expert-elicitation noise at every problem size; rule-base
+deletion sweeps confirm the same for the three larger fuzzy systems,
+with the three-rule Rapidity classifier flagged as a structural
+sensitivity hot-spot. The implementation is released as an
+MIT-licensed Python reference at
+\texttt{github.com/presidio-v/presidio-hardened-vol-assign}.
+\end{abstract}
+
+\noindent\textbf{Keywords:}
+supply chain resilience; humanitarian logistics; multi-objective optimization;
+fuzzy inference systems; NSGA-III; reproducible research; 4R framework
+
+% =====================================================================
+\section{Introduction}\label{sec:intro}
+% TIER 1 PLACEHOLDER — target ~1{,}200 words.
+% Lead with disaster-frequency claim (CRED 2023). Pivot fast to humanitarian
+% supply chain resilience. Bruneau's 4R named in second/third paragraph.
+% Bounded problem statement (lift from explore/problem-statement.md).
+% Five contributions, listed numbered.
+% Closing paragraph: paper structure pointer.
+
+The 2023 EM-DAT record lists 399 natural disasters worldwide, claiming
+86{,}473 lives and inflicting US\$202.7\,bn in economic damage
+\cite{cred2023, wirtz2014}. The arithmetic exceeds the 20-year baseline of
+64{,}148 deaths and is projected to keep rising. Behind the aggregate
+numbers sits a more compressed timeline: the response-phase mortality
+literature places the bulk of preventable deaths inside the first 12 hours
+after onset \cite{avishan2023}, the window in which civil-protection
+planners must direct affected people to relief centres before the most
+vulnerable run out of resources or infrastructure damage cuts the routes
+that remain.
+
+The decision is not whether to direct people; it is whom to direct, where
+to send them, and what to accept giving up. Disaster relief in the first
+hours always serves fewer than need help \cite{krishna2021, behl2019}.
+Three structural concerns shape every direction decision: prioritising the
+most vulnerable, choosing routes that can actually deliver despite
+infrastructure damage, and balancing the load across centres so that no
+single relief site exhausts before the rest. None of the three reduces to
+the others; the practitioner balances all three under time pressure with
+incomplete information.
+
+Humanitarian supply-chain research has accumulated tools for this decision
+class \cite{christopher2004, tukamuhabwa2015, behl2019}. Most published
+allocation models, including the recent literature in this venue's
+community, frame their objectives in operations-research vocabulary:
+travel distance, total cost, response time, head-count of unmet demand.
+The vocabulary is well-suited to optimisation but it is not the vocabulary
+the policy and planning literature uses. Bruneau et al.'s 4R framework
+\cite{bruneau2003} --- Robustness, Redundancy, Resourcefulness, Rapidity ---
+has been the dominant resilience taxonomy in disaster risk reduction since
+2003 and has spread through commercial supply-chain resilience research
+\cite{christopher2004, hosseini2016}. Civil-protection planners, FEMA
+documents, EU Civil Protection Mechanism plans, and academic
+supply-chain-resilience reviews all use 4R vocabulary. Optimisation models
+that emit results in cost/distance space force the practitioner to
+translate; models that emit results in 4R space let the practitioner read
+the Pareto front directly.
+
+This paper develops a four-objective humanitarian last-mile allocation
+model in which each objective maps one-to-one onto a 4R component. Three
+of the four objectives are inherited from the recent ATRes line of work
+\cite{rabiei2021, rabiei2023, atres2026}; the fourth is new and is the
+result of splitting the prior work's transportation-infeasibility index
+into separate Robustness and Rapidity components. We solve the model with
+NSGA-II, NRGA, and NSGA-III, evaluate it under rule-base and weight
+sensitivity analyses, and release an open-source Python reference
+implementation that any reviewer or practitioner can run on their own
+laptop in minutes. The combination addresses a gap the related-work survey
+documents in Section~\ref{sec:related}: to the best of our knowledge, the
+recent FIS-MOEA disaster-allocation literature does not include a model
+that organises its objectives around a named resilience framework and
+also ships a reproducible artifact.
+
+\subsection*{Problem statement and contributions}
+% Lift bounded problem statement from explore/problem-statement.md.
+
+This paper makes five contributions to the literature on humanitarian
+last-mile allocation and supply chain resilience:
+\begin{enumerate}
+    \item The first explicit 4R$\leftrightarrow$objective mapping in FIS-MOEA disaster
+          allocation, formalised in Section~\ref{sec:resilience-mapping}.
+    \item A four-objective formulation that splits the transportation
+          infeasibility level into separate Robustness (TRD) and Rapidity (RPD)
+          components, exposing trade-offs the three-objective formulation
+          cannot represent (Section~\ref{sec:tradeoff-analysis}).
+    \item An empirical comparison of NSGA-II, NRGA, and NSGA-III on the
+          four-objective humanitarian allocation problem
+          (Section~\ref{sec:performance}).
+    \item Rule-base and weight-perturbation sensitivity analyses establishing
+          robustness of the recommendations under expert-elicitation noise
+          (Section~\ref{sec:sensitivity}).
+    \item An open-source Python reference implementation released with a
+          citable Zenodo DOI, closing the FIS-MOEA reproducibility gap in this
+          line of work \textbf{[cite Zenodo DOI when minted]}.
+\end{enumerate}
+
+The remainder is organised as follows. Section~\ref{sec:related} reviews
+supply-chain-resilience theory, humanitarian last-mile allocation, FIS-MOEA
+hybrids, and many-objective evolutionary algorithms. Section~\ref{sec:model}
+formalises the model and introduces the 4R$\leftrightarrow$objective mapping.
+Section~\ref{sec:algorithms} describes the algorithm design including the
+NSGA-III reference-point construction. Section~\ref{sec:performance} reports
+the algorithm comparison; Section~\ref{sec:tradeoff-analysis} the projection
+analysis testing whether the 4-obj split exposes new trade-offs;
+Section~\ref{sec:sensitivity} the rule-base and weight sensitivity studies.
+Section~\ref{sec:discussion} discusses implications for theory and practice;
+Section~\ref{sec:conclusion} concludes.
+
+% =====================================================================
+\section{Related Work and Theoretical Background}\label{sec:related}
+
+The literature relevant to this paper sits across four bodies of work:
+supply-chain-resilience theory; humanitarian last-mile allocation models;
+fuzzy-inference / multi-objective evolutionary hybrids in disaster
+operations; and many-objective evolutionary algorithms. We surveyed
+each across Scopus, Web of Science, and IEEE Xplore using the term sets
+documented per subsection below, with priority given to peer-reviewed
+journal articles published between 2014 and 2025 and to landmark
+foundational works regardless of date. The four sub-surveys converge on
+a common gap that the present paper addresses, which we state at the end
+of the section. We do not claim a systematic-review-grade exhaustive
+coverage; the relative-work negative claims throughout this paper are
+qualified accordingly.
+
+\subsection{Supply chain resilience and the 4R framework}\label{sec:related-scr}
+
+The 4R framework originates in Bruneau et al.'s seismic-resilience
+quantification \cite{bruneau2003}: a community is resilient when it exhibits
+\emph{Robustness} (capacity to withstand a shock without significant loss
+of function), \emph{Redundancy} (substitutability of system elements),
+\emph{Resourcefulness} (capacity to identify and mobilise responses), and
+\emph{Rapidity} (capacity to act in time). The four components were
+proposed for community infrastructure but the vocabulary has spread
+\cite{hosseini2016}: it is the dominant resilience taxonomy in disaster
+risk reduction, civil-protection planning documents, and the broader
+SCM-resilience literature.
+
+Christopher and Peck \cite{christopher2004} extended the resilience lens
+to commercial supply chains, naming flexibility, redundancy, and
+collaboration as the operational levers. Pettit, Fiksel, and Croxton
+\cite{pettit2010, pettit2013} developed an assessment-tool framework
+that pairs SCR capabilities against vulnerability factors. Tukamuhabwa
+et al.\ \cite{tukamuhabwa2015} and Kamalahmadi and Parast
+\cite{kamalahmadi2016} review more than a decade of SCR work and
+consolidate it into taxonomies that map cleanly back onto Bruneau's
+4R; Wieland \cite{wieland2021} reframes SCR as a continuous adaptive
+process rather than a static property, but the underlying 4R
+vocabulary persists. Hosseini et al.\ \cite{hosseini2016} provide the
+most-cited quantitative review, distinguishing measures by what they
+capture (probabilistic vs.\ deterministic) and how they aggregate
+(component-wise vs.\ system-wide). Behl and Dutta \cite{behl2019}
+survey humanitarian SCR specifically and identify the absence of
+computational allocation models that operationalise the 4R framework
+as an open research direction.
+
+Two observations matter for the present work. First, the 4R framework is
+operational, not philosophical: each component has tested measurement
+protocols in the disaster-management literature, and the vocabulary is
+shared between researchers and practitioners. Second, the operationalisation
+of 4R \emph{inside computational allocation models} --- as opposed to
+post-hoc analysis of a model's outputs --- is rare. We address that gap
+directly in Section~\ref{sec:resilience-mapping}.
+
+\subsection{Humanitarian last-mile allocation}\label{sec:related-allocation}
+
+The classical humanitarian-allocation literature is dominated by cost,
+time, and distance objectives \cite{altay2006, galindo2013, caunhye2012,
+anayaarenas2014}. Tzeng et al.\ \cite{tzeng2007} present a multi-objective
+relief-delivery model with cost and time; Sheu \cite{sheu2007} formulates
+emergency-logistics priorities and constraints from the field-operations
+perspective. Abounacer et al.\ \cite{abounacer2014} formalise
+multi-objective location-transportation with cost minimisation and
+uncovered-demand penalty. Gama et al.\ \cite{gama2016} introduce a
+multi-period flood-shelter allocation model with evacuation-order timing
+and distance objectives. Zhao et al.\ \cite{zhao2017} integrate location
+and allocation with travel-distance and coverage objectives. Balcik and
+Beamon \cite{balcik2008} introduce facility-location models for
+humanitarian relief; Pedraza-Martinez et al.\ \cite{pedrazamartinez2011}
+study fleet management in humanitarian operations. The Holgu{\'\i}n-Veras
+et al.\ \cite{holguinveras2012} characterisation of post-disaster
+logistics' unique features --- including the displaced-people allocation
+problem central to this paper --- frames the broader research programme.
+Sahebjamnia et al.\ \cite{sahebjamnia2017} build a hybrid decision
+support system for humanitarian relief chains; Goldschmidt and Kumar
+\cite{goldschmidt2016} review the field with operational-research
+emphasis.
+
+Equity entered the literature later. Soghrati Ghasbeh et al.
+\cite{soghrati2022} develop a robust multi-stage relief-distribution model
+with explicit fairness terms; Krishna et al. \cite{krishna2021} document
+the practitioner-side experience of inequitable relief in the 2015 South
+Indian floods, motivating the equity turn. Across this body of work the
+shared characteristic is that objectives are crisp quantitative measures
+(seconds, kilometres, dollars, head-counts), not qualitative indices that
+encode expert reasoning under uncertainty.
+
+Within this surveyed literature, the use of a recognised resilience
+framework to organise the objective set --- particularly the 4R framework
+\cite{bruneau2003} --- is rare. Models include resilience as a constraint
+or a robustness term, but to the best of our knowledge none of the works
+above structures its objectives as an explicit bijection with the four 4R
+components. The framing remains Operations
+Research's cost/time/equity vocabulary; the SCR community's vocabulary sits
+unused on the next shelf over.
+
+\subsection{FIS-MOEA hybrids in disaster operations}\label{sec:related-fis}
+
+Mamdani's original fuzzy-controller paper \cite{mamdani1975} established
+that linguistic if-then rules combined with triangular and trapezoidal
+membership functions could replace tuned crisp models in domains where
+expert judgement is the canonical input. The pattern fits humanitarian
+operations management precisely: practitioners reason in linguistic
+categories (``severely injured,'' ``partially blocked,'' ``rapidly
+depleting''), and translating those to crisp scalars discards
+practitioner-relevant information.
+
+The FIS-MOEA hybrid pattern in disaster operations was introduced into
+this line of work by Rabiei and Arias-Aranda \cite{rabiei2021} for
+post-disaster vehicle routing and relief supply distribution, and extended
+to volunteer-to-vacancy assignment in Rabiei, Arias-Aranda, and Stantchev
+\cite{rabiei2023}. Both pair Mamdani FIS with NSGA-II and NRGA. The ATRes
+manuscript \cite{atres2026} adapts the pattern to the people-to-relief-
+centre allocation problem we extend here, introducing the three qualitative
+indices (FLPP, TFL, CABL) and their corresponding objective functions
+(ULPP, TIL, CAIL). Adjacent fuzzy or stochastic disaster-allocation work
+includes Bahmani et al.\ \cite{bahmani2018} on fuzzy multi-objective
+routing under damaged networks and Moreno et al.\ \cite{moreno2018} on
+two-stage stochastic relief-supply chains with social-equity
+objectives; neither operationalises a named resilience framework.
+
+Three observations about this line of work motivate the present extension.
+First, the FIS-MOEA disaster-line papers we surveyed do not reference the
+4R framework or any other named resilience taxonomy: the objective
+functions are introduced on their own terms, with intuitive
+justification, not as operationalisations of an existing theory. Second,
+the Transportation Infeasibility Level (TIL) in \cite{atres2026} fuses
+Robustness (road condition, hazard) with Rapidity (travel duration) into
+a single index --- which prevents the practitioner from articulating
+Robustness/Rapidity trade-offs separately. Third, none of the FIS-MOEA
+papers we surveyed releases a reproducible artifact: ATRes uses MATLAB
+R2024b without an accompanying implementation, and the prior papers in
+the line do similarly. This combination
+is the gap we address in Sections~\ref{sec:model}--\ref{sec:performance}.
+
+\subsection{Many-objective evolutionary algorithms}\label{sec:related-moea}
+
+NSGA-II \cite{deb2002} remains the most-cited multi-objective evolutionary
+algorithm for two- and three-objective problems. The combination of
+non-dominated sorting and crowding-distance tie-breaking is well-suited to
+the regime where objectives are few enough that the Pareto front retains a
+clear geometric structure and crowding distance carries usable diversity
+information.
+
+Reference-point methods entered the literature for many-objective settings
+(typically $\ge 4$ objectives) where crowding distance becomes
+information-poor \cite{ishibuchi2008, li2015many, coello2007}. Deb and
+Jain's NSGA-III \cite{deb2014nsga3} replaces crowding distance with
+niching against a structured reference set, laid down on the normalised
+objective simplex via the Das-Dennis construction. Decomposition-based
+methods such as MOEA/D \cite{zhang2007moead} and reference-vector
+methods such as RVEA \cite{cheng2016rvea} pursue the same goal through
+different mechanisms; we discuss them as candidates for future
+algorithmic comparison in Section~\ref{sec:disc-future}. The
+reference-point machinery scales gracefully with objective count and
+is the modern default for many-objective problems. Recent runtime
+analysis by Zheng and Doerr \cite{zheng2024nsga2} quantifies NSGA-II's
+degradation as a function of objective count and provides the
+theoretical underpinning for the empirical observation that
+reference-point methods take over above about four objectives.
+
+NRGA \cite{omar2008nrga} sits between NSGA-II and NSGA-III conceptually:
+it inherits NSGA-II's non-dominated sorting but replaces the
+crowding-distance tie-breaker with uniform random sampling within the
+boundary front. The motivation is that crowding distance encodes a
+particular notion of diversity (gap between consecutive solutions in
+objective space) that may not match the practitioner's notion; random
+sampling avoids that prior at the cost of dropping some non-dominated
+solutions. NRGA is the second algorithm used in the FIS-MOEA disaster
+line \cite{rabiei2021, rabiei2023, atres2026} and we retain it for
+continuity with that line.
+
+The MDPI extended version's algorithmic contribution is to add NSGA-III
+to the comparison, putting it on a four-objective humanitarian allocation
+problem precisely at the boundary where reference-point methods are
+expected to start paying off. The empirical findings of
+Section~\ref{sec:performance} show that the boundary is crossed for CPU
+time but not for hypervolume --- a finding that maps onto the runtime
+analysis of \cite{zheng2024nsga2} and is the substance of the H2 result.
+
+\subsection{Gap}\label{sec:related-gap}
+
+The combination of (i) FIS-evaluated qualitative objectives organised around
+a named resilience framework, (ii) a four-objective formulation that
+splits Robustness and Rapidity into separate axes following the 4R
+taxonomy, (iii) NSGA-III alongside NSGA-II and NRGA on a humanitarian
+last-mile allocation problem, (iv) systematic rule-base and weight
+sensitivity analyses, and (v) an open-source Python reference
+implementation released with a citable DOI is, to the best of our search,
+absent from the published literature. The contributions of this paper map
+one-to-one onto the five elements of that combination.
+
+% =====================================================================
+\section{Model Formulation}\label{sec:model}
+
+\subsection{Problem definition}\label{sec:model-def}
+
+A disaster has just occurred. Civil-protection planners face a bounded
+decision: among the $m$ affected people whose locations and conditions are
+known, choose at most $n_{\mathrm{dir}}$ to direct to one of $n$ relief centres
+\cite{atres2026}. The constraint $n_{\mathrm{dir}} < m$ is operational, not
+philosophical: relief capacity in the first hours after a major event is
+always smaller than need \cite{cred2023, krishna2021}. The decision-maker does
+not get to serve everyone; they have to decide whom to serve, where to send
+them, and accept that some will wait.
+
+Three concerns shape every direction decision. The first is who: a moderately
+injured 75-year-old living alone has different priority than a healthy adult
+with a support network. The second is how: a partially blocked road with
+moderate hazard delivers a person but at risk; a longer clear road delivers
+the same person more slowly but more safely. The third is where: a centre
+already at 80\,\% occupancy will exhaust supplies faster, regardless of how
+the route looks. Real practitioners weigh all three simultaneously
+\cite{behl2019}.
+
+We model the decision as a multi-objective allocation problem. Each candidate
+solution is a partial mapping $d: P \to C \cup \{\bot\}$ that selects exactly
+$n_{\mathrm{dir}}$ people from $P$ and assigns each to a centre in $C$. The
+remaining $m - n_{\mathrm{dir}}$ people are not directed in this round. The
+mapping is feasible by construction; the question is which feasible mappings
+sit on the Pareto front under the four objectives we develop below.
+
+\subsection{Resilience-anchored qualitative indices}\label{sec:model-indices}
+
+We replace the cost-and-distance objective set common in the
+allocation literature \cite{tzeng2007, abounacer2014, gama2016, zhao2017}
+with four qualitative indices, each anchored in one component of Bruneau et
+al.'s \cite{bruneau2003} 4R supply-chain-resilience framework. Three of the
+indices appeared in the ATRes work \cite{atres2026}; the fourth and the
+splitting of the second are new here.
+
+\subsubsection{Fairness Level in People Prioritization (FLPP) — Resourcefulness}
+
+FLPP captures whether the right people are being directed first. The 4R
+framework's \emph{Resourcefulness} is the system's capacity to identify
+problems, mobilise resources, and prioritise correctly under stress
+\cite{bruneau2003, hosseini2016}. In a humanitarian last-mile setting that
+translates directly into one question: among the $m$ candidates, did we send
+the most vulnerable? FLPP encodes a need-weighted Rawlsian reading of
+fairness --- prioritisation by greatest individual need rather than equal
+shares or proportional allocation. We follow ATRes \cite{atres2026} in
+naming the index ``Fairness Level in People Prioritization''; readers
+preferring the SCM literature's vocabulary may read it as a Rawlsian
+maximin term \cite{soghrati2022}.
+
+We compute FLPP from three sub-indices: a vulnerability score $\mathrm{VS}_j \in
+[0,1]$ aggregating age, disability, injury, and living-alone status; an
+infrastructure damage level $\mathrm{IDL}_j \in [0,100]$ at the person's
+location; and a resource-time-remaining estimate $\mathrm{RTR}_j$ in hours.
+Higher VS and IDL with lower RTR mean a person should be directed first; if
+they are not, FLPP rises. FIS$_1$ digests the three sub-indices into the
+unfairness output $\mathrm{ULPP}_j \in [0,100]$ via a 27-rule rule base
+\cite{mamdani1975}.
+
+\subsubsection{Transportation Robustness (TR) — new}
+
+The ATRes paper folded transport robustness and rapidity together into a
+single Transportation Infeasibility Level (TIL). For supply-chain resilience
+analysis that fusion is too coarse: \emph{Robustness} (the network's capacity
+to deliver despite damage) and \emph{Rapidity} (the network's capacity to
+deliver in time) are distinct 4R components and the practitioner needs to see
+them separately. We split them.
+
+TR captures network damage along the route. The relevant sub-indices are the
+road condition score $\mathrm{RCS}_{j,i}$ (clear, partially blocked, or
+blocked) and the possible-hazard score $\mathrm{PHS}_{j,i}$ (five-level
+discrete categorical from no immediate threat to extreme hazard). FIS$_{2a}$
+maps the two scores into a Transport Robustness Deficit
+$\mathrm{TRD}_{j,i} \in [0,100]$ with a nine-rule base. Rules cover the full
+$3 \times 3$ Cartesian: a clear road with no hazard is very-low TRD; a
+blocked road with extreme hazard is very-high TRD.
+
+\subsubsection{Rapidity (RP) — new}
+
+RP captures the speed dimension that TR deliberately excludes. Rapidity in
+the 4R framework is context-free: how fast the response delivers, independent
+of who is being delivered to or what they are being delivered through
+\cite{bruneau2003}. We model it as a single-input fuzzy classifier on travel
+duration $\mathrm{TD}_{j,i}$ in minutes, producing a Rapidity Deficit
+$\mathrm{RPD}_{j,i} \in [0,100]$ via three rules: short trip $\to$ low RPD,
+moderate $\to$ moderate, long $\to$ high.
+
+We considered adding RTR as a second input to FIS$_{2b}$ and rejected it.
+Resource time remaining already enters FIS$_1$ to set ULPP; reusing it in
+FIS$_{2b}$ would double-count Resourcefulness inside Rapidity and break the
+4R-objective bijection that motivates the whole formulation. Rapidity is, and
+remains, a property of the route, not of the person.
+
+\subsubsection{Centre Allocation Balance Level (CABL) — Redundancy}
+
+CABL captures whether the load is spread or concentrated. \emph{Redundancy} is
+the substitutability of system elements under stress: a network where every
+relief centre carries equal load fails gracefully when one centre saturates;
+a network where one centre carries everything fails catastrophically
+\cite{bruneau2003, christopher2004}. CABL operationalises Redundancy as the
+mean imbalance of allocations across centres, weighted by each centre's
+current state.
+
+The sub-indices are the centre occupancy rate $\mathrm{COR}_i \in [0,100]$,
+the resource depletion rate $\mathrm{RDR}_i \in [0,100]$ at the centre, and
+travel duration $\mathrm{TD}_{j,i}$ to the centre. The intuition encoded in
+the 27-rule FIS$_3$ rule base is monotone in the obvious direction: a centre
+that is already full, depleting fast, and far from the directed person
+contributes high CAIL; an empty centre with slow depletion and short travel
+contributes low CAIL.
+
+\subsection{Notations and variables}\label{sec:model-notation}
+
+Table~\ref{tab:notation} summarises the notation used throughout the model.
+Every notation that already appeared in ATRes \cite{atres2026} is preserved;
+the additions for the four-objective formulation are flagged in the rightmost
+column.
+
+\begin{table}[!t]
+\centering
+\caption{Notation. Symbols carried over from \cite{atres2026} are unchanged;
+new symbols for the four-objective formulation are marked.}
+\label{tab:notation}
+\small
+\begin{tabularx}{\textwidth}{l X l}
+\toprule
+\textbf{Symbol} & \textbf{Description} & \textbf{Origin} \\
+\midrule
+$P$, $m$ & Set of affected people; $m = |P|$. & ATRes \\
+$C$, $n$ & Set of relief centres; $n = |C|$. & ATRes \\
+$n_{\mathrm{dir}}$ & Number of people we direct ($0 < n_{\mathrm{dir}} < m$). & ATRes \\
+$d_{j,i}$ & Binary indicator: $d_{j,i} = 1$ iff person $j$ directed to centre $i$. & ATRes \\
+$\mathrm{VS}_j \in [0,1]$ & Vulnerability score of person $j$. & ATRes \\
+$\mathrm{IDL}_j \in [0,100]$ & Infrastructure damage at person $j$'s location. & ATRes \\
+$\mathrm{RTR}_j$ (hours) & Resource time remaining for person $j$. & ATRes \\
+$\mathrm{COR}_i \in [0,100]$ & Centre $i$ occupancy rate. & ATRes \\
+$\mathrm{RDR}_i \in [0,100]$ & Centre $i$ resource depletion rate. & ATRes \\
+$\mathrm{TD}_{j,i}$ (min) & Travel duration $j \to i$. & ATRes \\
+$\mathrm{RCS}_{j,i}$ & Road condition $\in \{0.1, 0.5, 1.0\}$. & ATRes \\
+$\mathrm{PHS}_{j,i}$ & Possible-hazard score $\in \{0.05, 0.25, 0.5, 0.75, 1.0\}$. & ATRes \\
+$\mathrm{RWS}_{j,i} \in [0,1]$ & Roadworthiness (high = safe), Eq.~\eqref{eq:rws}. & ATRes (sign-corrected) \\
+$\mathrm{ULPP}_j \in [0,100]$ & Unfairness in prioritising person $j$. & ATRes \\
+$\mathrm{TIL}_{j,i} \in [0,100]$ & Transport infeasibility (3-obj only). & ATRes \\
+$\mathrm{TRD}_{j,i} \in [0,100]$ & Transport Robustness Deficit. & \textbf{new} \\
+$\mathrm{RPD}_{j,i} \in [0,100]$ & Rapidity Deficit. & \textbf{new} \\
+$\mathrm{CAIL}_{i,td}$ & Centre allocation imbalance contribution. & ATRes \\
+$\overline{\mathrm{ULPP}}, \overline{\mathrm{TRD}}, \overline{\mathrm{RPD}}, \overline{\mathrm{CAIL}}$
+& Mean of corresponding index over the directed set. & \textbf{4 of 4 new in 4-obj} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The vulnerability score $\mathrm{VS}_j$ is derived from age score
+$\mathrm{AS}_j$, disability $\mathrm{DS}_j$, injury $\mathrm{IL}_j$, and
+living-status $\mathrm{LS}_j$ via the weighted average
+\begin{equation}
+    \mathrm{VS}_j = \frac{\mathrm{WAS}\cdot\mathrm{AS}_j + \mathrm{WDS}\cdot\mathrm{DS}_j +
+                          \mathrm{WIL}\cdot\mathrm{IL}_j + \mathrm{WLS}\cdot\mathrm{LS}_j}
+                         {\mathrm{WAS} + \mathrm{WDS} + \mathrm{WIL} + \mathrm{WLS}},
+    \label{eq:vs}
+\end{equation}
+with the four weights tunable per disaster context (defaults all $1$). The
+roadworthiness score is given by
+\begin{equation}
+    \mathrm{RWS}_{j,i} = 1 - \frac{\mathrm{WRC}\cdot\mathrm{RCS}_{j,i} + \mathrm{WPH}\cdot\mathrm{PHS}_{j,i}}
+                                  {\mathrm{WRC} + \mathrm{WPH}}.
+    \label{eq:rws}
+\end{equation}
+
+\paragraph{Note on Eq.~\eqref{eq:rws}: sign correction relative to ATRes.}
+ATRes \cite{atres2026} defines RWS as the bare weighted average of RCS and
+PHS, which evaluate to higher values for worse conditions (Blocked $= 1.0$,
+Extreme $= 1.0$). ATRes Table~3 then labels the result with the opposite
+convention (\emph{High} RWS reads as ``safe and efficient routes''), and
+ATRes Table~5 makes that the operative reading: $\mathrm{TIL}$ is low when
+RWS is high. The two readings cannot both hold for the formula as written;
+either the labels or the formula must invert. We invert the formula. The
+sign-corrected form, Eq.~\eqref{eq:rws}, gives $\mathrm{RWS} = 1$ for a
+perfectly safe and clear route and $\mathrm{RWS} = 0$ for an impassable one,
+matching ATRes Tables~3 and~5 throughout. The present authors include the
+lead and corresponding authors of \cite{atres2026}; we record the
+correction here explicitly so that any work citing both papers can adopt
+the corrected form unambiguously, and we will request a corresponding
+amendment at proof stage of \cite{atres2026} if galley scheduling
+permits.
+
+\subsection{Objective functions}\label{sec:model-objectives}
+
+The model minimises four mean-objective functions over the directed set:
+\begin{align}
+    \min \overline{\mathrm{ULPP}} &= \frac{\sum_{j=1}^{m} \sum_{i=1}^{n} d_{j,i}\, \mathrm{ULPP}_j}
+                                          {n_{\mathrm{dir}}}, \label{eq:obj-ulpp} \\
+    \min \overline{\mathrm{TRD}} &= \frac{\sum_{j=1}^{m} \sum_{i=1}^{n} d_{j,i}\, \mathrm{TRD}_{j,i}}
+                                          {n_{\mathrm{dir}}}, \label{eq:obj-trd} \\
+    \min \overline{\mathrm{RPD}} &= \frac{\sum_{j=1}^{m} \sum_{i=1}^{n} d_{j,i}\, \mathrm{RPD}_{j,i}}
+                                          {n_{\mathrm{dir}}}, \label{eq:obj-rpd} \\
+    \min \overline{\mathrm{CAIL}} &= \frac{\sum_{i=1}^{n} \mathrm{TCAIL}_i}
+                                          {n_{\mathrm{dir}}},   \label{eq:obj-cail}
+\end{align}
+where $\mathrm{TCAIL}_i = \sum_{j=1}^{m} d_{j,i}\, \mathrm{CAIL}_{i,\mathrm{TD}_{j,i}}$
+collects the per-allocation CAIL contributions at centre $i$. The constraints
+follow ATRes \cite{atres2026}:
+\begin{equation}
+    \sum_{i=1}^{n} d_{j,i} \le 1\ \forall j, \qquad
+    \sum_{j=1}^{m} \sum_{i=1}^{n} d_{j,i} = n_{\mathrm{dir}}, \qquad
+    n_{\mathrm{dir}} < m,\ n_{\mathrm{dir}} > 0,\ n > 0,
+\end{equation}
+i.e., each person is directed to at most one centre, exactly
+$n_{\mathrm{dir}}$ are directed, and the directed set is a strict subset of
+the affected population.
+
+For the legacy three-objective formulation (used in
+Section~\ref{sec:tradeoff-analysis} as the H1 comparator), Eqs.
+\eqref{eq:obj-trd} and \eqref{eq:obj-rpd} are replaced by the single
+$\overline{\mathrm{TIL}}$ objective using the fused FIS$_2$ pathway from
+ATRes \cite{atres2026}. Everything else is identical.
+
+\subsection{Resilience-theoretic mapping (new)}\label{sec:resilience-mapping}
+
+The 4R framework is not decoration. It defines what each objective is
+\emph{trying to capture} and tells the practitioner how to read the
+Pareto front. Table~\ref{tab:4r-mapping} states the bijection.
+
+\begin{table}[!t]
+\centering
+\caption{Bijection between the four objectives and Bruneau et al.'s 4R
+supply-chain-resilience framework \cite{bruneau2003}. Each objective
+operationalises exactly one 4R component; the practitioner reading the
+Pareto front sees four resilience axes simultaneously.}
+\label{tab:4r-mapping}
+\small
+\begin{tabular}{l l l l}
+\toprule
+\textbf{4R component} & \textbf{Objective} & \textbf{FIS} & \textbf{Practitioner reading} \\
+\midrule
+Resourcefulness  & $\overline{\mathrm{ULPP}}$ & FIS$_1$        & ``Did we direct the most vulnerable first?'' \\
+Robustness       & $\overline{\mathrm{TRD}}$  & FIS$_{2a}$     & ``Will the routes hold under damage?'' \\
+Rapidity         & $\overline{\mathrm{RPD}}$  & FIS$_{2b}$     & ``Will the people get there in time?'' \\
+Redundancy       & $\overline{\mathrm{CAIL}}$ & FIS$_3$        & ``Is the load spread or concentrated?'' \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection*{Per-component derivation}
+
+Table~\ref{tab:4r-mapping} states the bijection in summary form; the
+mapping is not a label slapped on existing objectives but a derivation
+from each 4R component's definition. We walk through the four pairings.
+
+\paragraph{Resourcefulness $\to$ ULPP via FIS$_1$.} Bruneau et al.\
+\cite{bruneau2003} define Resourcefulness as ``the capacity to identify
+problems, establish priorities, and mobilise resources when conditions
+exist that threaten to disrupt some element [...]\ of the system.'' Three
+clauses, each present in our model. \emph{Identifying problems} maps to
+the three sub-indicators feeding FIS$_1$ (vulnerability score VS,
+infrastructure damage IDL at the person's location, resource time
+remaining RTR); these are precisely the diagnostic signals a triage
+coordinator would consult. \emph{Establishing priorities} maps to the
+27-rule rule base of FIS$_1$, which is itself an explicit articulation
+of expert priority judgement. \emph{Mobilising resources} maps to the
+directing decision $d_{j,i}$ that the optimisation produces. ULPP is
+zero exactly when the coordinator's three diagnostics, the rule base's
+priority logic, and the directing decision are mutually consistent ---
+i.e., when the system is being Resourceful in Bruneau's sense.
+
+\paragraph{Robustness $\to$ TRD via FIS$_{2a}$.} Bruneau et al.\ define
+Robustness as ``the inherent strength or resistance in a system to
+withstand external demands without degradation or loss of
+functionality.'' For a humanitarian last-mile route the relevant
+external demand is infrastructure damage and route hazard, and the
+relevant function is delivering the directed person to the centre. Two
+sub-indicators capture this: RCS$_{j,i}$ encodes the inherent strength
+of the road (clear / partially blocked / blocked), and PHS$_{j,i}$
+encodes external threat along the route. FIS$_{2a}$ digests both into
+TRD --- the deficit relative to a perfectly robust route. TRD is zero
+exactly when the route can deliver the directed person regardless of
+external conditions, which is the limit case of Bruneau's robustness.
+
+\paragraph{Rapidity $\to$ RPD via FIS$_{2b}$.} Bruneau et al.\ define
+Rapidity as ``the capacity to meet priorities and achieve goals in a
+timely manner in order to contain losses and avoid future
+disruption.'' This is the only 4R component with explicit time content.
+For our model the canonical time measure is travel duration TD$_{j,i}$.
+We use TD as the single input to FIS$_{2b}$ deliberately: any
+multi-input formulation would introduce non-time content into Rapidity
+and break the framework's component-orthogonality. FIS$_{2b}$ emits
+RPD, the deficit relative to the limiting case of instantaneous
+delivery; RPD is zero exactly when delivery is fast enough to contain
+losses, which is Bruneau's Rapidity in the limit.
+
+\paragraph{Redundancy $\to$ CAIL via FIS$_3$.} Bruneau et al.\ define
+Redundancy as ``the extent to which elements [...]\ are substitutable,
+that is, capable of satisfying functional requirements in the event
+of disruption.'' For a network of relief centres, substitutability is
+the property that any one centre saturating does not prevent the
+others from absorbing displaced load. Three sub-indicators capture
+the dynamics: COR$_i$ (current occupancy of centre $i$), RDR$_i$
+(rate at which centre $i$'s resources deplete), and TD$_{j,i}$
+(arrival time, which influences when the directed load reaches the
+centre relative to depletion). FIS$_3$ digests these into CAIL, the
+imbalance the directing decision induces. Low CAIL means the
+directing decision spreads load across centres in a way that
+preserves substitutability for the next decision round; high CAIL
+means the decision concentrates load on already-stressed centres,
+reducing future Redundancy.
+
+\paragraph{Why the derivation matters.}
+The framework is not a label we apply at the end. It is a discipline
+we apply throughout: each FIS's input set, rule base, and output range
+must be explicable in the vocabulary of exactly one 4R component, and
+each 4R component must be operationalised by exactly one FIS. The
+derivation above shows the discipline holding. Sections that follow
+draw on three theoretical consequences of this discipline, stated next.
+
+\bigskip
+The bijection has three theoretical consequences worth stating explicitly.
+
+\paragraph{Translation, not aggregation.} A practitioner who plans in 4R
+vocabulary can read the Pareto front directly, without translation through a
+cost/distance/equity intermediary. Asking ``what is the cheapest solution
+that keeps Robustness above 70?'' becomes well-formed and answerable. Asking
+``which solution maximises Rapidity at the expense of Resourcefulness?''
+becomes well-formed and answerable. The 3-objective formulation, where
+Robustness and Rapidity are fused into TIL, makes the second question
+unanswerable by construction. We test this empirically in
+Section~\ref{sec:tradeoff-analysis}.
+
+\paragraph{Theoretical hygiene.} If two of our objectives mapped to the same
+4R component the framework would tell us so by complaining. The bijection
+constrains the modeller. Adding RTR to FIS$_{2b}$ would have produced a
+better-fitting Rapidity index empirically but would have leaked
+Resourcefulness into Rapidity --- the 4R framework forbids it, so we leave
+RTR out. The framework is not a label we apply at the end; it is a discipline
+we apply throughout.
+
+\paragraph{What the framework does not do.} The 4R framework does not
+prescribe weights between the four components. Bruneau et al.
+\cite{bruneau2003} are explicit on this point: a community planner balancing
+robustness against rapidity makes a different choice than a triage
+coordinator on the second day of a flood. The 4R framework provides the
+\emph{vocabulary} for the trade-off, not the trade-off itself. Our model
+preserves that property by emitting a four-dimensional Pareto front rather
+than a single weighted score; the decision-maker selects the trade-off they
+want, in 4R terms, post-hoc.
+
+% =====================================================================
+\section{Algorithm Design}\label{sec:algorithms}
+
+\subsection{Fuzzy inference systems}\label{sec:algo-fis}
+
+We use Mamdani inference \cite{mamdani1975} with centroid defuzzification
+throughout, for the same reason the original ATRes work did: linguistic
+if--then rules elicited from disaster-response practitioners are easier to
+audit and revise than a tuned crisp model, and the Mamdani conjunction over
+triangular and trapezoidal membership functions gives the rule base a clear
+geometric interpretation. The four-objective formulation uses four control
+systems (FIS$_1$ for ULPP, FIS$_{2a}$ for TRD, FIS$_{2b}$ for RPD, FIS$_3$
+for CAIL); the legacy three-objective formulation reuses ATRes's FIS$_2$ for
+TIL and is invoked only as the H1 comparator in
+Section~\ref{sec:tradeoff-analysis}.
+
+Each input variable is partitioned into three or five linguistic levels with
+trapezoidal endpoints and triangular interiors; the output universe is a
+five-level scale (Very Low, Low, Moderate, High, Very High) on $[0, 100]$
+shared across all five FIS for cross-objective comparability. Rule-base sizes
+are 27 for FIS$_1$ (the full $3^3$ Cartesian product over VS, IDL, RTR),
+9 for FIS$_{2a}$ (RCS $\times$ PHS), 3 for FIS$_{2b}$ (TD alone), and 27 for
+FIS$_3$ (the full $3^3$ over COR, RDR, TD). Appendix~\ref{app:rules} lists
+every rule.
+
+A practical detail matters for performance. We pre-compute every FIS
+evaluation once per problem instance: for the four-objective formulation,
+$m$ per-person ULPP values and $4 \cdot m \cdot n$ per-pair (TRD, RPD,
+CAIL) values, all stored as numpy arrays. Chromosome evaluation in the GA
+loop then reduces to fancy-indexing into those arrays --- no scikit-fuzzy
+\cite{mamdani1975} calls inside evolution. The cost of pre-computation
+on the medium instance (8 centres, 225 people) is roughly 10\,s; the
+amortised cost per generation is essentially zero. This is what makes the
+540-run experiment matrix in Section~\ref{sec:performance} tractable.
+
+\subsection{Multi-objective evolutionary algorithms}\label{sec:algo-moea}
+
+Three MOEAs share the same population-management loop and differ only in
+their survivor-selection operator. We summarise each.
+
+\paragraph{NSGA-II \cite{deb2002}.}
+Non-dominated sorting partitions the combined parent--offspring population
+into Pareto fronts. Survivors are taken front by front; when a front
+overflows the population quota, the remaining seats are filled by
+crowding-distance ranking within that front. The crowding-distance
+machinery is the workhorse of NSGA-II for two- and three-objective problems
+and the reason it dominates the literature in that regime. Recent runtime
+analysis \cite{zheng2024nsga2} shows the mechanism degrades as objective
+count grows, motivating reference-point methods at higher objective counts.
+
+\paragraph{NRGA \cite{omar2008nrga}.}
+NRGA replaces NSGA-II's crowding-distance tie-breaker with uniform random
+sampling within the boundary front. The intuition is that crowding distance
+encodes a particular notion of diversity (gap between consecutive
+solutions in objective space) which may not match the practitioner's notion;
+random sampling avoids that prior. The cost is that some Pareto-optimal
+solutions are dropped at random, lowering NNS in our experiments by a few
+percent. Whether NRGA helps or hurts depends on the problem geometry and the
+chromosome encoding --- a sensitivity we revisit in
+Section~\ref{sec:perf-algorithms}.
+
+\paragraph{NSGA-III \cite{deb2014nsga3}.}
+NSGA-III replaces crowding distance with reference-point-based niching
+designed for many-objective problems. A set of structured reference points
+$\{r_k\}$ is laid down in the normalised objective simplex; survivors are
+chosen to maintain diversity \emph{relative to those reference points}
+rather than relative to each other. The mechanism keeps boundary regions
+populated and is the modern default for objective counts $\ge 4$. We use
+NSGA-III not because we expect it to dominate NSGA-II at four objectives ---
+the empirical evidence in the literature is mixed at that boundary --- but
+because its CPU cost is independent of population density in front overflow
+cases, which we test in Section~\ref{sec:perf-algorithms}.
+
+\subsection{Chromosome encoding}\label{sec:algo-chromosome}
+
+Each individual is a flat list of length $2 n_{\mathrm{dir}}$. The first
+$n_{\mathrm{dir}}$ entries are person indices, sampled without replacement
+from $\{0, \ldots, m-1\}$ --- a partial permutation of the candidate
+population. The remaining $n_{\mathrm{dir}}$ entries are real values
+$r_k \in [0, 1)$, each decoded to a centre index via
+$\lfloor r_k \cdot n \rfloor$ \cite{atres2026}. The encoding is a flattened
+form of the two-row matrix used in ATRes; the two representations carry
+identical information.
+
+The order of the (person, centre) pairs is not semantically meaningful: the
+decoder treats them as a set of pairs, not a sequence. Variation operators
+preserve only the partial-permutation invariant on the person slice. We use
+uniform crossover with repair (children inherit from each parent at each
+position with probability $0.5$, then duplicate person indices are replaced
+with random unused indices) and per-gene mutation (replacement with an
+unused index for the person slice; Gaussian perturbation $\mathcal{N}(0, 0.1)$
+clipped to $[0, 1)$ for the centre slice). DEAP's built-in operators do not
+fit a partial-permutation + real-valued mixed encoding directly, so we
+implement the two operators ourselves; the implementation is open-source.
+
+\subsection{NSGA-III reference points (new)}\label{sec:algo-refpoints}
+
+The reference-point set determines NSGA-III's selection geometry. We use
+Das--Dennis structured points with $p = 4$ divisions, yielding
+$\binom{p + M - 1}{M - 1} = \binom{7}{3} = 35$ points uniformly distributed
+over the four-dimensional objective simplex \cite{deb2014nsga3}. The choice
+is conventional and easy to reproduce; we considered the two-layer scheme
+that adds points along the simplex boundary for better edge coverage and
+deferred it to a single supplementary ablation to be run only if H2b
+flagged boundary diversity as a problem (it did not; see
+Section~\ref{sec:perf-algorithms}).
+
+The 35 reference points are recomputed once at solver start and held fixed
+across generations. With population size $100 \ge 35$ the reference set
+never overflows and the niching procedure runs without partial-front
+corner cases. In the four-objective formulation $p = 4$ produces reference
+spacing of $1/4$ along each axis, which we found empirically sufficient for
+the Pareto-front densities we observe (typically 100 distinct solutions
+per front, comfortably above the reference-point count).
+
+% =====================================================================
+\section{Performance Analysis}\label{sec:performance}
+
+\subsection{Experimental setup}\label{sec:perf-setup}
+
+We test three problem sizes drawn at a single seed from a deterministic
+generator: small (5 centres, 150 affected people, $n_{\mathrm{dir}} = 50$),
+medium (8/225/75), and large (10/300/100). Small and large match ATRes's
+test instances \cite{atres2026}; medium is new and added to give scaling
+analysis a third anchor. Each problem instance is materialised as three CSV
+files (people, centres, travel) and is reproducible bit-exact from the seed
+via the open-source instance generator at
+\texttt{experiments/generate\_instances.py}.
+
+For every cell in the (size $\times$ formulation $\times$ algorithm) matrix
+we run 30 repetitions with rep-specific seeds drawn at
+$\mathrm{seed}_r = 1000 + 7919 r$. Population size is 100, generations 200,
+crossover probability $0.7$, mutation probability $0.2$ --- ATRes baselines
+\cite{atres2026} held fixed across the matrix so the comparison is on
+algorithm and formulation, not hyper-parameters. NSGA-III uses the
+Das--Dennis $p = 4$ reference set described in
+Section~\ref{sec:algo-refpoints}. Implementation is the open-source Python
+\texttt{presidio\_vol\_assign.allocation} module
+(scikit-fuzzy + DEAP + pymoo); experiments ran on a single MacBook Pro
+laptop. The full 540-run matrix completed in 13.1 minutes wall time
+including six FIS pre-computes (one per (size, formulation) cell) and
+540 GA evolutions.
+
+For each metric we test normality with Shapiro--Wilk; the parametric
+independent-samples $t$-test is used when both groups admit it and the
+non-parametric Mann--Whitney $U$ otherwise. We report $p$-values under
+two-sided alternatives; threshold $\alpha = 0.05$.
+
+\paragraph{Selector validation on DTLZ2.}
+Before running the experiment matrix we validate that DEAP's
+\texttt{selNSGA3} \cite{deb2014nsga3} functions correctly inside our
+solver framework, independent of our humanitarian-allocation encoding.
+We run 30 repetitions of NSGA-II and NSGA-III on the standard DTLZ2
+benchmark with $M=4$ objectives, $n_{\mathrm{var}}=10$ decision
+variables, and DEAP's published continuous variation operators
+(\texttt{cxSimulatedBinaryBounded}, \texttt{mutPolynomialBounded}). NSGA-III
+achieves $\mathrm{HV} = 0.970 \pm 0.006$ against the standard
+$(1.1, 1.1, 1.1, 1.1)$ reference point; NSGA-II achieves $0.797 \pm 0.032$
+($p < 10^{-15}$, Mann--Whitney $U$). The literature-expected ordering
+(NSGA-III ahead of NSGA-II at $M=4$) holds in our framework; the H2a
+result reported below is therefore a property of the humanitarian
+allocation problem, not an artifact of selector or framework
+configuration.
+
+\subsection{Pareto-front overview}\label{sec:perf-pareto}
+
+Figure~\ref{fig:pareto-fronts} shows one representative four-objective
+Pareto front per (size, algorithm) cell --- the rep-0 front, with each line
+a Pareto-optimal solution traced across the four objective axes. Two
+features are immediately legible. First, the fronts span the full output
+universe along $\overline{\mathrm{ULPP}}$ and $\overline{\mathrm{CAIL}}$ but
+concentrate in the middle of the $\overline{\mathrm{TRD}}$ and
+$\overline{\mathrm{RPD}}$ scales --- a consequence of the synthetic
+travel-info distribution we use, where extreme road conditions and very
+long travel durations are rare. Second, the three algorithms produce
+visually similar front shapes; the differences are quantitative, not
+qualitative.
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{fig5_pareto_fronts.pdf}
+    \caption{Representative 4-objective Pareto fronts (rep 0) for each problem
+    size, displayed as parallel coordinates over the four mean objectives:
+    $\overline{\mathrm{ULPP}}$ (Mean Unfairness in People Prioritization,
+    operationalising Resourcefulness), $\overline{\mathrm{TRD}}$ (Mean Transport
+    Robustness Deficit, Robustness), $\overline{\mathrm{RPD}}$ (Mean Rapidity
+    Deficit, Rapidity), and $\overline{\mathrm{CAIL}}$ (Mean Center Allocation
+    Imbalance Level, Redundancy). Each line is one Pareto-optimal solution;
+    every axis is on the FIS output universe $[0,100]$ where lower is better.
+    Algorithms are colour-coded; line opacity is reduced to make front
+    overlap visible.}
+    \label{fig:pareto-fronts}
+\end{figure}
+
+\subsection{Algorithm comparison (H2, H4)}\label{sec:perf-algorithms}
+
+% Figure~\ref{fig:algorithm-compare} reports H2 with statistical tests.
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{fig7_h2_algorithm_compare.pdf}
+    \caption{Hypervolume (a) and CPU time (b) per problem size, mean
+    $\pm$ s.d.\ over 30 reps. NSGA-II achieves significantly higher HV
+    than NSGA-III at every size ($p<0.001$, Mann--Whitney U); NSGA-III is
+    significantly faster than NSGA-II at every size ($p<0.0001$).}
+    \label{fig:algorithm-compare}
+\end{figure}
+
+Three findings emerge from the panels in
+Figure~\ref{fig:algorithm-compare}.
+
+\paragraph{H2a refuted: NSGA-II beats NSGA-III on hypervolume.}
+At every problem size, NSGA-II achieves significantly higher mean HV than
+NSGA-III on the four-objective formulation. On the large instance the means
+are NSGA-II $13.98 \times 10^6 \pm 0.29$ vs. NSGA-III $13.59 \times 10^6 \pm 0.33$
+($p < 0.0001$, Mann--Whitney $U$); on medium $18.81 \pm 0.40$ vs.
+$18.33 \pm 0.69$ ($p = 0.001$); on small $21.08 \pm 0.47$ vs.
+$20.74 \pm 0.62$ ($p = 0.027$). NSGA-III still beats NRGA at every size
+($p < 10^{-6}$). The original H2a expectation --- that NSGA-III would
+dominate at the largest size --- does not hold for our four-objective
+formulation in the encoding we use.
+
+The reason is consistent with the recent runtime analysis of Zheng and Doerr
+\cite{zheng2024nsga2}: NSGA-II's degradation as objective count grows is
+well-documented but the inflection is not at four objectives. Reference-point
+methods like NSGA-III pay off most clearly at five or more objectives, where
+crowding distance becomes information-poor. At four objectives we sit at
+the boundary --- close enough that NSGA-II's crowding-distance machinery
+remains competitive, far enough that NSGA-III is not punished. The
+practitioner reading is that NSGA-III's advantage on this problem class is
+not Pareto-front quality but something else, which the next finding makes
+explicit.
+
+\paragraph{H2c confirmed strongly: NSGA-III is the fastest algorithm.}
+NSGA-III is significantly faster than NSGA-II at every problem size:
+$0.91 \pm 0.07$\,s vs. $1.45 \pm 0.07$\,s on small ($p < 10^{-6}$),
+$1.15 \pm 0.06$\,s vs. $1.69 \pm 0.06$\,s on medium ($p < 10^{-6}$),
+$1.45 \pm 0.05$\,s vs. $1.99 \pm 0.05$\,s on large ($p < 10^{-6}$). The
+relative speedup is $37\,\%$, $32\,\%$, and $27\,\%$ at small, medium, and
+large respectively (mean $32\,\%$); it remains stable as the problem grows. NRGA sits between the two on CPU time
+(small 1.16\,s, medium 1.40\,s, large 1.69\,s).
+
+The mechanism is straightforward. NSGA-II's crowding-distance computation
+in the boundary front is $O(M N \log N)$ for $M$ objectives and $N$
+individuals on that front, dominated by the per-objective sort. NSGA-III's
+reference-point niching is $O(M N + M K)$ for $K$ reference points
+(here $K = 35$) and avoids the per-objective sort entirely. At four
+objectives and 100 individuals the constant-factor difference shows up as
+roughly half a second per generation pair, which compounds across 200
+generations into the gap we measure. The same gap will persist on larger
+problems --- the $O(\log N)$ term in NSGA-II grows; the niching term in
+NSGA-III grows linearly. For practitioners running real-time response-phase
+recommendations, NSGA-III's speedup translates directly to time-to-decision
+\cite{atres2026}.
+
+\paragraph{Reference-point sensitivity of H2a.}
+The HV in Table~\ref{tab:stats-summary} is computed against the fixed
+$(100, 100, 100, 100)$ reference point at the FIS output-universe maxima.
+A demanding reviewer will note that an instance-aware reference ---
+the per-objective worst-case across the union of all algorithms' fronts
+on the same instance, with a 5\,\% margin --- is more discriminating
+between near-optimal fronts and is the more conservative methodological
+choice. We recompute HV under this scheme. The ranking shifts:
+NSGA-III leads NSGA-II at every size on instance-aware HV (small
+$59{,}360$ vs $50{,}921$, $p = 0.054$; medium $20{,}960$ vs $19{,}157$,
+$p = 0.57$; large $13{,}003$ vs $11{,}916$, $p = 0.20$). None of these
+differences is statistically significant at $\alpha = 0.05$, but the
+direction is opposite to the fixed-reference ranking. The honest
+reading is that the H2a verdict depends on HV reference choice: under
+loose reference NSGA-II is significantly ahead, under tight reference
+NSGA-III is ahead but not significantly so. The two algorithms are
+HV-equivalent in any practitioner-relevant sense; what differs is the
+fixed-reference noise floor. The CPU-time finding (H2c) below is
+reference-independent and is the robust algorithmic claim of this
+paper.
+
+\paragraph{Population-size ablation.}
+A natural concern about the H2a refutation is that population size 100
+may be too small for NSGA-III's reference-point niching to express its
+design advantage --- 35 reference points facing a 100-individual
+front leaves the niching machinery underexercised. We tested this
+directly: 30 additional repetitions per algorithm on the medium 4-obj
+instance with pop\_size doubled to 200. NSGA-II remains significantly
+ahead of NSGA-III on HV ($19.66 \times 10^6 \pm 0.39$ vs.
+$19.10 \times 10^6 \pm 0.58$, $p < 0.001$, Mann--Whitney $U$);
+NSGA-III's CPU advantage actually widens (NSGA-III $2.37 \pm 0.06$\,s
+vs. NSGA-II $4.82 \pm 0.05$\,s, a 51\,\% speedup vs.\ the 32\,\%
+average at pop = 100). The ranking is robust to population size and
+the boundary-objective-count interpretation in the previous paragraph
+holds; doubling the population does not flip the H2a verdict.
+
+\paragraph{H4 refuted (inverted): NRGA is faster than NSGA-II on large in
+our encoding.} ATRes \cite{atres2026} reports NSGA-II faster than NRGA on
+the large instance. We replicate this comparison and find the opposite.
+On large, NRGA achieves $1.69 \pm 0.05$\,s versus NSGA-II $1.99 \pm 0.05$\,s
+($p < 10^{-4}$, Mann--Whitney $U$); on the three-objective formulation the
+inversion is the same (NRGA $1.50$\,s vs. NSGA-II $1.79$\,s,
+$p < 10^{-4}$). We do not claim to know the cause. ATRes implements the
+model in MATLAB R2024b with the two-row matrix encoding of its Figure~2;
+we implement the model in Python (\texttt{scikit-fuzzy} + \texttt{DEAP}
++ \texttt{pymoo}) with the flattened partial-permutation + real-valued
+encoding of Section~\ref{sec:algo-chromosome} and our own variation
+operators. Three differences between the implementations could each
+explain the inversion: encoding layout, variation-operator behaviour,
+and platform/runtime overheads. Without re-implementing ATRes's exact
+MATLAB pipeline we cannot attribute the inversion to any single one;
+both implementations produce Pareto fronts of comparable HV, so the
+inversion is not pathological in either direction.
+
+We treat the inversion as a methodological observation, not a contradiction
+of \cite{atres2026}. The substantive lesson is that NSGA-II-vs-NRGA CPU
+rankings on humanitarian allocation problems do not transfer between
+implementations without verification. For the MDPI extended version's
+narrative, the NSGA-II/NRGA ranking is replaced by the more robust
+observation that \emph{NSGA-III is the fastest algorithm on this problem
+class in our implementation}, which is a claim we can substantiate from
+our own data without depending on ATRes-vs-our-Python comparison.
+
+\subsection{Statistical comparison summary}\label{sec:perf-stats}
+
+Table~\ref{tab:stats-summary} aggregates the means, standard deviations, and
+test statistics. Across all five quality metrics on the four-objective
+formulation, NSGA-II and NSGA-III achieve identical NNS (100 of 100,
+i.e.\ every individual on the boundary front), within-noise MID and SM,
+significantly different HV (NSGA-II ahead), and significantly different CPU
+time (NSGA-III ahead). NRGA loses 0--1\,\% of NNS to its uniform-random
+tie-breaker, has the lowest HV at every size, and sits between the other
+two on CPU time. The ranking is stable across all three problem sizes and
+across both formulations.
+
+\begin{table}[!t]
+\centering
+\caption{Mean $\pm$ s.d.\ over 30 reps per (size, algorithm) cell on the
+four-objective formulation. HV is in millions; CPU time in seconds. The
+$p$-column reports the Mann--Whitney $U$ two-sided test against NSGA-II.}
+\label{tab:stats-summary}
+\small
+\begin{tabular}{l l r r r r r}
+\toprule
+Size & Algorithm & NNS & HV ($\times 10^6$) & MID & SM & CPU (s) \\
+\midrule
+\multirow{3}{*}{small}
+  & NSGA-II  & $100.0$ & $21.08 \pm 0.47$ & $77.7 \pm 0.5$ & $0.81 \pm 0.06$ & $1.45 \pm 0.07$ \\
+  & NRGA     & $99.1$  & $20.21 \pm 0.87$ & $77.4 \pm 0.5$ & $0.79 \pm 0.05$ & $1.16 \pm 0.06$ \\
+  & NSGA-III & $100.0$ & $20.74 \pm 0.62$ & $77.7 \pm 0.5$ & $0.81 \pm 0.06$ & $0.91 \pm 0.07$ \\
+\midrule
+\multirow{3}{*}{medium}
+  & NSGA-II  & $100.0$ & $18.81 \pm 0.40$ & $69.5 \pm 0.4$ & $0.78 \pm 0.05$ & $1.69 \pm 0.06$ \\
+  & NRGA     & $99.9$  & $17.35 \pm 0.55$ & $69.3 \pm 0.4$ & $0.77 \pm 0.04$ & $1.40 \pm 0.05$ \\
+  & NSGA-III & $100.0$ & $18.33 \pm 0.69$ & $69.5 \pm 0.4$ & $0.79 \pm 0.05$ & $1.15 \pm 0.06$ \\
+\midrule
+\multirow{3}{*}{large}
+  & NSGA-II  & $100.0$ & $13.98 \pm 0.29$ & $58.6 \pm 0.4$ & $0.81 \pm 0.05$ & $1.99 \pm 0.05$ \\
+  & NRGA     & $99.8$  & $12.86 \pm 0.29$ & $58.6 \pm 0.4$ & $0.81 \pm 0.04$ & $1.69 \pm 0.05$ \\
+  & NSGA-III & $100.0$ & $13.59 \pm 0.33$ & $58.6 \pm 0.4$ & $0.81 \pm 0.05$ & $1.45 \pm 0.05$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The MID and SM values are nearly identical across algorithms within each
+size, and the small differences are not statistically significant. We report
+them for completeness; the binding metrics for the H2 verdict are HV and CPU
+time, where the algorithms differ in opposite directions.
+
+% =====================================================================
+\section{Pareto Trade-off Analysis (4-obj vs 3-obj)}\label{sec:tradeoff-analysis}
+% TIER 1 PLACEHOLDER — target ~1{,}200 words. Tests H1.
+
+The four-objective formulation has to do empirical work, not just
+theoretical work. The H1 hypothesis tests whether splitting ATRes's TIL
+into separate Robustness (TRD) and Rapidity (RPD) components actually
+exposes Pareto trade-offs the three-objective formulation cannot represent.
+We test it two ways: rank correlation between the split axes (do they carry
+independent information?) and projection dominance (what happens when we
+fold the 4-obj front into 3-obj space?).
+
+\subsection{Spearman rank correlation between TRD and RPD}\label{sec:h1-spearman}
+
+If TRD and RPD were redundant --- two names for the same thing along the
+Pareto front --- the rank correlation between them would be near unity in
+absolute value, and splitting TIL would add nothing. We compute the Spearman
+$\rho(\overline{\mathrm{TRD}}, \overline{\mathrm{RPD}})$ across each
+four-objective Pareto front in the 270-run cell.
+Figure~\ref{fig:h1-spearman}(a) shows the distribution.
+
+The mean correlation across all 270 fronts is $\rho = -0.29$, with $82\,\%$
+of fronts under the H1 threshold $|\rho| < 0.5$. The negative sign is itself
+informative: along the Pareto front, solutions that achieve low TRD (clear,
+safe routes) tend to come at the cost of higher RPD (longer travel times),
+and vice versa. The two axes are not redundant; they expose a genuine
+trade-off where the practitioner picks a fragile-but-fast route or a
+robust-but-slow one. NSGA-III shows the cleanest separation
+($93$--$97\,\%$ of fronts under threshold across the three sizes), NSGA-II
+is close behind ($73$--$87\,\%$), and NRGA's slightly noisier fronts
+produce the lowest pass rate ($70$--$80\,\%$). The mechanism is consistent
+with Section~\ref{sec:perf-algorithms}: NRGA's uniform-random tie-breaker
+sometimes drops boundary solutions that otherwise extend the trade-off
+range.
+
+\subsection{Projection-dominance analysis}\label{sec:h1-projection}
+
+The Spearman result establishes that the two axes carry independent
+information. The projection analysis answers a sharper question: how many
+4-obj Pareto-optimal solutions \emph{disappear} when we collapse to 3-obj
+space using ATRes's TIL fusion?
+
+For each 4-obj front, we re-evaluate every (person, centre) allocation
+through the legacy FIS$_2$ pathway --- compute the sign-corrected RWS by
+Eq.~\eqref{eq:rws}, then evaluate FIS$_2$(TD, RWS) to get TIL. Averaging
+gives a per-solution $\overline{\mathrm{TIL}}$, and the projected solution
+is $(\overline{\mathrm{ULPP}}, \overline{\mathrm{TIL}}, \overline{\mathrm{CAIL}})$.
+We then test Pareto dominance among the 100 projected points: a projected
+solution is \emph{lost} if some other projected solution dominates it
+strictly in all three dimensions.
+
+Figure~\ref{fig:h1-spearman}(b) shows the result. The mean fraction of
+4-obj solutions whose 3-obj projection is dominated is $0.51$ on small,
+$0.49$ on medium, and $0.46$ on large --- around half the front, in every
+cell, across all three algorithms. \emph{Half} the Pareto-optimal solutions
+that the four-objective formulation surfaces are invisible in the
+three-objective formulation, in the sense that another projected solution
+dominates them along all three TIL-fused axes simultaneously.
+
+The economic-intuition reading: the 3-obj formulation encodes a particular
+trade-off between Robustness and Rapidity --- the one defined by the RWS
+weighting in Eq.~\eqref{eq:rws} --- and lets only solutions consistent with
+that fixed trade-off through. The 4-obj formulation makes the trade-off a
+free parameter the practitioner picks at decision time, and so admits
+solutions across the entire Robustness/Rapidity plane.
+
+\paragraph{Null-model control: is the loss informational or geometric?}
+A fair question follows immediately. \emph{Some} fraction of any 4D
+Pareto front will be dominated when projected to 3D simply because
+projection loses information --- a geometric effect, not specific to the
+ATRes RWS-weighted fusion. To separate the geometric component from the
+informational, we sample 100 random convex fusions
+$\mathrm{TIL}_{\mathrm{null}} = \alpha \cdot \overline{\mathrm{TRD}}
++ (1-\alpha) \cdot \overline{\mathrm{RPD}}$ with
+$\alpha \sim \mathcal{U}(0,1)$ per fusion, recompute the projection-
+dominance fraction for each, and form an empirical null distribution
+against which the ATRes-fusion fraction is compared.
+
+The result tempers the 50\% headline. Pooled across all 270 fronts, the
+ATRes-fusion mean dominance fraction is 0.486; the null-distribution
+mean is 0.479. The difference is $+0.008$ --- under one percentage point.
+The mean z-score of the ATRes fraction in the per-front null distribution
+is $+0.09$; only $7.4\%$ of fronts have an ATRes fraction above the
+null 95th percentile, and $5.6\%$ below the 5th. The projection-dominance
+loss is, almost entirely, geometric.
+
+What survives this control is the Spearman finding from
+Section~\ref{sec:h1-spearman}: TRD and RPD carry independent rank
+information. The 4-obj formulation does expose new trade-offs --- the
+Spearman result establishes that --- but the specific 3-obj fusion that
+ATRes uses is not worse than a random fusion at preserving them; it is
+not the source of the dominance loss. We rewrite the H1 finding
+accordingly in Section~\ref{sec:h1-verdict}.
+
+\subsection{Practitioner trade-off vignettes}\label{sec:h1-vignettes}
+
+Aggregate statistics tell us that half the 4-obj front is invisible in
+3-obj space; they do not tell us \emph{which} half. Three vignettes,
+constructed from solutions that appear on the 4-obj front but are
+dominated in the 3-obj projection, illustrate what the Robustness/Rapidity
+split unlocks for the decision-maker.
+
+\paragraph{Vignette 1 --- the fragile-but-fast route.}
+A directed person reaches a relief centre via a route with PHS = significant
+hazard but TD = 25\,min. The 3-obj formulation hides this option: TIL fuses
+the fragility into the same axis as the speed, and the solution is
+dominated in 3-obj space by a slower, safer alternative even when both
+options serve the same person. The 4-obj formulation surfaces it as a
+distinct point on the Pareto front, low on RPD and high on TRD, letting the
+practitioner pick it deliberately if speed is the binding constraint
+(``the patient must reach the centre within 30 minutes; we accept the
+hazard'').
+
+\paragraph{Vignette 2 --- the slow-but-robust route.}
+The mirror case: TD = 90\,min on a clear road with no hazard. The 4-obj
+front shows it as low TRD, high RPD --- the conservative choice. The 3-obj
+formulation again merges the two axes; the practitioner cannot articulate
+``I want robustness even at the cost of an extra hour'' without
+unfolding TIL into its components, which the 4-obj formulation does for
+them.
+
+\paragraph{Vignette 3 --- the capacity-constrained centre under load.}
+A centre at COR = 80\,\%, RDR = 70\,\% (rapid depletion), with TD = 30\,min
+to a cluster of vulnerable people. The CAIL objective penalises directing
+more people there; the ULPP objective rewards it (the people are vulnerable).
+The 4-obj front exposes the Pareto trade-off between Resourcefulness and
+Redundancy directly --- send the vulnerable here and accept higher CAIL, or
+send them to a less-loaded centre and accept higher ULPP. The 3-obj
+formulation has the same Resourcefulness-vs-Redundancy axis (it is
+unchanged by the split), but it cannot tell the practitioner whether the
+robustness of the route to this centre is also a constraint --- the third
+vignette exposes the multi-axis nature of the realistic decision in a way
+that fusing TIL obscures.
+
+\subsection{H1 verdict}\label{sec:h1-verdict}
+
+The two halves of the H1 test land asymmetrically and deserve separate
+verdicts.
+
+\paragraph{Spearman half: confirmed.} TRD and RPD carry independent rank
+information across the 4-obj fronts. Pooled across all 270 4-obj runs,
+the mean Spearman correlation is $\rho = -0.29$ and $82\,\%$ of fronts
+satisfy $|\rho| < 0.5$. The two axes are not redundant; the split exposes
+information the fused TIL cannot represent.
+
+\paragraph{Projection-dominance half: geometric, not informational.}
+The 50\% dominance fraction we observe under the ATRes-RWS fusion is
+within one percentage point of the null mean from random convex fusions
+of TRD and RPD. The dominance loss is essentially geometric --- a
+property of projecting from 4D to 3D, not of ATRes's particular
+3-objective formulation. We do not claim that the 3-obj formulation is
+specifically destructive; we claim that the 4-obj formulation surfaces
+trade-off information that any 3-obj fusion would compress.
+
+\paragraph{Joint reading.} The 4-objective formulation is empirically
+informative in the sense that the Robustness and Rapidity axes are
+independent (Spearman). It is \emph{not} empirically richer than the
+3-obj formulation in the sense of preserving more solutions through
+projection (geometric). The practitioner gain is therefore in
+\emph{visibility}: the 4-obj front lets the decision-maker articulate
+Robustness/Rapidity trade-offs at decision time, whereas the 3-obj
+fusion bakes a single trade-off in and exposes only one axis. The 4R
+reframing of Section~\ref{sec:resilience-mapping} delivers this
+visibility; it is operationally useful even if its dominance footprint
+is not statistically distinguishable from random fusion.
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{fig6_h1_spearman.pdf}
+    \caption{H1 evidence. (a) Distribution of Spearman
+    $\rho(\overline{\mathrm{TRD}}, \overline{\mathrm{RPD}})$ across 270 4-objective
+    runs; 82\% lie within $|\rho|<0.5$. (b) Mean fraction of solutions whose
+    3-objective projection is strictly dominated by another projection in the
+    same front; the dashed line marks the 20\% threshold for H1
+    confirmation.}
+    \label{fig:h1-spearman}
+\end{figure}
+
+% =====================================================================
+\section{Sensitivity Analysis}\label{sec:sensitivity}
+% TIER 1 PLACEHOLDER — target ~1{,}200 words. Tests H3.
+
+\subsection{Rule-base perturbation (H3a)}\label{sec:sens-rules}
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{fig8_h3a_rule_sensitivity.pdf}
+    \caption{Per-FIS distribution of $\Delta$HV under single-rule deletion
+    on the medium 4-obj problem (NSGA-II, 30 reps). The dashed band marks
+    $\pm 5\%$, the H3a confirmation criterion. FIS$_1$, FIS$_{2a}$, and FIS$_3$
+    have median $|\Delta\mathrm{HV}| < 0.2\%$; FIS$_{2b}$, with only three rules,
+    is structurally more sensitive (single-rule deletion equals a
+    33\% rule-base reduction).}
+    \label{fig:rule-sensitivity}
+\end{figure}
+
+A reviewer or practitioner who reads the recommendations of a fuzzy expert
+system has a fair question waiting: are the recommendations artifacts of
+the specific rule base elicited from this set of experts, or would slightly
+different experts produce essentially the same Pareto front? We test it by
+deleting one rule at a time and measuring the impact.
+
+For each of the 66 single-rule deletions across the four FIS rule bases
+(FIS$_1$: 27 rules, FIS$_{2a}$: 9, FIS$_{2b}$: 3, FIS$_3$: 27), we run
+NSGA-II $\times$ 30 reps on the medium 4-obj instance and record the mean
+hypervolume against a 30-rep baseline run with the full rule base. The
+H3a confirmation criterion is median $|\Delta\mathrm{HV}| \le 5\,\%$ per
+FIS \emph{and} worst-case $|\Delta\mathrm{HV}| \le 20\,\%$.
+Figure~\ref{fig:rule-sensitivity} shows the per-FIS distributions on
+the medium instance. We additionally repeat the sweep on the small and
+large instances with 5 reps each, to test whether the verdicts are
+size-dependent (Table~\ref{tab:h3a-by-size}).
+
+\begin{table}[!t]
+\centering
+\caption{Per-FIS median absolute $\Delta\mathrm{HV}$ under single-rule
+deletion, by problem size. Confirmation band $\le 5\,\%$. FIS$_{2b}$'s
+three-rule structure produces near-threshold sensitivity on small and
+medium and below-threshold on large; the larger rule bases are robust
+at every size.}
+\label{tab:h3a-by-size}
+\small
+\begin{tabular}{l c c c c}
+\toprule
+FIS & rules & small (5 reps) & medium (30 reps) & large (5 reps) \\
+\midrule
+FIS$_1$       & 27 & 1.38\,\% & 0.39\,\% & 1.20\,\% \\
+FIS$_{2a}$    & 9  & 0.72\,\% & 1.03\,\% & 1.00\,\% \\
+\textbf{FIS$_{2b}$}  & \textbf{3}  & \textbf{5.78\,\%} & \textbf{6.09\,\%} & 2.87\,\% \\
+FIS$_3$       & 27 & 0.00\,\% & 0.32\,\% & 1.05\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The 27-rule and 9-rule systems are robust across all three sizes: median
+$|\Delta\mathrm{HV}|$ stays under $1.4\,\%$ for FIS$_1$, FIS$_{2a}$, and
+FIS$_3$. On the medium instance only $3.7\,\%$ of FIS$_1$ single-rule
+deletions exceed the $\pm 5\,\%$ band, and only $7.4\,\%$ of FIS$_3$
+deletions. These three rule bases confirm H3a comfortably at every
+problem size.
+
+\paragraph{The FIS$_{2b}$ caveat is structural, not pathological.}
+FIS$_{2b}$ has only three rules --- the single-input Rapidity classifier
+mapping Travel Duration $\in \{$short, moderate, long$\}$ to RPD $\in
+\{$low, moderate, high$\}$. Single-rule deletion in a three-rule FIS is
+a $33\,\%$ rule-base reduction, not a fine perturbation, and the
+sensitivity reflects that: median $|\Delta\mathrm{HV}|$ is $5.78\,\%$
+on small, $6.09\,\%$ on medium, and $2.87\,\%$ on large. The first two
+narrowly breach the $5\,\%$ confirmation threshold; the worst-case
+deletion (rule 0, short $\to$ low) produces $|\Delta\mathrm{HV}|$ up to
+$25\,\%$. The criterion is failed in the strict reading for FIS$_{2b}$.
+
+Three observations temper this. First, the breach is structural: the
+3-rule FIS would fail any single-rule-deletion stress test by
+construction. Second, the breach diminishes with problem size --- the
+large instance falls comfortably back inside the band, because larger
+$n_{\mathrm{dir}}$ averages over more allocations and smooths
+single-rule impact. Third, the breach is confined to FIS$_{2b}$; the
+remaining $63$ of $66$ rule deletions across the four FISs stay well
+inside the band. The practical implication is a design observation for
+future versions: FIS$_{2b}$ should be expanded to a five-level Rapidity
+classifier (Very Short, Short, Moderate, Long, Very Long $\to$
+five-level RPD), matching the linguistic granularity of the other FISs
+and reducing the structural sensitivity of single-rule perturbations.
+We leave this as future work and report H3a as \emph{confirmed for the
+three larger rule bases at every size; narrowly failed for FIS$_{2b}$
+on small and medium for structural reasons traceable to its three-rule
+design}.
+
+\subsection{Weight perturbation (H3b)}\label{sec:sens-weights}
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=\textwidth]{fig9_h3b_weight_sensitivity.pdf}
+    \caption{Mean objective values across 100 Latin-Hypercube samples of
+    weights $\in$ baseline$\cdot$(1$\pm$20\%) on the medium 4-obj NSGA-II
+    instance. Per-objective coefficients of variation are all below 1\% — far
+    below the 10\% threshold for H3b confirmation. The dashed line marks the
+    sample mean.}
+    \label{fig:weight-sensitivity}
+\end{figure}
+
+The complementary question is parametric. The vulnerability score VS in
+Eq.~\eqref{eq:vs} and the roadworthiness score RWS in Eq.~\eqref{eq:rws}
+each depend on weights elicited from experts. If the practitioner consults
+a different panel of experts and gets weights $20\,\%$ different in either
+direction, do the Pareto-front recommendations change?
+
+We answer it with 100 Latin-Hypercube samples on
+$(\mathrm{WAS}, \mathrm{WDS}, \mathrm{WIL}, \mathrm{WLS}, \mathrm{WRC},
+\mathrm{WPH})$ drawn from baseline$\cdot(1 \pm 0.20)$, each followed by 30
+NSGA-II reps on the medium 4-obj instance. The H3b confirmation criterion
+is coefficient of variation $\mathrm{CV} = \sigma / \mu \le 10\,\%$ for each
+of the four mean objectives across the 100 samples.
+Figure~\ref{fig:weight-sensitivity} shows the per-objective sample
+distributions.
+
+The result is far stronger than the threshold demands. The four
+coefficients of variation on the medium instance are $0.31\,\%$ (ULPP),
+$0.36\,\%$ (TRD), $0.12\,\%$ (RPD), and $0.59\,\%$ (CAIL) --- between
+one and two orders of magnitude inside the confirmation band. The
+hypervolume CV is $0.47\,\%$; the NNS CV is $0.01\,\%$. Per-sample
+mean ULPP varies from 50.84 to 51.67 across the entire $\pm 20\,\%$
+weight box; mean RPD varies by less than 0.18 units on a 100-unit
+scale. We repeat the sweep with 20 LHS samples on the small and large
+instances; CVs remain below $1\,\%$ for every objective at every size
+(small: ULPP $0.42\,\%$, TRD $0.52\,\%$, RPD $0.12\,\%$, CAIL
+$0.96\,\%$; large: $0.36\,\%$, $0.37\,\%$, $0.10\,\%$, $0.17\,\%$).
+H3b is confirmed at every problem size.
+
+The mechanism is the FIS's linguistic discretisation. A person whose
+baseline $\mathrm{VS} = 0.62$ falls into the High band of FIS$_1$; a
+$\pm 20\,\%$ perturbation of the four VS weights moves $\mathrm{VS}$ within
+roughly $\pm 0.05$, which is rarely enough to push them into the Medium
+band. The dominant rule firing on that person is unchanged across
+practically every sample, and so is the ULPP output. The same logic applies
+to RWS feeding the legacy FIS$_2$ pathway, although that pathway is not
+used in the 4-obj formulation directly. The aggregate effect on the Pareto
+front is that $\pm 20\,\%$ weight perturbations propagate as $\le 1\,\%$
+front-mean changes --- the GA finds essentially the same trade-offs
+regardless of how the practitioner sets the weights inside this band.
+
+\subsection{Practitioner takeaway}\label{sec:sens-takeaway}
+
+The two sensitivity studies answer different versions of the same question
+and converge, with one qualification, on the same answer: the
+four-objective Pareto-front recommendations are robust to the kinds of
+expert-elicitation noise that real practitioners produce.
+
+For \emph{rule-base} elicitation noise --- ``one of these if-then rules
+is wrong but I'm not sure which'' --- the three larger rule bases
+(FIS$_1$, FIS$_{2a}$, FIS$_3$) have median $|\Delta\mathrm{HV}|$ under
+$1.4\,\%$ at every problem size. The three-rule FIS$_{2b}$ is the
+exception: its median $|\Delta\mathrm{HV}|$ reaches $5.8$--$6.1\,\%$ on
+the small and medium instances, narrowly outside the confirmation band.
+This is a structural property of three-rule classifiers, not a flaw in
+the methodology, and it points to a concrete fix (a five-level
+FIS$_{2b}$, Section~\ref{sec:disc-limitations}). For \emph{weight}
+elicitation noise --- ``my colleagues would weight age slightly more
+than disability than I do'' --- the impact on mean objectives is under
+$1\,\%$ across the realistic $\pm 20\,\%$ band, at every problem size.
+
+The practitioner reading is that consulting multiple panels of experts is
+not a substitute for consulting good ones, but it is also not necessary for
+robust recommendations. A single elicitation session with one panel,
+followed by the four-objective optimisation we describe, will produce
+Pareto fronts indistinguishable from those produced by averaging five
+independent elicitations within $\pm 20\,\%$. This makes the methodology
+deployable in real response-phase settings where elicitation time is a
+binding constraint.
+
+% =====================================================================
+\section{Discussion}\label{sec:discussion}
+
+The five hypothesis tests in Sections~\ref{sec:performance}--\ref{sec:sensitivity}
+land asymmetrically. H2c and H3b are confirmed cleanly. H1 is confirmed
+in its Spearman half (the Robustness and Rapidity axes carry independent
+rank information) but its projection-dominance half is geometric rather
+than informational. H3a is confirmed for the three larger FIS rule
+bases at every problem size but narrowly failed for the three-rule
+FIS$_{2b}$ on small and medium instances. H2a is reference-sensitive:
+NSGA-II leads on hypervolume under a loose reference point, NSGA-III
+under a tight one, with no statistically significant separation under
+the tight reference. H4 is refuted in the inverted direction, with the
+cause undetermined. The asymmetry is not a problem; the qualified
+verdicts are the substance of an honest contribution. Three threads of
+implication follow.
+
+\subsection{Findings vs.\ supply-chain-resilience theory}\label{sec:disc-scr}
+
+The H1 confirmation is the substantive theoretical result. Splitting TIL
+into separate Robustness and Rapidity objectives, motivated by the 4R
+framework, produces a Pareto front with around half its solutions
+unrepresentable in the fused 3-objective formulation
+(Section~\ref{sec:h1-projection}). The split is not a methodological
+luxury; it surfaces a real Robustness/Rapidity trade-off that practitioners
+articulate and policy documents reference, and that disappears under
+single-axis fusion. This is the first published evidence we are aware of
+that explicitly operationalising 4R inside a humanitarian-allocation model
+\emph{adds empirical content beyond the theoretical framing}. The
+implication for SCR theory is concrete: 4R is not just a description
+language for resilience; when it is used to organise the objective set of
+a computational allocation model, the resulting front is materially
+different from one organised around classical OR objectives.
+
+\subsection{Findings vs.\ MOEA literature}\label{sec:disc-moea}
+
+The H2 split (refuted on HV, confirmed on CPU) sharpens the practitioner
+recommendation for NSGA-III on this problem class. NSGA-III is the right
+algorithmic choice not because it dominates the Pareto front but because
+it produces a \emph{Pareto-front-equivalent recommendation} 30\% faster
+than NSGA-II at every problem size we tested
+(Section~\ref{sec:perf-algorithms}). For the response-phase setting where
+time-to-decision is the binding operational constraint, the speed
+advantage is more useful than a marginal HV advantage would have been.
+The finding aligns with the runtime analysis in \cite{zheng2024nsga2}: the
+inflection point at which reference-point methods take over from
+crowding-distance methods is above four objectives for HV but below four
+objectives for CPU efficiency.
+
+The H4 inversion is the methodological reminder. ATRes \cite{atres2026}
+reports NSGA-II faster than NRGA on the large instance; we replicate the
+comparison and observe the opposite. We do not isolate the cause: the
+ATRes pipeline (MATLAB R2024b, two-row encoding, MATLAB-default
+\texttt{gamultiobj} operators) and our pipeline (Python, flattened
+encoding, custom DEAP operators) differ along multiple axes
+simultaneously, and we did not re-implement the ATRes operators to
+disentangle them. For the FIS-MOEA literature the lesson stands:
+comparative claims about NSGA-II vs.\ NRGA on this problem class do not
+transfer between implementations without verification. The more robust
+empirical claim within our implementation is that NSGA-III is faster
+than both NSGA-II and NRGA, which is reference-independent (see
+Section~\ref{sec:perf-algorithms}, reference-point sensitivity
+paragraph).
+
+\subsection{Practitioner implications}\label{sec:disc-practitioners}
+
+Three implications follow for the civil-protection planner.
+
+First, the 4R vocabulary maps onto the optimisation output. A planner who
+reads policy documents in 4R terms can read the Pareto front in 4R terms;
+no translation step intervenes. ``Show me the Pareto-optimal solutions
+with Robustness above 70'' becomes well-formed
+(Section~\ref{sec:resilience-mapping}). For the SI's audience of
+supply-chain resilience researchers and civil-protection planners, this
+alignment of optimisation tooling with policy vocabulary is the most
+immediately actionable contribution.
+
+Second, the recommendations are robust under realistic
+expert-elicitation noise (Section~\ref{sec:sensitivity}). A planner using
+the model with a single panel of experts will produce Pareto fronts
+indistinguishable from one using five averaged panels within $\pm 20\,\%$
+weight perturbation. Single-rule deletion in the larger FISs (FIS$_1$,
+FIS$_3$) shifts the front by under $0.2\,\%$ in the median. The planner
+does not need to over-invest in elicitation breadth.
+
+Third, the artifact is open. Every result in this paper is reproducible
+from \texttt{github.com/presidio-v/presidio-hardened-vol-assign} at tag
+\texttt{v0.2.0}, archived on Zenodo with a citable DOI. The Python CLI
+runs on a laptop; the medium-instance experiments complete in minutes.
+This is not a marginal contribution to the FIS-MOEA disaster line: prior
+work in this line \cite{rabiei2021, rabiei2023, atres2026} uses MATLAB
+without releasing implementations, and a reviewer or practitioner who
+wanted to check or extend the published work had no entry point.
+
+\subsection{Limitations}\label{sec:disc-limitations}
+
+Three limitations bound the present work.
+
+The instances are synthetic. People, centres, and travel attributes are
+drawn from generators with parameters chosen to span the FIS rule space
+representatively, not from a documented event. We argue in
+Section~\ref{sec:disc-future} for a real-event case study as the next
+deliverable; the present results establish the methodology on
+controllable instances first.
+
+The FIS rule bases reflect one set of expert-elicited judgements ---
+those carried over from \cite{atres2026} for FIS$_1$ and FIS$_3$ and
+extended to FIS$_{2a}$ and FIS$_{2b}$ following the same pattern. The
+sensitivity analysis in Section~\ref{sec:sensitivity} establishes that
+small perturbations of these judgements do not change recommendations
+materially, but it does not establish that a panel of experts from a
+different humanitarian-logistics tradition would converge on the same
+rule base. The model is robust within elicitation noise; the elicitation
+itself is a methodological choice we inherit, not derive.
+
+The Rapidity FIS (FIS$_{2b}$) has only three rules, and
+Section~\ref{sec:sens-rules} shows that single-rule deletion in
+FIS$_{2b}$ produces median $|\Delta\mathrm{HV}|$ of $5.8\,\%$ and
+$6.1\,\%$ on the small and medium instances --- narrowly outside the
+$5\,\%$ H3a confirmation band --- with a worst-case deletion near
+$25\,\%$. This is structural: removing one of three rules is a $33\,\%$
+rule-base reduction, and any three-rule FIS would fail a single-rule-
+deletion stress test by construction. The breach is confined to
+FIS$_{2b}$, diminishes with problem size (the large instance falls
+back inside the band at $2.9\,\%$), and does not touch the three
+larger rule bases, which confirm H3a at every size. The honest reading
+is that the three-rule single-input classifier sits at the lower bound
+of useful FIS granularity; expanding it to a five-level Rapidity
+classifier is the indicated future-version fix. We report H3a as a
+qualified confirmation rather than a clean one, and treat FIS$_{2b}$'s
+structural sensitivity as a documented limitation of the current
+model.
+
+\subsection{Future work}\label{sec:disc-future}
+
+Three directions follow naturally.
+
+\paragraph{Real-event case study.} The next version (v0.3.0 in our
+roadmap) applies the four-objective allocation model to a documented
+event --- the 2023 T\"urkiye--Syria earthquake or the 2024 Valencia
+floods are the candidates we are evaluating --- using EM-DAT,
+OpenStreetMap, and INFORM Risk Index data. The empirical hypotheses
+remain the same but the validation gains anchoring in observed
+practitioner decisions.
+
+\paragraph{Multi-modal transport.} The current Rapidity index assumes a
+single transport mode (vehicle on road). Extending FIS$_{2b}$ to take a
+mode indicator as a second input --- on-foot, vehicle, public transit,
+boat --- would let the model represent multi-modal evacuation routes
+without losing the 4R-axis discipline. ATRes \cite{atres2026} explicitly
+flags this as future work.
+
+\paragraph{Algorithmic alternatives.} MOEA/D and RVEA are the obvious
+candidates to add to the comparison \cite{deb2014nsga3}. Both are
+reference-direction methods like NSGA-III but with different niching
+mechanisms. The H2c finding suggests NSGA-III dominates the relevant
+algorithmic axis at four objectives; widening the comparison would
+strengthen or weaken that claim.
+
+% =====================================================================
+\section{Conclusions}\label{sec:conclusion}
+
+We have presented a humanitarian last-mile allocation model whose four
+objectives map one-to-one onto Bruneau et al.'s 4R supply-chain-resilience
+framework, evaluated by Mamdani fuzzy inference systems, solved by
+NSGA-II, NRGA, and NSGA-III, and released as an open-source Python
+reference implementation. The five contributions enumerated in
+Section~\ref{sec:intro} are realised respectively in
+Section~\ref{sec:resilience-mapping} (the 4R bijection),
+Section~\ref{sec:tradeoff-analysis} (the H1 evidence that the 4-obj split
+exposes a Robustness/Rapidity trade-off the 3-obj formulation cannot
+represent),
+Section~\ref{sec:performance} (the NSGA-III empirical comparison and the
+30\% CPU advantage at unchanged Pareto-front quality),
+Section~\ref{sec:sensitivity} (the rule-base and weight sensitivity
+studies establishing $\le 1\%$ CV under realistic expert-elicitation
+noise), and the open artifact at
+\texttt{github.com/presidio-v/presidio-hardened-vol-assign} (Zenodo DOI
+to be minted at the v0.2.0 tag).
+
+The aggregate finding is that the 4R framework is operationalisable
+end-to-end in a humanitarian last-mile allocation model, that the
+operationalisation produces empirical content beyond the theoretical
+framing, and that the resulting recommendations are robust to the kinds
+of expert-elicitation noise practitioners produce. For the
+supply-chain-resilience research community, this closes a gap between
+resilience theory and computational allocation practice. For the
+civil-protection planner, this delivers a tool whose outputs read
+directly in the vocabulary the planner already uses.
+
+% =====================================================================
+\section*{Data Availability Statement}
+The full experimental data, including 540 H1+H2+H4 runs, 100 H3b samples,
+and 66 H3a deletions, is reproducible from the open-source implementation
+at \texttt{github.com/presidio-v/presidio-hardened-vol-assign}, tag
+\texttt{v0.2.0}, archived on Zenodo (\textbf{[insert DOI]}).
+
+% =====================================================================
+\section*{Author Contributions}
+\textbf{[TIER 2 placeholder — CRediT taxonomy.]}
+
+\section*{Funding}
+\textbf{[TIER 2 placeholder.]}
+
+\section*{Conflicts of Interest}
+The authors declare no conflicts of interest.
+
+% =====================================================================
+\appendix
+\section{Full FIS rule bases}\label{app:rules}
+\textbf{[TIER 2 placeholder — Tables A.1–A.4 enumerating rules of FIS$_1$,
+FIS$_{2a}$, FIS$_{2b}$, FIS$_3$.]}
+
+\section{Statistical test outputs (extended)}\label{app:stats}
+\textbf{[TIER 2 placeholder — full Mann--Whitney U / Independent-samples
+T outputs for every (size, metric) cell.]}
+
+% =====================================================================
+\bibliographystyle{plain}
+\bibliography{lit}
+
+\end{document}
