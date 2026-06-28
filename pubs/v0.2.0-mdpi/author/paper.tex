@@ -25,6 +25,7 @@
 \usepackage{tabularx}
 \usepackage{multirow}
 \usepackage{amsmath}
+\let\Bbbk\relax % newtxmath predefines \Bbbk; avoid amssymb redefinition clash
 \usepackage{amssymb}
 \usepackage{xcolor}
 \usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black]{hyperref}
@@ -54,22 +55,8 @@
 \begin{document}
 \maketitle
 
-% --- MDPI extended-version disclosure (mandatory for the SI) ---
-\begin{center}
-\small
-\fbox{\parbox{0.95\textwidth}{
-This paper is an extended version of Rabiei, P.; Arias-Aranda, D.; Stantchev, V.
-\emph{A Novel Multi-Objective Optimization Model for Directing Affected People
-to Relief Centers in Post-Disaster Scenarios: Combining Fuzzy Inference Systems
-with NSGA-II and NRGA.} \emph{Autonomous Transportation Research}, in press,
-2026 (ATRES-S-26-00021). The present paper extends that work by reframing the
-model in supply-chain-resilience theory, splitting the transportation
-infeasibility objective into separate Robustness and Rapidity components,
-adding NSGA-III as a third evolutionary algorithm, introducing rule-base and
-weight-perturbation sensitivity analyses, and releasing a Python reference
-implementation as an open-source artifact.
-}}
-\end{center}
+% (Extended-version disclosure removed: the earlier manuscript is unpublished;
+% this paper is the primary publication of the model.)
 
 % =====================================================================
 \begin{abstract}
@@ -86,17 +73,17 @@ components --- Resourcefulness, Robustness, Rapidity, Redundancy ---
 evaluated by Mamdani fuzzy inference systems and solved by NSGA-II, NRGA,
 and NSGA-III. On 540 runs across three problem sizes the four-objective
 formulation surfaces independent Robustness and Rapidity axes that the
-three-objective ATRes formulation fuses into one --- a visibility gain
+baseline three-objective formulation fuses into one --- a visibility gain
 for the decision-maker, established by rank-correlation analysis.
-NSGA-III is 32\% faster than NSGA-II at every size with statistically
-equivalent Pareto-front quality. Weight-perturbation sweeps (100
+NSGA-III is 32\% faster than NSGA-II at every size with comparable
+Pareto-front quality, the HV ranking depending on the reference-point scheme. Weight-perturbation sweeps (100
 Latin-Hypercube samples, $\pm 20\%$) confirm the recommendations are
 robust under expert-elicitation noise at every problem size; rule-base
 deletion sweeps confirm the same for the three larger fuzzy systems,
 with the three-rule Rapidity classifier flagged as a structural
 sensitivity hot-spot. The implementation is released as an
 MIT-licensed Python reference at
-\texttt{github.com/presidio-v/presidio-hardened-vol-assign}.
+\url{https://github.com/presidio-v/presidio-hardened-vol-assign}.
 \end{abstract}
 
 \noindent\textbf{Keywords:}
@@ -152,9 +139,9 @@ the Pareto front directly.
 
 This paper develops a four-objective humanitarian last-mile allocation
 model in which each objective maps one-to-one onto a 4R component. Three
-of the four objectives are inherited from the recent ATRes line of work
-\cite{rabiei2021, rabiei2023, atres2026}; the fourth is new and is the
-result of splitting the prior work's transportation-infeasibility index
+of the four objectives build on the authors' recent FIS-MOEA line of work
+\cite{rabiei2021, rabiei2023}; the fourth is new and is the
+result of splitting a baseline transportation-infeasibility index
 into separate Robustness and Rapidity components. We solve the model with
 NSGA-II, NRGA, and NSGA-III, evaluate it under rule-base and weight
 sensitivity analyses, and release an open-source Python reference
@@ -312,11 +299,11 @@ The FIS-MOEA hybrid pattern in disaster operations was introduced into
 this line of work by Rabiei and Arias-Aranda \cite{rabiei2021} for
 post-disaster vehicle routing and relief supply distribution, and extended
 to volunteer-to-vacancy assignment in Rabiei, Arias-Aranda, and Stantchev
-\cite{rabiei2023}. Both pair Mamdani FIS with NSGA-II and NRGA. The ATRes
-manuscript \cite{atres2026} adapts the pattern to the people-to-relief-
-centre allocation problem we extend here, introducing the three qualitative
-indices (FLPP, TFL, CABL) and their corresponding objective functions
-(ULPP, TIL, CAIL). Adjacent fuzzy or stochastic disaster-allocation work
+\cite{rabiei2023}. Both pair Mamdani FIS with NSGA-II and NRGA. The present
+paper adapts the pattern to the people-to-relief-centre allocation problem,
+developing the three qualitative indices (FLPP, TFL, CABL) and their
+corresponding objective functions (ULPP, TIL, CAIL) as the baseline
+three-objective formulation that the four-objective model extends. Adjacent fuzzy or stochastic disaster-allocation work
 includes Bahmani et al.\ \cite{bahmani2018} on fuzzy multi-objective
 routing under damaged networks and Moreno et al.\ \cite{moreno2018} on
 two-stage stochastic relief-supply chains with social-equity
@@ -327,13 +314,12 @@ First, the FIS-MOEA disaster-line papers we surveyed do not reference the
 4R framework or any other named resilience taxonomy: the objective
 functions are introduced on their own terms, with intuitive
 justification, not as operationalisations of an existing theory. Second,
-the Transportation Infeasibility Level (TIL) in \cite{atres2026} fuses
+the baseline Transportation Infeasibility Level (TIL) fuses
 Robustness (road condition, hazard) with Rapidity (travel duration) into
 a single index --- which prevents the practitioner from articulating
 Robustness/Rapidity trade-offs separately. Third, none of the FIS-MOEA
-papers we surveyed releases a reproducible artifact: ATRes uses MATLAB
-R2024b without an accompanying implementation, and the prior papers in
-the line do similarly. This combination
+papers we surveyed releases a reproducible artifact: the prior work in
+this line uses MATLAB without an accompanying open implementation. This combination
 is the gap we address in Sections~\ref{sec:model}--\ref{sec:performance}.
 
 \subsection{Many-objective evolutionary algorithms}\label{sec:related-moea}
@@ -370,10 +356,10 @@ particular notion of diversity (gap between consecutive solutions in
 objective space) that may not match the practitioner's notion; random
 sampling avoids that prior at the cost of dropping some non-dominated
 solutions. NRGA is the second algorithm used in the FIS-MOEA disaster
-line \cite{rabiei2021, rabiei2023, atres2026} and we retain it for
+line \cite{rabiei2021, rabiei2023} and we retain it for
 continuity with that line.
 
-The MDPI extended version's algorithmic contribution is to add NSGA-III
+This paper's algorithmic contribution is to add NSGA-III
 to the comparison, putting it on a four-objective humanitarian allocation
 problem precisely at the boundary where reference-point methods are
 expected to start paying off. The empirical findings of
@@ -400,8 +386,8 @@ one-to-one onto the five elements of that combination.
 
 A disaster has just occurred. Civil-protection planners face a bounded
 decision: among the $m$ affected people whose locations and conditions are
-known, choose at most $n_{\mathrm{dir}}$ to direct to one of $n$ relief centres
-\cite{atres2026}. The constraint $n_{\mathrm{dir}} < m$ is operational, not
+known, choose at most $n_{\mathrm{dir}}$ to direct to one of $n$ relief centres.
+The constraint $n_{\mathrm{dir}} < m$ is operational, not
 philosophical: relief capacity in the first hours after a major event is
 always smaller than need \cite{cred2023, krishna2021}. The decision-maker does
 not get to serve everyone; they have to decide whom to serve, where to send
@@ -429,8 +415,8 @@ We replace the cost-and-distance objective set common in the
 allocation literature \cite{tzeng2007, abounacer2014, gama2016, zhao2017}
 with four qualitative indices, each anchored in one component of Bruneau et
 al.'s \cite{bruneau2003} 4R supply-chain-resilience framework. Three of the
-indices appeared in the ATRes work \cite{atres2026}; the fourth and the
-splitting of the second are new here.
+indices form the baseline three-objective formulation; the fourth, and the
+splitting of the second, are new here.
 
 \subsubsection{Fairness Level in People Prioritization (FLPP) — Resourcefulness}
 
@@ -441,8 +427,8 @@ problems, mobilise resources, and prioritise correctly under stress
 translates directly into one question: among the $m$ candidates, did we send
 the most vulnerable? FLPP encodes a need-weighted Rawlsian reading of
 fairness --- prioritisation by greatest individual need rather than equal
-shares or proportional allocation. We follow ATRes \cite{atres2026} in
-naming the index ``Fairness Level in People Prioritization''; readers
+shares or proportional allocation. We name the index
+``Fairness Level in People Prioritization''; readers
 preferring the SCM literature's vocabulary may read it as a Rawlsian
 maximin term \cite{soghrati2022}.
 
@@ -457,7 +443,7 @@ unfairness output $\mathrm{ULPP}_j \in [0,100]$ via a 27-rule rule base
 
 \subsubsection{Transportation Robustness (TR) — new}
 
-The ATRes paper folded transport robustness and rapidity together into a
+The baseline formulation folds transport robustness and rapidity together into a
 single Transportation Infeasibility Level (TIL). For supply-chain resilience
 analysis that fusion is too coarse: \emph{Robustness} (the network's capacity
 to deliver despite damage) and \emph{Rapidity} (the network's capacity to
@@ -510,38 +496,38 @@ contributes low CAIL.
 \subsection{Notations and variables}\label{sec:model-notation}
 
 Table~\ref{tab:notation} summarises the notation used throughout the model.
-Every notation that already appeared in ATRes \cite{atres2026} is preserved;
-the additions for the four-objective formulation are flagged in the rightmost
-column.
+Every notation carried over from the baseline three-objective formulation is
+preserved; the additions for the four-objective formulation are flagged in the
+rightmost column.
 
 \begin{table}[!t]
 \centering
-\caption{Notation. Symbols carried over from \cite{atres2026} are unchanged;
-new symbols for the four-objective formulation are marked.}
+\caption{Notation. Symbols carried over from the baseline three-objective
+formulation are unchanged; new symbols for the four-objective formulation are marked.}
 \label{tab:notation}
 \small
 \begin{tabularx}{\textwidth}{l X l}
 \toprule
 \textbf{Symbol} & \textbf{Description} & \textbf{Origin} \\
 \midrule
-$P$, $m$ & Set of affected people; $m = |P|$. & ATRes \\
-$C$, $n$ & Set of relief centres; $n = |C|$. & ATRes \\
-$n_{\mathrm{dir}}$ & Number of people we direct ($0 < n_{\mathrm{dir}} < m$). & ATRes \\
-$d_{j,i}$ & Binary indicator: $d_{j,i} = 1$ iff person $j$ directed to centre $i$. & ATRes \\
-$\mathrm{VS}_j \in [0,1]$ & Vulnerability score of person $j$. & ATRes \\
-$\mathrm{IDL}_j \in [0,100]$ & Infrastructure damage at person $j$'s location. & ATRes \\
-$\mathrm{RTR}_j$ (hours) & Resource time remaining for person $j$. & ATRes \\
-$\mathrm{COR}_i \in [0,100]$ & Centre $i$ occupancy rate. & ATRes \\
-$\mathrm{RDR}_i \in [0,100]$ & Centre $i$ resource depletion rate. & ATRes \\
-$\mathrm{TD}_{j,i}$ (min) & Travel duration $j \to i$. & ATRes \\
-$\mathrm{RCS}_{j,i}$ & Road condition $\in \{0.1, 0.5, 1.0\}$. & ATRes \\
-$\mathrm{PHS}_{j,i}$ & Possible-hazard score $\in \{0.05, 0.25, 0.5, 0.75, 1.0\}$. & ATRes \\
-$\mathrm{RWS}_{j,i} \in [0,1]$ & Roadworthiness (high = safe), Eq.~\eqref{eq:rws}. & ATRes (sign-corrected) \\
-$\mathrm{ULPP}_j \in [0,100]$ & Unfairness in prioritising person $j$. & ATRes \\
-$\mathrm{TIL}_{j,i} \in [0,100]$ & Transport infeasibility (3-obj only). & ATRes \\
+$P$, $m$ & Set of affected people; $m = |P|$. & baseline \\
+$C$, $n$ & Set of relief centres; $n = |C|$. & baseline \\
+$n_{\mathrm{dir}}$ & Number of people we direct ($0 < n_{\mathrm{dir}} < m$). & baseline \\
+$d_{j,i}$ & Binary indicator: $d_{j,i} = 1$ iff person $j$ directed to centre $i$. & baseline \\
+$\mathrm{VS}_j \in [0,1]$ & Vulnerability score of person $j$. & baseline \\
+$\mathrm{IDL}_j \in [0,100]$ & Infrastructure damage at person $j$'s location. & baseline \\
+$\mathrm{RTR}_j$ (hours) & Resource time remaining for person $j$. & baseline \\
+$\mathrm{COR}_i \in [0,100]$ & Centre $i$ occupancy rate. & baseline \\
+$\mathrm{RDR}_i \in [0,100]$ & Centre $i$ resource depletion rate. & baseline \\
+$\mathrm{TD}_{j,i}$ (min) & Travel duration $j \to i$. & baseline \\
+$\mathrm{RCS}_{j,i}$ & Road condition $\in \{0.1, 0.5, 1.0\}$. & baseline \\
+$\mathrm{PHS}_{j,i}$ & Possible-hazard score $\in \{0.05, 0.25, 0.5, 0.75, 1.0\}$. & baseline \\
+$\mathrm{RWS}_{j,i} \in [0,1]$ & Roadworthiness (high = safe), Eq.~\eqref{eq:rws}. & baseline \\
+$\mathrm{ULPP}_j \in [0,100]$ & Unfairness in prioritising person $j$. & baseline \\
+$\mathrm{TIL}_{j,i} \in [0,100]$ & Transport infeasibility (3-obj only). & baseline \\
 $\mathrm{TRD}_{j,i} \in [0,100]$ & Transport Robustness Deficit. & \textbf{new} \\
 $\mathrm{RPD}_{j,i} \in [0,100]$ & Rapidity Deficit. & \textbf{new} \\
-$\mathrm{CAIL}_{i,td}$ & Centre allocation imbalance contribution. & ATRes \\
+$\mathrm{CAIL}_{i,td}$ & Centre allocation imbalance contribution. & baseline \\
 $\overline{\mathrm{ULPP}}, \overline{\mathrm{TRD}}, \overline{\mathrm{RPD}}, \overline{\mathrm{CAIL}}$
 & Mean of corresponding index over the directed set. & \textbf{4 of 4 new in 4-obj} \\
 \bottomrule
@@ -565,22 +551,12 @@ roadworthiness score is given by
     \label{eq:rws}
 \end{equation}
 
-\paragraph{Note on Eq.~\eqref{eq:rws}: sign correction relative to ATRes.}
-ATRes \cite{atres2026} defines RWS as the bare weighted average of RCS and
-PHS, which evaluate to higher values for worse conditions (Blocked $= 1.0$,
-Extreme $= 1.0$). ATRes Table~3 then labels the result with the opposite
-convention (\emph{High} RWS reads as ``safe and efficient routes''), and
-ATRes Table~5 makes that the operative reading: $\mathrm{TIL}$ is low when
-RWS is high. The two readings cannot both hold for the formula as written;
-either the labels or the formula must invert. We invert the formula. The
-sign-corrected form, Eq.~\eqref{eq:rws}, gives $\mathrm{RWS} = 1$ for a
-perfectly safe and clear route and $\mathrm{RWS} = 0$ for an impassable one,
-matching ATRes Tables~3 and~5 throughout. The present authors include the
-lead and corresponding authors of \cite{atres2026}; we record the
-correction here explicitly so that any work citing both papers can adopt
-the corrected form unambiguously, and we will request a corresponding
-amendment at proof stage of \cite{atres2026} if galley scheduling
-permits.
+\paragraph{Note on Eq.~\eqref{eq:rws}: orientation of RWS.}
+We define RWS so that it increases with route quality: the weighted average
+of RCS and PHS rises with worse conditions (Blocked $= 1.0$, Extreme $= 1.0$),
+so Eq.~\eqref{eq:rws} subtracts it from one. This gives $\mathrm{RWS} = 1$ for
+a perfectly safe and clear route and $\mathrm{RWS} = 0$ for an impassable one,
+so that $\mathrm{TIL}$ is low exactly when the route is safe and fast.
 
 \subsection{Objective functions}\label{sec:model-objectives}
 
@@ -596,8 +572,8 @@ The model minimises four mean-objective functions over the directed set:
                                           {n_{\mathrm{dir}}},   \label{eq:obj-cail}
 \end{align}
 where $\mathrm{TCAIL}_i = \sum_{j=1}^{m} d_{j,i}\, \mathrm{CAIL}_{i,\mathrm{TD}_{j,i}}$
-collects the per-allocation CAIL contributions at centre $i$. The constraints
-follow ATRes \cite{atres2026}:
+collects the per-allocation CAIL contributions at centre $i$. The model
+constraints are:
 \begin{equation}
     \sum_{i=1}^{n} d_{j,i} \le 1\ \forall j, \qquad
     \sum_{j=1}^{m} \sum_{i=1}^{n} d_{j,i} = n_{\mathrm{dir}}, \qquad
@@ -607,11 +583,11 @@ i.e., each person is directed to at most one centre, exactly
 $n_{\mathrm{dir}}$ are directed, and the directed set is a strict subset of
 the affected population.
 
-For the legacy three-objective formulation (used in
+For the baseline three-objective formulation (used in
 Section~\ref{sec:tradeoff-analysis} as the H1 comparator), Eqs.
 \eqref{eq:obj-trd} and \eqref{eq:obj-rpd} are replaced by the single
-$\overline{\mathrm{TIL}}$ objective using the fused FIS$_2$ pathway from
-ATRes \cite{atres2026}. Everything else is identical.
+$\overline{\mathrm{TIL}}$ objective using the fused FIS$_2$ pathway of the
+baseline formulation. Everything else is identical.
 
 \subsection{Resilience-theoretic mapping (new)}\label{sec:resilience-mapping}
 
@@ -747,13 +723,14 @@ want, in 4R terms, post-hoc.
 \subsection{Fuzzy inference systems}\label{sec:algo-fis}
 
 We use Mamdani inference \cite{mamdani1975} with centroid defuzzification
-throughout, for the same reason the original ATRes work did: linguistic
+throughout, for the same reason as earlier work in this line
+\cite{rabiei2021, rabiei2023}: linguistic
 if--then rules elicited from disaster-response practitioners are easier to
 audit and revise than a tuned crisp model, and the Mamdani conjunction over
 triangular and trapezoidal membership functions gives the rule base a clear
 geometric interpretation. The four-objective formulation uses four control
 systems (FIS$_1$ for ULPP, FIS$_{2a}$ for TRD, FIS$_{2b}$ for RPD, FIS$_3$
-for CAIL); the legacy three-objective formulation reuses ATRes's FIS$_2$ for
+for CAIL); the baseline three-objective formulation reuses its FIS$_2$ for
 TIL and is invoked only as the H1 comparator in
 Section~\ref{sec:tradeoff-analysis}.
 
@@ -821,8 +798,8 @@ $n_{\mathrm{dir}}$ entries are person indices, sampled without replacement
 from $\{0, \ldots, m-1\}$ --- a partial permutation of the candidate
 population. The remaining $n_{\mathrm{dir}}$ entries are real values
 $r_k \in [0, 1)$, each decoded to a centre index via
-$\lfloor r_k \cdot n \rfloor$ \cite{atres2026}. The encoding is a flattened
-form of the two-row matrix used in ATRes; the two representations carry
+$\lfloor r_k \cdot n \rfloor$. The encoding is a flattened
+form of a two-row allocation matrix; the two representations carry
 identical information.
 
 The order of the (person, centre) pairs is not semantically meaningful: the
@@ -863,8 +840,8 @@ per front, comfortably above the reference-point count).
 
 We test three problem sizes drawn at a single seed from a deterministic
 generator: small (5 centres, 150 affected people, $n_{\mathrm{dir}} = 50$),
-medium (8/225/75), and large (10/300/100). Small and large match ATRes's
-test instances \cite{atres2026}; medium is new and added to give scaling
+medium (8/225/75), and large (10/300/100). Small and large match the baseline
+test instances; medium is new and added to give scaling
 analysis a third anchor. Each problem instance is materialised as three CSV
 files (people, centres, travel) and is reproducible bit-exact from the seed
 via the open-source instance generator at
@@ -873,8 +850,8 @@ via the open-source instance generator at
 For every cell in the (size $\times$ formulation $\times$ algorithm) matrix
 we run 30 repetitions with rep-specific seeds drawn at
 $\mathrm{seed}_r = 1000 + 7919 r$. Population size is 100, generations 200,
-crossover probability $0.7$, mutation probability $0.2$ --- ATRes baselines
-\cite{atres2026} held fixed across the matrix so the comparison is on
+crossover probability $0.7$, mutation probability $0.2$ --- baseline
+hyper-parameters held fixed across the matrix so the comparison is on
 algorithm and formulation, not hyper-parameters. NSGA-III uses the
 Das--Dennis $p = 4$ reference set described in
 Section~\ref{sec:algo-refpoints}. Implementation is the open-source Python
@@ -992,8 +969,7 @@ roughly half a second per generation pair, which compounds across 200
 generations into the gap we measure. The same gap will persist on larger
 problems --- the $O(\log N)$ term in NSGA-II grows; the niching term in
 NSGA-III grows linearly. For practitioners running real-time response-phase
-recommendations, NSGA-III's speedup translates directly to time-to-decision
-\cite{atres2026}.
+recommendations, NSGA-III's speedup translates directly to time-to-decision.
 
 \paragraph{Reference-point sensitivity of H2a.}
 The HV in Table~\ref{tab:stats-summary} is computed against the fixed
@@ -1032,43 +1008,48 @@ the boundary-objective-count interpretation in the previous paragraph
 holds; doubling the population does not flip the H2a verdict.
 
 \paragraph{H4 refuted (inverted): NRGA is faster than NSGA-II on large in
-our encoding.} ATRes \cite{atres2026} reports NSGA-II faster than NRGA on
-the large instance. We replicate this comparison and find the opposite.
+our encoding.} An earlier MATLAB implementation of this model in our group
+reported NSGA-II faster than NRGA on the large instance. Our Python
+implementation finds the opposite.
 On large, NRGA achieves $1.69 \pm 0.05$\,s versus NSGA-II $1.99 \pm 0.05$\,s
 ($p < 10^{-4}$, Mann--Whitney $U$); on the three-objective formulation the
 inversion is the same (NRGA $1.50$\,s vs. NSGA-II $1.79$\,s,
-$p < 10^{-4}$). We do not claim to know the cause. ATRes implements the
-model in MATLAB R2024b with the two-row matrix encoding of its Figure~2;
+$p < 10^{-4}$). We do not claim to know the cause. The earlier
+implementation uses MATLAB R2024b with a two-row matrix encoding;
 we implement the model in Python (\texttt{scikit-fuzzy} + \texttt{DEAP}
 + \texttt{pymoo}) with the flattened partial-permutation + real-valued
 encoding of Section~\ref{sec:algo-chromosome} and our own variation
 operators. Three differences between the implementations could each
 explain the inversion: encoding layout, variation-operator behaviour,
-and platform/runtime overheads. Without re-implementing ATRes's exact
+and platform/runtime overheads. Without re-implementing the exact
 MATLAB pipeline we cannot attribute the inversion to any single one;
 both implementations produce Pareto fronts of comparable HV, so the
 inversion is not pathological in either direction.
 
 We treat the inversion as a methodological observation, not a contradiction
-of \cite{atres2026}. The substantive lesson is that NSGA-II-vs-NRGA CPU
+of the earlier results. The substantive lesson is that NSGA-II-vs-NRGA CPU
 rankings on humanitarian allocation problems do not transfer between
-implementations without verification. For the MDPI extended version's
-narrative, the NSGA-II/NRGA ranking is replaced by the more robust
+implementations without verification. In this paper, the NSGA-II/NRGA
+ranking is replaced by the more robust
 observation that \emph{NSGA-III is the fastest algorithm on this problem
 class in our implementation}, which is a claim we can substantiate from
-our own data without depending on ATRes-vs-our-Python comparison.
+our own data without depending on a MATLAB-vs-Python comparison.
 
 \subsection{Statistical comparison summary}\label{sec:perf-stats}
 
 Table~\ref{tab:stats-summary} aggregates the means, standard deviations, and
 test statistics. Across all five quality metrics on the four-objective
 formulation, NSGA-II and NSGA-III achieve identical NNS (100 of 100,
-i.e.\ every individual on the boundary front), within-noise MID and SM,
+i.e.\ every individual on the boundary front), MID and SM differences that are
+statistically detectable (Mann--Whitney $p < 0.001$, Appendix~\ref{app:stats})
+but practically negligible (means equal to one decimal place),
 significantly different HV (NSGA-II ahead), and significantly different CPU
 time (NSGA-III ahead). NRGA loses 0--1\,\% of NNS to its uniform-random
 tie-breaker, has the lowest HV at every size, and sits between the other
-two on CPU time. The ranking is stable across all three problem sizes and
-across both formulations.
+two on CPU time. The CPU ranking is stable across all three problem sizes and
+both formulations; the HV lead of NSGA-II over NSGA-III is significant
+throughout the four-objective formulation but, in the three-objective baseline,
+only at the large size (Appendix~\ref{app:stats}).
 
 \begin{table}[!t]
 \centering
@@ -1109,7 +1090,7 @@ time, where the algorithms differ in opposite directions.
 % TIER 1 PLACEHOLDER — target ~1{,}200 words. Tests H1.
 
 The four-objective formulation has to do empirical work, not just
-theoretical work. The H1 hypothesis tests whether splitting ATRes's TIL
+theoretical work. The H1 hypothesis tests whether splitting the baseline TIL
 into separate Robustness (TRD) and Rapidity (RPD) components actually
 exposes Pareto trade-offs the three-objective formulation cannot represent.
 We test it two ways: rank correlation between the split axes (do they carry
@@ -1144,10 +1125,10 @@ range.
 The Spearman result establishes that the two axes carry independent
 information. The projection analysis answers a sharper question: how many
 4-obj Pareto-optimal solutions \emph{disappear} when we collapse to 3-obj
-space using ATRes's TIL fusion?
+space using the baseline TIL fusion?
 
 For each 4-obj front, we re-evaluate every (person, centre) allocation
-through the legacy FIS$_2$ pathway --- compute the sign-corrected RWS by
+through the baseline FIS$_2$ pathway --- compute the RWS by
 Eq.~\eqref{eq:rws}, then evaluate FIS$_2$(TD, RWS) to get TIL. Averaging
 gives a per-solution $\overline{\mathrm{TIL}}$, and the projected solution
 is $(\overline{\mathrm{ULPP}}, \overline{\mathrm{TIL}}, \overline{\mathrm{CAIL}})$.
@@ -1174,27 +1155,27 @@ solutions across the entire Robustness/Rapidity plane.
 A fair question follows immediately. \emph{Some} fraction of any 4D
 Pareto front will be dominated when projected to 3D simply because
 projection loses information --- a geometric effect, not specific to the
-ATRes RWS-weighted fusion. To separate the geometric component from the
+baseline RWS-weighted fusion. To separate the geometric component from the
 informational, we sample 100 random convex fusions
 $\mathrm{TIL}_{\mathrm{null}} = \alpha \cdot \overline{\mathrm{TRD}}
 + (1-\alpha) \cdot \overline{\mathrm{RPD}}$ with
 $\alpha \sim \mathcal{U}(0,1)$ per fusion, recompute the projection-
 dominance fraction for each, and form an empirical null distribution
-against which the ATRes-fusion fraction is compared.
+against which the baseline-fusion fraction is compared.
 
 The result tempers the 50\% headline. Pooled across all 270 fronts, the
-ATRes-fusion mean dominance fraction is 0.486; the null-distribution
+baseline-fusion mean dominance fraction is 0.486; the null-distribution
 mean is 0.479. The difference is $+0.008$ --- under one percentage point.
-The mean z-score of the ATRes fraction in the per-front null distribution
-is $+0.09$; only $7.4\%$ of fronts have an ATRes fraction above the
+The mean z-score of the baseline fraction in the per-front null distribution
+is $+0.09$; only $7.4\%$ of fronts have a baseline fraction above the
 null 95th percentile, and $5.6\%$ below the 5th. The projection-dominance
 loss is, almost entirely, geometric.
 
 What survives this control is the Spearman finding from
 Section~\ref{sec:h1-spearman}: TRD and RPD carry independent rank
 information. The 4-obj formulation does expose new trade-offs --- the
-Spearman result establishes that --- but the specific 3-obj fusion that
-ATRes uses is not worse than a random fusion at preserving them; it is
+Spearman result establishes that --- but the specific 3-obj fusion the
+baseline uses is not worse than a random fusion at preserving them; it is
 not the source of the dominance loss. We rewrite the H1 finding
 accordingly in Section~\ref{sec:h1-verdict}.
 
@@ -1250,10 +1231,10 @@ satisfy $|\rho| < 0.5$. The two axes are not redundant; the split exposes
 information the fused TIL cannot represent.
 
 \paragraph{Projection-dominance half: geometric, not informational.}
-The 50\% dominance fraction we observe under the ATRes-RWS fusion is
+The 50\% dominance fraction we observe under the baseline RWS fusion is
 within one percentage point of the null mean from random convex fusions
 of TRD and RPD. The dominance loss is essentially geometric --- a
-property of projecting from 4D to 3D, not of ATRes's particular
+property of projecting from 4D to 3D, not of the baseline's particular
 3-objective formulation. We do not claim that the 3-obj formulation is
 specifically destructive; we claim that the 4-obj formulation surfaces
 trade-off information that any 3-obj fusion would compress.
@@ -1420,7 +1401,7 @@ $\pm 20\,\%$ perturbation of the four VS weights moves $\mathrm{VS}$ within
 roughly $\pm 0.05$, which is rarely enough to push them into the Medium
 band. The dominant rule firing on that person is unchanged across
 practically every sample, and so is the ULPP output. The same logic applies
-to RWS feeding the legacy FIS$_2$ pathway, although that pathway is not
+to RWS feeding the baseline FIS$_2$ pathway, although that pathway is not
 used in the 4-obj formulation directly. The aggregate effect on the Pareto
 front is that $\pm 20\,\%$ weight perturbations propagate as $\le 1\,\%$
 front-mean changes --- the GA finds essentially the same trade-offs
@@ -1504,13 +1485,13 @@ inflection point at which reference-point methods take over from
 crowding-distance methods is above four objectives for HV but below four
 objectives for CPU efficiency.
 
-The H4 inversion is the methodological reminder. ATRes \cite{atres2026}
-reports NSGA-II faster than NRGA on the large instance; we replicate the
-comparison and observe the opposite. We do not isolate the cause: the
-ATRes pipeline (MATLAB R2024b, two-row encoding, MATLAB-default
-\texttt{gamultiobj} operators) and our pipeline (Python, flattened
+The H4 inversion is the methodological reminder. An earlier MATLAB
+implementation of this model reported NSGA-II faster than NRGA on the large
+instance; we observe the opposite. We do not isolate the cause: that earlier
+pipeline (MATLAB R2024b, two-row encoding, MATLAB-default
+\texttt{gamultiobj} operators) and ours (Python, flattened
 encoding, custom DEAP operators) differ along multiple axes
-simultaneously, and we did not re-implement the ATRes operators to
+simultaneously, and we did not re-implement the MATLAB operators to
 disentangle them. For the FIS-MOEA literature the lesson stands:
 comparative claims about NSGA-II vs.\ NRGA on this problem class do not
 transfer between implementations without verification. The more robust
@@ -1541,11 +1522,11 @@ FIS$_3$) shifts the front by under $0.2\,\%$ in the median. The planner
 does not need to over-invest in elicitation breadth.
 
 Third, the artifact is open. Every result in this paper is reproducible
-from \texttt{github.com/presidio-v/presidio-hardened-vol-assign} at tag
+from \url{https://github.com/presidio-v/presidio-hardened-vol-assign} at tag
 \texttt{v0.2.0}, archived on Zenodo with a citable DOI. The Python CLI
 runs on a laptop; the medium-instance experiments complete in minutes.
 This is not a marginal contribution to the FIS-MOEA disaster line: prior
-work in this line \cite{rabiei2021, rabiei2023, atres2026} uses MATLAB
+work in this line \cite{rabiei2021, rabiei2023} uses MATLAB
 without releasing implementations, and a reviewer or practitioner who
 wanted to check or extend the published work had no entry point.
 
@@ -1561,7 +1542,7 @@ deliverable; the present results establish the methodology on
 controllable instances first.
 
 The FIS rule bases reflect one set of expert-elicited judgements ---
-those carried over from \cite{atres2026} for FIS$_1$ and FIS$_3$ and
+those carried over from the baseline formulation for FIS$_1$ and FIS$_3$ and
 extended to FIS$_{2a}$ and FIS$_{2b}$ following the same pattern. The
 sensitivity analysis in Section~\ref{sec:sensitivity} establishes that
 small perturbations of these judgements do not change recommendations
@@ -1604,8 +1585,7 @@ practitioner decisions.
 single transport mode (vehicle on road). Extending FIS$_{2b}$ to take a
 mode indicator as a second input --- on-foot, vehicle, public transit,
 boat --- would let the model represent multi-modal evacuation routes
-without losing the 4R-axis discipline. ATRes \cite{atres2026} explicitly
-flags this as future work.
+without losing the 4R-axis discipline.
 
 \paragraph{Algorithmic alternatives.} MOEA/D and RVEA are the obvious
 candidates to add to the comparison \cite{deb2014nsga3}. Both are
@@ -1632,7 +1612,7 @@ Section~\ref{sec:performance} (the NSGA-III empirical comparison and the
 Section~\ref{sec:sensitivity} (the rule-base and weight sensitivity
 studies establishing $\le 1\%$ CV under realistic expert-elicitation
 noise), and the open artifact at
-\texttt{github.com/presidio-v/presidio-hardened-vol-assign} (Zenodo DOI
+\url{https://github.com/presidio-v/presidio-hardened-vol-assign} (Zenodo DOI
 to be minted at the v0.2.0 tag).
 
 The aggregate finding is that the 4R framework is operationalisable
@@ -1649,15 +1629,22 @@ directly in the vocabulary the planner already uses.
 \section*{Data Availability Statement}
 The full experimental data, including 540 H1+H2+H4 runs, 100 H3b samples,
 and 66 H3a deletions, is reproducible from the open-source implementation
-at \texttt{github.com/presidio-v/presidio-hardened-vol-assign}, tag
+at \url{https://github.com/presidio-v/presidio-hardened-vol-assign}, tag
 \texttt{v0.2.0}, archived on Zenodo (\textbf{[insert DOI]}).
 
 % =====================================================================
 \section*{Author Contributions}
-\textbf{[TIER 2 placeholder — CRediT taxonomy.]}
+% DRAFT CRediT — co-authors to confirm/adjust roles before submission.
+Conceptualization, P.R., D.A.-A. and V.S.; methodology, P.R., D.A.-A. and V.S.;
+software, P.R. and V.S.; validation, D.A.-A. and V.S.; formal analysis, V.S.;
+investigation, P.R.; data curation, V.S.; writing---original draft preparation,
+P.R. and V.S.; writing---review and editing, D.A.-A. and V.S.; visualization,
+V.S.; supervision, D.A.-A. All authors have read and agreed to the published
+version of the manuscript.
 
 \section*{Funding}
-\textbf{[TIER 2 placeholder.]}
+\textbf{[Confirm before submission: external funding and grant number(s), or
+``This research received no external funding.'']}
 
 \section*{Conflicts of Interest}
 The authors declare no conflicts of interest.
@@ -1665,12 +1652,244 @@ The authors declare no conflicts of interest.
 % =====================================================================
 \appendix
 \section{Full FIS rule bases}\label{app:rules}
-\textbf{[TIER 2 placeholder — Tables A.1–A.4 enumerating rules of FIS$_1$,
-FIS$_{2a}$, FIS$_{2b}$, FIS$_3$.]}
+
+This appendix enumerates every rule of the four fuzzy inference systems of the
+four-objective formulation (FIS$_1$, FIS$_{2a}$, FIS$_{2b}$, FIS$_3$), followed
+by the baseline FIS$_2$ used only as the H1 three-objective comparator. The
+tables are generated directly from the rule-base constants in the open-source
+implementation (\texttt{presidio\_vol\_assign.allocation.fis}); they are
+authoritative and reproduce bit-exact under the released code.
+
+\begin{table}[!ht]
+\centering\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{FIS$_1$ rule base: (VS, IDL, RTR) $\to$ ULPP, operationalising
+Resourcefulness. Full $3^3 = 27$ Cartesian rule base.}
+\label{tab:rules-fis1}
+\begin{minipage}[t]{0.48\textwidth}\centering
+\begin{tabular}{cccc}
+\toprule
+VS & IDL & RTR & ULPP \\
+\midrule
+Low & Minor & Short & Moderate \\
+Low & Minor & Moderate & Low \\
+Low & Minor & Long & Very Low \\
+Low & Moderate & Short & High \\
+Low & Moderate & Moderate & Moderate \\
+Low & Moderate & Long & Low \\
+Low & Severe & Short & Very High \\
+Low & Severe & Moderate & High \\
+Low & Severe & Long & Moderate \\
+Medium & Minor & Short & High \\
+Medium & Minor & Moderate & Moderate \\
+Medium & Minor & Long & Low \\
+Medium & Moderate & Short & Very High \\
+Medium & Moderate & Moderate & High \\
+\bottomrule
+\end{tabular}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}\centering
+\begin{tabular}{cccc}
+\toprule
+VS & IDL & RTR & ULPP \\
+\midrule
+Medium & Moderate & Long & Moderate \\
+Medium & Severe & Short & Very High \\
+Medium & Severe & Moderate & Very High \\
+Medium & Severe & Long & High \\
+High & Minor & Short & Very High \\
+High & Minor & Moderate & High \\
+High & Minor & Long & Moderate \\
+High & Moderate & Short & Very High \\
+High & Moderate & Moderate & Very High \\
+High & Moderate & Long & High \\
+High & Severe & Short & Very High \\
+High & Severe & Moderate & Very High \\
+High & Severe & Long & Very High \\
+& & & \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\end{table}
+
+\begin{table}[!ht]
+\centering\footnotesize
+\setlength{\tabcolsep}{6pt}
+\caption{FIS$_{2a}$ rule base: (RCS, PHS) $\to$ TRD, operationalising
+Robustness ($3 \times 3 = 9$ rules); FIS$_{2b}$ rule base:
+(TD) $\to$ RPD, operationalising Rapidity (3 rules).}
+\label{tab:rules-fis2}
+\begin{minipage}[t]{0.55\textwidth}\centering
+\textbf{FIS$_{2a}$ (Robustness)}\\[2pt]
+\begin{tabular}{ccc}
+\toprule
+RCS & PHS & TRD \\
+\midrule
+Low & Low & Very Low \\
+Low & Moderate & Low \\
+Low & High & Moderate \\
+Moderate & Low & Low \\
+Moderate & Moderate & Moderate \\
+Moderate & High & High \\
+High & Low & Moderate \\
+High & Moderate & High \\
+High & High & Very High \\
+\bottomrule
+\end{tabular}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.4\textwidth}\centering
+\textbf{FIS$_{2b}$ (Rapidity)}\\[2pt]
+\begin{tabular}{cc}
+\toprule
+TD & RPD \\
+\midrule
+Short & Low \\
+Moderate & Moderate \\
+Long & High \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\end{table}
+
+\begin{table}[!ht]
+\centering\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{FIS$_3$ rule base: (COR, RDR, TD) $\to$ CAIL, operationalising
+Redundancy. Full $3^3 = 27$ Cartesian rule base.}
+\label{tab:rules-fis3}
+\begin{minipage}[t]{0.48\textwidth}\centering
+\begin{tabular}{cccc}
+\toprule
+COR & RDR & TD & CAIL \\
+\midrule
+Low & Slow & Short & Very Low \\
+Low & Slow & Moderate & Low \\
+Low & Slow & Long & Moderate \\
+Low & Moderate & Short & Low \\
+Low & Moderate & Moderate & Moderate \\
+Low & Moderate & Long & High \\
+Low & Rapid & Short & Moderate \\
+Low & Rapid & Moderate & High \\
+Low & Rapid & Long & High \\
+Moderate & Slow & Short & Low \\
+Moderate & Slow & Moderate & Moderate \\
+Moderate & Slow & Long & High \\
+Moderate & Moderate & Short & Moderate \\
+Moderate & Moderate & Moderate & Moderate \\
+\bottomrule
+\end{tabular}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.48\textwidth}\centering
+\begin{tabular}{cccc}
+\toprule
+COR & RDR & TD & CAIL \\
+\midrule
+Moderate & Moderate & Long & High \\
+Moderate & Rapid & Short & High \\
+Moderate & Rapid & Moderate & High \\
+Moderate & Rapid & Long & Very High \\
+High & Slow & Short & Moderate \\
+High & Slow & Moderate & High \\
+High & Slow & Long & High \\
+High & Moderate & Short & High \\
+High & Moderate & Moderate & High \\
+High & Moderate & Long & Very High \\
+High & Rapid & Short & Very High \\
+High & Rapid & Moderate & Very High \\
+High & Rapid & Long & Very High \\
+& & & \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+\end{table}
+
+\begin{table}[!ht]
+\centering\footnotesize
+\setlength{\tabcolsep}{6pt}
+\caption{Baseline FIS$_2$ rule base: (TD, RWS) $\to$ TIL, the fused
+transportation-infeasibility classifier used only as the three-objective
+H1 comparator (Section~\ref{sec:tradeoff-analysis}). 9 rules.}
+\label{tab:rules-fis2-baseline}
+\begin{tabular}{ccc}
+\toprule
+TD & RWS & TIL \\
+\midrule
+Short & Low & Moderate \\
+Short & Moderate & Low \\
+Short & High & Very Low \\
+Moderate & Low & High \\
+Moderate & Moderate & Moderate \\
+Moderate & High & Low \\
+Long & Low & Very High \\
+Long & Moderate & High \\
+Long & High & Moderate \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Statistical test outputs (extended)}\label{app:stats}
-\textbf{[TIER 2 placeholder — full Mann--Whitney U / Independent-samples
-T outputs for every (size, metric) cell.]}
+
+This appendix gives the complete pairwise Mann--Whitney $U$ two-sided test
+outputs underlying the summary in Section~\ref{sec:perf-stats}. For each
+problem size and each of the five quality metrics (NNS, HV, MID, SM, CPU
+time), we report the $p$-value of every algorithm pair (NSGA-II, NRGA,
+NSGA-III), over 30 repetitions per cell. Tables~\ref{tab:appb-4obj}
+and~\ref{tab:appb-3obj} cover the four-objective and the three-objective
+baseline formulations respectively. The values are computed directly from
+the released run manifest
+(\texttt{experiments/results/h1\_h2\_h4/manifest.csv}) and reproduce under
+the open-source code.
+
+\begin{table}[!ht]
+\centering\footnotesize
+\caption{Pairwise Mann--Whitney $U$ two-sided $p$-values per
+(size, metric) on the \textbf{four-objective} formulation, 30 reps per
+cell. $^{*}$ marks $p<0.05$. ``---'' denotes a degenerate comparison
+(both samples constant, e.g.\ NNS at the 100-individual ceiling).}
+\label{tab:appb-4obj}
+\begin{tabular}{l l ccccc}
+\toprule
+Size & Pair & NNS & HV & MID & SM & CPU \\
+\midrule
+\multirow{3}{*}{small} & NSGA-II vs NSGA-III & --- & $0.027^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+ & NSGA-II vs NRGA & $0.334$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+ & NSGA-III vs NRGA & $0.334$ & $0.006^{*}$ & $<0.001^{*}$ & $0.066$ & $<0.001^{*}$ \\
+\midrule
+\multirow{3}{*}{medium} & NSGA-II vs NSGA-III & --- & $0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+ & NSGA-II vs NRGA & $0.334$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+ & NSGA-III vs NRGA & $0.334$ & $<0.001^{*}$ & $0.112$ & $0.003^{*}$ & $<0.001^{*}$ \\
+\midrule
+\multirow{3}{*}{large} & NSGA-II vs NSGA-III & --- & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+ & NSGA-II vs NRGA & $0.334$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+ & NSGA-III vs NRGA & $0.334$ & $<0.001^{*}$ & $0.181$ & $0.652$ & $<0.001^{*}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!ht]
+\centering\footnotesize
+\caption{Pairwise Mann--Whitney $U$ two-sided $p$-values per
+(size, metric) on the \textbf{three-objective} baseline formulation,
+30 reps per cell. $^{*}$ marks $p<0.05$.}
+\label{tab:appb-3obj}
+\begin{tabular}{l l ccccc}
+\toprule
+Size & Pair & NNS & HV & MID & SM & CPU \\
+\midrule
+\multirow{3}{*}{small} & NSGA-II vs NSGA-III & $0.334$ & $0.348$ & $0.044^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+ & NSGA-II vs NRGA & $0.021^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+ & NSGA-III vs NRGA & $0.006^{*}$ & $<0.001^{*}$ & $0.158$ & $0.002^{*}$ & $<0.001^{*}$ \\
+\midrule
+\multirow{3}{*}{medium} & NSGA-II vs NSGA-III & --- & $0.284$ & $0.041^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+ & NSGA-II vs NRGA & $0.082$ & $<0.001^{*}$ & $0.042^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+ & NSGA-III vs NRGA & $0.082$ & $<0.001^{*}$ & $0.784$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+\midrule
+\multirow{3}{*}{large} & NSGA-II vs NSGA-III & --- & $0.018^{*}$ & $0.853$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+ & NSGA-II vs NRGA & $0.022^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+ & NSGA-III vs NRGA & $0.022^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $0.007^{*}$ & $<0.001^{*}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 % =====================================================================
 \bibliographystyle{plain}
