@@ -95,8 +95,8 @@ def _dominance_mask(pts: np.ndarray) -> np.ndarray:
     if n < 2:
         return np.zeros(n, dtype=bool)
     diff = pts[None, :, :] - pts[:, None, :]  # (n, n, 3) — pts[j] - pts[i]
-    le = (diff <= 0).all(axis=2)              # j dominates i in ≤ sense
-    lt = (diff < 0).any(axis=2)               # at least one strictly less
+    le = (diff <= 0).all(axis=2)  # j dominates i in ≤ sense
+    lt = (diff < 0).any(axis=2)  # at least one strictly less
     np.fill_diagonal(le, False)
     return (le & lt).any(axis=1)
 
