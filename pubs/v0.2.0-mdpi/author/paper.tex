@@ -155,8 +155,13 @@ also ships a reproducible artifact.
 \subsection*{Problem statement and contributions}
 % Lift bounded problem statement from explore/problem-statement.md.
 
-This paper makes five contributions to the literature on humanitarian
-last-mile allocation and supply chain resilience:
+The contribution of this paper is a reframing and a tool, not a new
+optimisation operator. We do not propose a new selection, crossover, or
+mutation mechanism; we reorganise an existing class of allocation models
+around a recognised resilience vocabulary and ship an implementation that
+others can run and check. Concretely, the paper makes five contributions to
+the literature on humanitarian last-mile allocation and supply chain
+resilience:
 \begin{enumerate}
     \item The first explicit 4R$\leftrightarrow$objective mapping in FIS-MOEA disaster
           allocation, formalised in Section~\ref{sec:resilience-mapping}.
@@ -164,9 +169,10 @@ last-mile allocation and supply chain resilience:
           infeasibility level into separate Robustness (TRD) and Rapidity (RPD)
           components, exposing trade-offs the three-objective formulation
           cannot represent (Section~\ref{sec:tradeoff-analysis}).
-    \item An empirical comparison of NSGA-II, NRGA, and NSGA-III on the
-          four-objective humanitarian allocation problem
-          (Section~\ref{sec:performance}).
+    \item An empirical comparison of three established solvers --- NSGA-II,
+          NRGA, and NSGA-III --- on the four-objective humanitarian allocation
+          problem, used to characterise the model rather than to advance the
+          solvers (Section~\ref{sec:performance}).
     \item Rule-base and weight-perturbation sensitivity analyses establishing
           robustness of the recommendations under expert-elicitation noise
           (Section~\ref{sec:sensitivity}).
@@ -174,6 +180,28 @@ last-mile allocation and supply chain resilience:
           citable Zenodo DOI, closing the FIS-MOEA reproducibility gap in this
           line of work \textbf{[cite Zenodo DOI when minted]}.
 \end{enumerate}
+
+The implicit hypothesis behind the reframing is that organising the objective
+set around the 4R framework buys the practitioner something measurable, not
+just a relabelling. We make it explicit and decompose it into four testable
+hypotheses, each resolved by the experiments in
+Sections~\ref{sec:performance}--\ref{sec:sensitivity}:
+\begin{description}
+    \item[H1] Splitting the fused transportation index into separate Robustness
+          (TRD) and Rapidity (RPD) objectives exposes trade-off information that
+          the three-objective formulation cannot represent
+          (Section~\ref{sec:tradeoff-analysis}).
+    \item[H2] At four objectives, NSGA-III improves on NSGA-II in Pareto-front
+          quality (H2a) or in computational cost (H2c), the boundary at which
+          reference-point methods are expected to begin paying off
+          (Section~\ref{sec:perf-algorithms}).
+    \item[H3] The model's recommendations are robust to realistic
+          expert-elicitation noise, both in the fuzzy rule bases (H3a) and in
+          the elicited weights (H3b) (Section~\ref{sec:sensitivity}).
+    \item[H4] The NSGA-II-versus-NRGA cost ranking reported by the earlier
+          MATLAB implementation of this model reproduces in an independent
+          Python implementation (Section~\ref{sec:perf-algorithms}).
+\end{description}
 
 The remainder is organised as follows. Section~\ref{sec:related} reviews
 supply-chain-resilience theory, humanitarian last-mile allocation, FIS-MOEA
@@ -301,7 +329,7 @@ post-disaster vehicle routing and relief supply distribution, and extended
 to volunteer-to-vacancy assignment in Rabiei, Arias-Aranda, and Stantchev
 \cite{rabiei2023}. Both pair Mamdani FIS with NSGA-II and NRGA. The present
 paper adapts the pattern to the people-to-relief-centre allocation problem,
-developing the three qualitative indices (FLPP, TFL, CABL) and their
+developing the three fuzzy-aggregated indices (FLPP, TFL, CABL) and their
 corresponding objective functions (ULPP, TIL, CAIL) as the baseline
 three-objective formulation that the four-objective model extends. Adjacent fuzzy or stochastic disaster-allocation work
 includes Bahmani et al.\ \cite{bahmani2018} on fuzzy multi-objective
@@ -369,8 +397,9 @@ analysis of \cite{zheng2024nsga2} and is the substance of the H2 result.
 
 \subsection{Gap}\label{sec:related-gap}
 
-The combination of (i) FIS-evaluated qualitative objectives organised around
-a named resilience framework, (ii) a four-objective formulation that
+The combination of (i) fuzzy-aggregated objectives (quantitative inputs,
+linguistic outputs) organised around a named resilience framework, (ii) a
+four-objective formulation that
 splits Robustness and Rapidity into separate axes following the 4R
 taxonomy, (iii) NSGA-III alongside NSGA-II and NRGA on a humanitarian
 last-mile allocation problem, (iv) systematic rule-base and weight
@@ -409,14 +438,23 @@ remaining $m - n_{\mathrm{dir}}$ people are not directed in this round. The
 mapping is feasible by construction; the question is which feasible mappings
 sit on the Pareto front under the four objectives we develop below.
 
-\subsection{Resilience-anchored qualitative indices}\label{sec:model-indices}
+\subsection{Resilience-anchored fuzzy indices}\label{sec:model-indices}
 
 We replace the cost-and-distance objective set common in the
 allocation literature \cite{tzeng2007, abounacer2014, gama2016, zhao2017}
-with four qualitative indices, each anchored in one component of Bruneau et
+with four fuzzy-aggregated indices, each anchored in one component of Bruneau et
 al.'s \cite{bruneau2003} 4R supply-chain-resilience framework. Three of the
 indices form the baseline three-objective formulation; the fourth, and the
 splitting of the second, are new here.
+
+A point on terminology, since the distinction matters for what follows. The
+\emph{inputs} to these indices are quantitative measurements: a travel duration
+in minutes, a distance in kilometres, an occupancy rate, a road-condition
+category. What is qualitative is the \emph{output} --- the linguistic resilience
+deficit that a fuzzy inference system produces by combining several quantitative
+inputs through expert-elicited rules. We therefore call the four objectives
+fuzzy-aggregated rather than qualitative: each digests crisp, measurable signals
+into a single expert-style judgement on a common $[0,100]$ scale.
 
 \subsubsection{Fairness Level in People Prioritization (FLPP) — Resourcefulness}
 
@@ -560,7 +598,28 @@ so that $\mathrm{TIL}$ is low exactly when the route is safe and fast.
 
 \subsection{Objective functions}\label{sec:model-objectives}
 
-The model minimises four mean-objective functions over the directed set:
+In words before symbols: each objective averages one resilience deficit over
+the people we direct, and the optimiser tries to push all four averages down at
+once. The first, $\overline{\mathrm{ULPP}}$, is the mean unfairness of the
+prioritisation --- low when the most vulnerable were directed first. The second
+and third, $\overline{\mathrm{TRD}}$ and $\overline{\mathrm{RPD}}$, are the mean
+robustness deficit of the chosen routes (how exposed they are to damage and
+hazard) and the mean rapidity deficit (how slow they are). The fourth,
+$\overline{\mathrm{CAIL}}$, is the mean imbalance the decision induces across
+centres --- low when load is spread rather than piled onto already-stressed
+sites. Each is a number on the same $[0,100]$ scale where lower is better.
+
+These four objectives conflict, which is why a single best solution does not
+exist and a Pareto front does. Directing the most vulnerable people (low ULPP)
+often means reaching those who live where infrastructure is most damaged, along
+the worst routes (high TRD) or the longest ones (high RPD). Choosing the fastest
+route (low RPD) can mean accepting a more hazardous one (high TRD), and the
+safest route is rarely the quickest. Sending many vulnerable people to the
+best-equipped centre lowers ULPP but concentrates load and raises CAIL. No
+allocation minimises all four at once; the model's job is to surface the
+trade-off surface so the practitioner can choose where on it to sit.
+
+Formally, the model minimises four mean-objective functions over the directed set:
 \begin{align}
     \min \overline{\mathrm{ULPP}} &= \frac{\sum_{j=1}^{m} \sum_{i=1}^{n} d_{j,i}\, \mathrm{ULPP}_j}
                                           {n_{\mathrm{dir}}}, \label{eq:obj-ulpp} \\
@@ -591,9 +650,9 @@ baseline formulation. Everything else is identical.
 
 \subsection{Resilience-theoretic mapping (new)}\label{sec:resilience-mapping}
 
-The 4R framework is not decoration. It defines what each objective is
-\emph{trying to capture} and tells the practitioner how to read the
-Pareto front. Table~\ref{tab:4r-mapping} states the bijection.
+The 4R framework earns its place by doing analytical work, not by labelling.
+It fixes what each objective is meant to capture and tells the practitioner how
+to read the Pareto front. Table~\ref{tab:4r-mapping} states the bijection.
 
 \begin{table}[!t]
 \centering
@@ -679,12 +738,12 @@ means the decision concentrates load on already-stressed centres,
 reducing future Redundancy.
 
 \paragraph{Why the derivation matters.}
-The framework is not a label we apply at the end. It is a discipline
-we apply throughout: each FIS's input set, rule base, and output range
-must be explicable in the vocabulary of exactly one 4R component, and
-each 4R component must be operationalised by exactly one FIS. The
-derivation above shows the discipline holding. Sections that follow
-draw on three theoretical consequences of this discipline, stated next.
+The bijection acts as a design constraint rather than a post-hoc gloss: each
+FIS's input set, rule base, and output range must be explicable in the
+vocabulary of exactly one 4R component, and each 4R component must be
+operationalised by exactly one FIS. The derivation above shows that constraint
+holding across all four pairings. Three theoretical consequences follow, which
+later sections draw on.
 
 \bigskip
 The bijection has three theoretical consequences worth stating explicitly.
@@ -703,9 +762,8 @@ Section~\ref{sec:tradeoff-analysis}.
 4R component the framework would tell us so by complaining. The bijection
 constrains the modeller. Adding RTR to FIS$_{2b}$ would have produced a
 better-fitting Rapidity index empirically but would have leaked
-Resourcefulness into Rapidity --- the 4R framework forbids it, so we leave
-RTR out. The framework is not a label we apply at the end; it is a discipline
-we apply throughout.
+Resourcefulness into Rapidity, which the 4R framework forbids, so we leave
+RTR out.
 
 \paragraph{What the framework does not do.} The 4R framework does not
 prescribe weights between the four components. Bruneau et al.
@@ -719,6 +777,45 @@ want, in 4R terms, post-hoc.
 
 % =====================================================================
 \section{Algorithm Design}\label{sec:algorithms}
+
+\subsection{Fuzzy inference in brief}\label{sec:algo-fis-primer}
+
+Each of our four objectives is produced by a fuzzy inference system (FIS), so
+we first describe what a FIS is and why we use one, assuming no prior
+familiarity. A FIS is a way of turning numbers into a graded expert judgement
+using if--then rules written in words. It suits this problem because the people
+who run relief operations reason in linguistic categories. A road is
+``partially blocked,'' supplies are ``depleting fast,'' a person is ``highly
+vulnerable.'' Forcing those judgements into a single tuned formula throws
+away information the practitioner actually has.
+
+A FIS works in three steps. \emph{Fuzzification} reads each crisp input and asks
+how strongly it belongs to each linguistic level. The levels are defined by
+\emph{membership functions}: simple shapes over the input range that return a
+degree of belonging between $0$ and $1$. We use two standard shapes. A
+\emph{triangular} membership function, written $\mathrm{tri}[a,b,c]$, rises
+linearly from $0$ at $a$ to $1$ at the peak $b$ and falls back to $0$ at $c$; it
+models a level with a single most-typical value. A \emph{trapezoidal} function,
+$\mathrm{trap}[a,b,c,d]$, rises from $a$ to $b$, stays at $1$ across the plateau
+$[b,c]$, and falls to $0$ at $d$; it models a level with a range of equally
+typical values, which is convenient for the ends of a scale. A given input
+typically belongs partly to two neighbouring levels at once: a vulnerability
+reading near the boundary between ``Medium'' and ``High'' might register, say,
+$0.27$ Medium and $0.73$ High rather than snapping to one label.
+
+\emph{Rule firing} then evaluates a small rule base of the form ``if vulnerability
+is High and the centre's service is Low, then unfairness is High.'' Every rule
+whose antecedent has non-zero membership contributes, weighted by how strongly it
+fired, so several rules speak at once. \emph{Defuzzification} collapses those
+weighted contributions back into one number: we use the centroid (centre of mass)
+of the aggregated output, which gives a smooth, monotone response on the common
+$[0,100]$ output scale. Concretely, a moderately vulnerable person placed at a
+nearby but only medium-service centre fuzzifies across the Medium/High levels,
+fires a handful of rules, and defuzzifies to a modest unfairness score rather
+than a hard ``fair/unfair'' verdict. A fully worked numerical example of all
+three steps is given in the companion documentation accompanying the released
+code. The remainder of this section specifies the four rule bases and the
+membership partitions they use.
 
 \subsection{Fuzzy inference systems}\label{sec:algo-fis}
 
@@ -793,14 +890,32 @@ cases, which we test in Section~\ref{sec:perf-algorithms}.
 
 \subsection{Chromosome encoding}\label{sec:algo-chromosome}
 
-Each individual is a flat list of length $2 n_{\mathrm{dir}}$. The first
-$n_{\mathrm{dir}}$ entries are person indices, sampled without replacement
-from $\{0, \ldots, m-1\}$ --- a partial permutation of the candidate
-population. The remaining $n_{\mathrm{dir}}$ entries are real values
-$r_k \in [0, 1)$, each decoded to a centre index via
-$\lfloor r_k \cdot n \rfloor$. The encoding is a flattened
-form of a two-row allocation matrix; the two representations carry
-identical information.
+Each individual is a flat list of length $2 n_{\mathrm{dir}}$, read as two
+contiguous slices. The first $n_{\mathrm{dir}}$ entries are the
+\emph{person slice}: integer person indices, sampled without replacement from
+$\{0, \ldots, m-1\}$, i.e.\ a partial permutation that names exactly which
+$n_{\mathrm{dir}}$ of the $m$ candidates are directed in this round. The second
+$n_{\mathrm{dir}}$ entries are the \emph{centre slice}: gene $k$ holds the centre
+to which the $k$-th directed person is sent. We store each centre gene as a real
+value $r_k \in [0, 1)$ and decode it to a centre index by
+$\lfloor r_k \cdot n \rfloor$ (clamped to $n-1$ at the upper endpoint). The real
+value is therefore just a mutation-friendly stand-in for an integer in
+$\{0, \ldots, n-1\}$; the centre slice carries exactly a per-person integer
+centre assignment, no more. Every chromosome the operators can produce is
+feasible by construction: the person slice is a permutation (no duplicate or
+out-of-range person), and every centre gene decodes to a valid centre, so no
+repair against infeasibility is ever needed.
+
+A reviewer of the earlier model in this line asked, reasonably, why not encode an
+allocation as a single length-$n$ vector with one integer centre per person. That
+encoding is the natural choice when \emph{every} person is served. Our problem
+directs a strict subset ($n_{\mathrm{dir}} < m$; relief capacity is smaller than
+need), so the chromosome must encode two decisions, not one: \emph{which} people
+are directed and \emph{where} each goes. The person slice carries the first
+decision and the centre slice the second. Restricted to the directed people, the
+centre slice \emph{is} exactly the one-integer-per-person encoding that reviewer
+suggested; the person slice is the additional structure the subset-selection
+problem requires.
 
 The order of the (person, centre) pairs is not semantically meaningful: the
 decoder treats them as a set of pairs, not a sequence. Variation operators
@@ -821,8 +936,8 @@ $\binom{p + M - 1}{M - 1} = \binom{7}{3} = 35$ points uniformly distributed
 over the four-dimensional objective simplex \cite{deb2014nsga3}. The choice
 is conventional and easy to reproduce; we considered the two-layer scheme
 that adds points along the simplex boundary for better edge coverage and
-deferred it to a single supplementary ablation to be run only if H2b
-flagged boundary diversity as a problem (it did not; see
+deferred it to a single supplementary ablation, to be run only if boundary
+diversity proved problematic in the algorithm comparison (it did not; see
 Section~\ref{sec:perf-algorithms}).
 
 The 35 reference points are recomputed once at solver start and held fixed
@@ -863,8 +978,18 @@ including six FIS pre-computes (one per (size, formulation) cell) and
 
 For each metric we test normality with Shapiro--Wilk; the parametric
 independent-samples $t$-test is used when both groups admit it and the
-non-parametric Mann--Whitney $U$ otherwise. We report $p$-values under
+non-parametric Mann--Whitney $U$ otherwise (the Mann--Whitney $U$ test is
+the Wilcoxon rank-sum test, the standard significance test in the MOEA
+benchmarking literature). We report $p$-values under
 two-sided alternatives; threshold $\alpha = 0.05$.
+
+We report hypervolume (HV) as the primary Pareto-front quality indicator
+throughout, because it captures both convergence and diversity in a single
+reference-anchored measure and is the modern default for many-objective
+comparison. We also record number of non-dominated solutions (NNS), spacing
+(SM), and CPU time. Mean Ideal Distance (MID) is reported only as a diagnostic,
+shown last in every table; we do not rank algorithms by it, for the reason
+given in the note to Table~\ref{tab:stats-summary}.
 
 \paragraph{Selector validation on DTLZ2.}
 Before running the experiment matrix we validate that DEAP's
@@ -1038,13 +1163,15 @@ our own data without depending on a MATLAB-vs-Python comparison.
 \subsection{Statistical comparison summary}\label{sec:perf-stats}
 
 Table~\ref{tab:stats-summary} aggregates the means, standard deviations, and
-test statistics. Across all five quality metrics on the four-objective
-formulation, NSGA-II and NSGA-III achieve identical NNS (100 of 100,
-i.e.\ every individual on the boundary front), MID and SM differences that are
-statistically detectable (Mann--Whitney $p < 0.001$, Appendix~\ref{app:stats})
-but practically negligible (means equal to one decimal place),
-significantly different HV (NSGA-II ahead), and significantly different CPU
-time (NSGA-III ahead). NRGA loses 0--1\,\% of NNS to its uniform-random
+test statistics. Reading the four-objective formulation by the primary metric
+first: NSGA-II holds a significant HV lead over NSGA-III at every size, while
+NSGA-III is significantly faster on CPU time --- the two binding metrics, moving
+in opposite directions. The remaining metrics do not separate the algorithms in
+any practically meaningful way: NSGA-II and NSGA-III achieve identical NNS
+(100 of 100, i.e.\ every individual on the boundary front), and their SM and MID
+differences, though statistically detectable (Mann--Whitney $p < 0.001$,
+Appendix~\ref{app:stats}), are negligible in magnitude (means equal to one
+decimal place). NRGA loses 0--1\,\% of NNS to its uniform-random
 tie-breaker, has the lowest HV at every size, and sits between the other
 two on CPU time. The CPU ranking is stable across all three problem sizes and
 both formulations; the HV lead of NSGA-II over NSGA-III is significant
@@ -1054,36 +1181,48 @@ only at the large size (Appendix~\ref{app:stats}).
 \begin{table}[!t]
 \centering
 \caption{Mean $\pm$ s.d.\ over 30 reps per (size, algorithm) cell on the
-four-objective formulation. HV is in millions; CPU time in seconds. The
-$p$-column reports the Mann--Whitney $U$ two-sided test against NSGA-II.}
+four-objective formulation. HV (in millions) is the primary quality indicator;
+CPU time is in seconds. MID is shown last as a diagnostic only (see note). The
+$p$-values underlying these means are the Mann--Whitney $U$ (Wilcoxon rank-sum)
+tests against NSGA-II in Appendix~\ref{app:stats}.}
 \label{tab:stats-summary}
 \small
 \begin{tabular}{l l r r r r r}
 \toprule
-Size & Algorithm & NNS & HV ($\times 10^6$) & MID & SM & CPU (s) \\
+Size & Algorithm & NNS & HV ($\times 10^6$) & SM & CPU (s) & MID$^{\dagger}$ \\
 \midrule
 \multirow{3}{*}{small}
-  & NSGA-II  & $100.0$ & $21.08 \pm 0.47$ & $77.7 \pm 0.5$ & $0.81 \pm 0.06$ & $1.45 \pm 0.07$ \\
-  & NRGA     & $99.1$  & $20.21 \pm 0.87$ & $77.4 \pm 0.5$ & $0.79 \pm 0.05$ & $1.16 \pm 0.06$ \\
-  & NSGA-III & $100.0$ & $20.74 \pm 0.62$ & $77.7 \pm 0.5$ & $0.81 \pm 0.06$ & $0.91 \pm 0.07$ \\
+  & NSGA-II  & $100.0$ & $21.08 \pm 0.47$ & $0.81 \pm 0.06$ & $1.45 \pm 0.07$ & $77.7 \pm 0.5$ \\
+  & NRGA     & $99.1$  & $20.21 \pm 0.87$ & $0.79 \pm 0.05$ & $1.16 \pm 0.06$ & $77.4 \pm 0.5$ \\
+  & NSGA-III & $100.0$ & $20.74 \pm 0.62$ & $0.81 \pm 0.06$ & $0.91 \pm 0.07$ & $77.7 \pm 0.5$ \\
 \midrule
 \multirow{3}{*}{medium}
-  & NSGA-II  & $100.0$ & $18.81 \pm 0.40$ & $69.5 \pm 0.4$ & $0.78 \pm 0.05$ & $1.69 \pm 0.06$ \\
-  & NRGA     & $99.9$  & $17.35 \pm 0.55$ & $69.3 \pm 0.4$ & $0.77 \pm 0.04$ & $1.40 \pm 0.05$ \\
-  & NSGA-III & $100.0$ & $18.33 \pm 0.69$ & $69.5 \pm 0.4$ & $0.79 \pm 0.05$ & $1.15 \pm 0.06$ \\
+  & NSGA-II  & $100.0$ & $18.81 \pm 0.40$ & $0.78 \pm 0.05$ & $1.69 \pm 0.06$ & $69.5 \pm 0.4$ \\
+  & NRGA     & $99.9$  & $17.35 \pm 0.55$ & $0.77 \pm 0.04$ & $1.40 \pm 0.05$ & $69.3 \pm 0.4$ \\
+  & NSGA-III & $100.0$ & $18.33 \pm 0.69$ & $0.79 \pm 0.05$ & $1.15 \pm 0.06$ & $69.5 \pm 0.4$ \\
 \midrule
 \multirow{3}{*}{large}
-  & NSGA-II  & $100.0$ & $13.98 \pm 0.29$ & $58.6 \pm 0.4$ & $0.81 \pm 0.05$ & $1.99 \pm 0.05$ \\
-  & NRGA     & $99.8$  & $12.86 \pm 0.29$ & $58.6 \pm 0.4$ & $0.81 \pm 0.04$ & $1.69 \pm 0.05$ \\
-  & NSGA-III & $100.0$ & $13.59 \pm 0.33$ & $58.6 \pm 0.4$ & $0.81 \pm 0.05$ & $1.45 \pm 0.05$ \\
+  & NSGA-II  & $100.0$ & $13.98 \pm 0.29$ & $0.81 \pm 0.05$ & $1.99 \pm 0.05$ & $58.6 \pm 0.4$ \\
+  & NRGA     & $99.8$  & $12.86 \pm 0.29$ & $0.81 \pm 0.04$ & $1.69 \pm 0.05$ & $58.6 \pm 0.4$ \\
+  & NSGA-III & $100.0$ & $13.59 \pm 0.33$ & $0.81 \pm 0.05$ & $1.45 \pm 0.05$ & $58.6 \pm 0.4$ \\
 \bottomrule
 \end{tabular}
+
+\smallskip
+{\footnotesize $^{\dagger}$\,MID (Mean Ideal Distance) is reported as a
+diagnostic only and is not used to rank algorithms. MID rewards solutions that
+sit close to the ideal point, which penalises legitimate Pareto-optimal
+trade-offs: every solution on a front is equally non-dominated, so a
+front-quality indicator should not prefer the ones nearest a single corner. We
+retain MID for backward comparability with the earlier formulation in this line
+of work, but read front quality from HV, which captures convergence and
+diversity together.}
 \end{table}
 
 The MID and SM values are nearly identical across algorithms within each
-size, and the small differences are not statistically significant. We report
-them for completeness; the binding metrics for the H2 verdict are HV and CPU
-time, where the algorithms differ in opposite directions.
+size, and the small differences are not statistically significant. The binding
+metrics for the H2 verdict are HV and CPU time, where the algorithms differ in
+opposite directions; MID and SM add no separating information.
 
 % =====================================================================
 \section{Pareto Trade-off Analysis (4-obj vs 3-obj)}\label{sec:tradeoff-analysis}
@@ -1328,7 +1467,7 @@ problem size.
 
 \paragraph{The FIS$_{2b}$ caveat is structural, not pathological.}
 FIS$_{2b}$ has only three rules --- the single-input Rapidity classifier
-mapping Travel Duration $\in \{$short, moderate, long$\}$ to RPD $\in
+mapping travel duration $\in \{$short, moderate, long$\}$ to RPD $\in
 \{$low, moderate, high$\}$. Single-rule deletion in a three-rule FIS is
 a $33\,\%$ rule-base reduction, not a fine perturbation, and the
 sensitivity reflects that: median $|\Delta\mathrm{HV}|$ is $5.78\,\%$
@@ -1449,9 +1588,9 @@ FIS$_{2b}$ on small and medium instances. H2a is reference-sensitive:
 NSGA-II leads on hypervolume under a loose reference point, NSGA-III
 under a tight one, with no statistically significant separation under
 the tight reference. H4 is refuted in the inverted direction, with the
-cause undetermined. The asymmetry is not a problem; the qualified
-verdicts are the substance of an honest contribution. Three threads of
-implication follow.
+cause undetermined. We read this asymmetry as a feature of an honest
+evaluation rather than a weakness: the qualified verdicts are where the
+substance lies. Three threads of implication follow.
 
 \subsection{Findings vs.\ supply-chain-resilience theory}\label{sec:disc-scr}
 
@@ -1459,10 +1598,9 @@ The H1 confirmation is the substantive theoretical result. Splitting TIL
 into separate Robustness and Rapidity objectives, motivated by the 4R
 framework, produces a Pareto front with around half its solutions
 unrepresentable in the fused 3-objective formulation
-(Section~\ref{sec:h1-projection}). The split is not a methodological
-luxury; it surfaces a real Robustness/Rapidity trade-off that practitioners
-articulate and policy documents reference, and that disappears under
-single-axis fusion. This is the first published evidence we are aware of
+(Section~\ref{sec:h1-projection}). The split does practical work: it surfaces a
+real Robustness/Rapidity trade-off that practitioners articulate and policy
+documents reference, one that disappears under single-axis fusion. This is the first published evidence we are aware of
 that explicitly operationalising 4R inside a humanitarian-allocation model
 \emph{adds empirical content beyond the theoretical framing}. The
 implication for SCR theory is concrete: 4R is not just a description
@@ -1475,8 +1613,8 @@ different from one organised around classical OR objectives.
 The H2 split (refuted on HV, confirmed on CPU) sharpens the practitioner
 recommendation for NSGA-III on this problem class. NSGA-III is the right
 algorithmic choice not because it dominates the Pareto front but because
-it produces a \emph{Pareto-front-equivalent recommendation} 30\% faster
-than NSGA-II at every problem size we tested
+it produces a \emph{Pareto-front-equivalent recommendation} 32\% faster
+on average (27--37\% across sizes) than NSGA-II at every problem size we tested
 (Section~\ref{sec:perf-algorithms}). For the response-phase setting where
 time-to-decision is the binding operational constraint, the speed
 advantage is more useful than a marginal HV advantage would have been.
@@ -1571,7 +1709,21 @@ model.
 
 \subsection{Future work}\label{sec:disc-future}
 
-Three directions follow naturally.
+Four directions follow naturally.
+
+\paragraph{Explicit-baseline benchmark and hard constraints.}
+The comparison in this paper is between solvers on our own model, which
+characterises the model but does not yet measure it against an external
+allocation method. The planned next extension benchmarks the four-objective
+framework against an explicit baseline --- a deterministic weighted-sum greedy
+heuristic and an exact weighted-sum optimum (Hungarian assignment and
+mixed-integer programming) --- so that the framework's quality is read against a
+known reference rather than only against alternative solvers. The same extension
+replaces the present soft-capacity treatment with optional hard shelter-capacity
+and transport-distance constraints. Both the baseline comparators and the
+hard-constraint mode are already implemented in the released tool; reporting them
+as a full empirical study is deferred to keep the present contribution focused on
+the resilience reframing and its robustness.
 
 \paragraph{Real-event case study.} The next version (v0.3.0 in our
 roadmap) applies the four-objective allocation model to a documented
@@ -1608,7 +1760,7 @@ Section~\ref{sec:tradeoff-analysis} (the H1 evidence that the 4-obj split
 exposes a Robustness/Rapidity trade-off the 3-obj formulation cannot
 represent),
 Section~\ref{sec:performance} (the NSGA-III empirical comparison and the
-30\% CPU advantage at unchanged Pareto-front quality),
+32\% mean CPU advantage at unchanged Pareto-front quality),
 Section~\ref{sec:sensitivity} (the rule-base and weight sensitivity
 studies establishing $\le 1\%$ CV under realistic expert-elicitation
 noise), and the open artifact at
@@ -1643,8 +1795,18 @@ V.S.; supervision, D.A.-A. All authors have read and agreed to the published
 version of the manuscript.
 
 \section*{Funding}
-\textbf{[Confirm before submission: external funding and grant number(s), or
-``This research received no external funding.'']}
+This research received no external funding.
+
+\section*{Institutional Review Board Statement}
+Not applicable. This study used only synthetically generated problem instances
+and involved no human participants or animals.
+
+\section*{Informed Consent Statement}
+Not applicable.
+
+\section*{Acknowledgments}
+The authors declare that no generative AI tools were used in the preparation of
+this manuscript.
 
 \section*{Conflicts of Interest}
 The authors declare no conflicts of interest.
@@ -1830,9 +1992,13 @@ Long & High & Moderate \\
 \section{Statistical test outputs (extended)}\label{app:stats}
 
 This appendix gives the complete pairwise Mann--Whitney $U$ two-sided test
-outputs underlying the summary in Section~\ref{sec:perf-stats}. For each
-problem size and each of the five quality metrics (NNS, HV, MID, SM, CPU
-time), we report the $p$-value of every algorithm pair (NSGA-II, NRGA,
+outputs underlying the summary in Section~\ref{sec:perf-stats}. The
+Mann--Whitney $U$ test is identical to the Wilcoxon rank-sum test, the
+significance test most multi-objective optimisation studies report; we use the
+$U$ formulation throughout for consistency with the normality-gated test
+selection in Section~\ref{sec:perf-setup}. For each
+problem size and each of the five quality metrics (NNS, HV, SM, CPU time, and
+the MID diagnostic), we report the $p$-value of every algorithm pair (NSGA-II, NRGA,
 NSGA-III), over 30 repetitions per cell. Tables~\ref{tab:appb-4obj}
 and~\ref{tab:appb-3obj} cover the four-objective and the three-objective
 baseline formulations respectively. The values are computed directly from
@@ -1849,21 +2015,25 @@ cell. $^{*}$ marks $p<0.05$. ``---'' denotes a degenerate comparison
 \label{tab:appb-4obj}
 \begin{tabular}{l l ccccc}
 \toprule
-Size & Pair & NNS & HV & MID & SM & CPU \\
+Size & Pair & NNS & HV & SM & CPU & MID$^{\dagger}$ \\
 \midrule
 \multirow{3}{*}{small} & NSGA-II vs NSGA-III & --- & $0.027^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
  & NSGA-II vs NRGA & $0.334$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
- & NSGA-III vs NRGA & $0.334$ & $0.006^{*}$ & $<0.001^{*}$ & $0.066$ & $<0.001^{*}$ \\
+ & NSGA-III vs NRGA & $0.334$ & $0.006^{*}$ & $0.066$ & $<0.001^{*}$ & $<0.001^{*}$ \\
 \midrule
 \multirow{3}{*}{medium} & NSGA-II vs NSGA-III & --- & $0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
  & NSGA-II vs NRGA & $0.334$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
- & NSGA-III vs NRGA & $0.334$ & $<0.001^{*}$ & $0.112$ & $0.003^{*}$ & $<0.001^{*}$ \\
+ & NSGA-III vs NRGA & $0.334$ & $<0.001^{*}$ & $0.003^{*}$ & $<0.001^{*}$ & $0.112$ \\
 \midrule
 \multirow{3}{*}{large} & NSGA-II vs NSGA-III & --- & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
  & NSGA-II vs NRGA & $0.334$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
- & NSGA-III vs NRGA & $0.334$ & $<0.001^{*}$ & $0.181$ & $0.652$ & $<0.001^{*}$ \\
+ & NSGA-III vs NRGA & $0.334$ & $<0.001^{*}$ & $0.652$ & $<0.001^{*}$ & $0.181$ \\
 \bottomrule
 \end{tabular}
+
+\smallskip
+{\footnotesize $^{\dagger}$\,MID is a diagnostic, not a ranking metric
+(see Table~\ref{tab:stats-summary}); its column is placed last accordingly.}
 \end{table}
 
 \begin{table}[!ht]
@@ -1874,21 +2044,25 @@ Size & Pair & NNS & HV & MID & SM & CPU \\
 \label{tab:appb-3obj}
 \begin{tabular}{l l ccccc}
 \toprule
-Size & Pair & NNS & HV & MID & SM & CPU \\
+Size & Pair & NNS & HV & SM & CPU & MID$^{\dagger}$ \\
 \midrule
-\multirow{3}{*}{small} & NSGA-II vs NSGA-III & $0.334$ & $0.348$ & $0.044^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+\multirow{3}{*}{small} & NSGA-II vs NSGA-III & $0.334$ & $0.348$ & $<0.001^{*}$ & $<0.001^{*}$ & $0.044^{*}$ \\
  & NSGA-II vs NRGA & $0.021^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
- & NSGA-III vs NRGA & $0.006^{*}$ & $<0.001^{*}$ & $0.158$ & $0.002^{*}$ & $<0.001^{*}$ \\
+ & NSGA-III vs NRGA & $0.006^{*}$ & $<0.001^{*}$ & $0.002^{*}$ & $<0.001^{*}$ & $0.158$ \\
 \midrule
-\multirow{3}{*}{medium} & NSGA-II vs NSGA-III & --- & $0.284$ & $0.041^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
- & NSGA-II vs NRGA & $0.082$ & $<0.001^{*}$ & $0.042^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
- & NSGA-III vs NRGA & $0.082$ & $<0.001^{*}$ & $0.784$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+\multirow{3}{*}{medium} & NSGA-II vs NSGA-III & --- & $0.284$ & $<0.001^{*}$ & $<0.001^{*}$ & $0.041^{*}$ \\
+ & NSGA-II vs NRGA & $0.082$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $0.042^{*}$ \\
+ & NSGA-III vs NRGA & $0.082$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $0.784$ \\
 \midrule
-\multirow{3}{*}{large} & NSGA-II vs NSGA-III & --- & $0.018^{*}$ & $0.853$ & $<0.001^{*}$ & $<0.001^{*}$ \\
+\multirow{3}{*}{large} & NSGA-II vs NSGA-III & --- & $0.018^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $0.853$ \\
  & NSGA-II vs NRGA & $0.022^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
- & NSGA-III vs NRGA & $0.022^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ & $0.007^{*}$ & $<0.001^{*}$ \\
+ & NSGA-III vs NRGA & $0.022^{*}$ & $<0.001^{*}$ & $0.007^{*}$ & $<0.001^{*}$ & $<0.001^{*}$ \\
 \bottomrule
 \end{tabular}
+
+\smallskip
+{\footnotesize $^{\dagger}$\,MID is a diagnostic, not a ranking metric
+(see Table~\ref{tab:stats-summary}); its column is placed last accordingly.}
 \end{table}
 
 % =====================================================================
