@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 import math
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 from pathlib import Path
 
@@ -67,6 +67,9 @@ class BenchmarkRow:
     cpu_mean: float
     cpu_std: float
     rep: float | None = None
+    # Per-instance HV values feeding the Wilcoxon rank-sum tests; kept in memory
+    # for the stats layer and stripped from the written Table-3 summary.
+    hv_samples: list[float] = field(default_factory=list, repr=False)
 
 
 # ---------------------------------------------------------------------------
@@ -172,14 +175,25 @@ def run_benchmark(
     *,
     base_seed: int = 42,
     check_repro: bool = False,
+    include_baseline: bool = False,
+    include_exact: bool = False,
 ) -> list[BenchmarkRow]:
     """Run the benchmark and return one aggregated row per (size, solver).
 
     Each instance is solved with ``config`` (its seed drives the solver). When
     ``check_repro`` is set, every instance is solved a second time and the
-    fraction of bit-for-bit identical results is reported as REP.
+    fraction of bit-for-bit identical results is reported as REP. When
+    ``include_baseline`` / ``include_exact`` are set, the deterministic greedy
+    and/or exact weighted-sum comparators are additionally run on every instance
+    and reported as ``greedy`` / ``exact`` solver rows, enabling a
+    framework-vs-baseline comparison (and the Wilcoxon HV tests).
     """
     domain = get_domain(model)
+    extra_configs = []
+    if include_baseline:
+        extra_configs.append(replace(config, solver="greedy"))
+    if include_exact:
+        extra_configs.append(replace(config, solver="exact"))
     rows: list[BenchmarkRow] = []
 
     for size in sizes:
@@ -190,6 +204,8 @@ def run_benchmark(
         for i in range(n_instances):
             problem = generate_instance(model, size, base_seed + _SIZE_OFFSET[size] + i)
             fronts = run(problem, config, domain)
+            for extra_cfg in extra_configs:
+                fronts = [*fronts, *run(problem, extra_cfg, domain)]
 
             for front in fronts:
                 m = compute_metrics(front)
@@ -226,6 +242,7 @@ def run_benchmark(
                     cpu_mean=float(np.mean(metrics["cpu"])),
                     cpu_std=float(np.std(metrics["cpu"])),
                     rep=rep,
+                    hv_samples=list(metrics["hv"]),
                 )
             )
     return rows
@@ -243,7 +260,8 @@ def resolve_sizes(size: str) -> list[str]:
 def write_benchmark_summary(rows: list[BenchmarkRow], output_dir: Path) -> tuple[Path, Path]:
     """Write the aggregated benchmark summary to CSV + JSON. Returns both paths."""
     ts = datetime.now().strftime("%Y%m%dT%H%M%S")
-    records = [asdict(r) for r in rows]
+    # Drop the in-memory per-instance sample arrays from the Table-3 summary.
+    records = [{k: v for k, v in asdict(r).items() if not k.endswith("_samples")} for r in rows]
     csv_path = output_dir / f"benchmark_{ts}.csv"
     json_path = output_dir / f"benchmark_{ts}.json"
     pd.DataFrame(records).to_csv(csv_path, index=False)

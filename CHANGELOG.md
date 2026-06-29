@@ -35,8 +35,40 @@ Stantchev). The ED-staffing model is unchanged and remains the default.
 - **`pva sensitivity`**: sweeps FIS-output perturbations (default ±10 %, ±20 %)
   and reports how NNS/MID/SM/HV shift, to gauge robustness to FIS rule-base
   uncertainty (`Domain.perturb`; `engine.run` accepts a pre-computed cache).
+- **Greedy baseline comparator** (`--solver greedy`): a deterministic
+  weighted-sum constructive heuristic, swept over the objective simplex, that
+  provides a non-evolutionary baseline Pareto front for both models
+  (`baselines.py`, `Domain.baseline_population`). `pva benchmark --baseline`
+  adds it as a `greedy` row so the framework can be measured against an
+  existing-style allocation method rather than only NSGA-II vs NRGA.
+- **Wilcoxon rank-sum HV testing** (`stats.py`): `pva benchmark` now compares
+  per-instance hypervolume distributions between solvers (vs. the greedy
+  baseline when present) with the Wilcoxon rank-sum test, prints a significance
+  table, and writes `stats_<ts>.csv` (runs automatically with ≥2 solvers and
+  ≥5 instances; uses the existing `scipy` dependency — no new package).
+- **`pva ablation`** (`ablation.py`): leave-one-objective-out analysis that
+  re-solves with each objective dropped in turn and reports how the dropped
+  objective and the overall hypervolume degrade (`ablation_<ts>.csv`) — empirical
+  evidence that each qualitative indicator is non-redundant (ATRES reviewer R2.2).
+- **Exact weighted-sum baseline** (`--solver exact`): the scalarisation solved to
+  optimality per weight — Hungarian assignment (`scipy.optimize.linear_sum_assignment`)
+  for ed-staffing, MILP (`scipy.optimize.milp`) for humanitarian — a
+  globally-optimal-per-scalarisation comparator stronger than greedy
+  (`Domain.exact_baseline_population`; `pva benchmark --exact`). Uses the existing
+  `scipy` dependency (ATRES reviewers R2.4 / R3.2).
+- **Hard-capacity / transport-limit mode** for the humanitarian model
+  (`--hard-capacity`, `--max-distance`, `--mobility-threshold`): a deterministic
+  repair decoder guarantees no centre exceeds capacity and keeps low-mobility
+  people within a maximum distance, complementing the default soft-capacity
+  objective (ATRES reviewer R2.5). The soft model remains the default.
 
 ### Changed
+- **HV is now the primary reported metric**; MID is shown last and flagged
+  *diagnostic*. MID rewards proximity to the ideal point, so it is not a sound
+  stand-alone quality measure for a Pareto front — HV captures both convergence
+  and diversity. MID is still computed for backward-compatibility with the 2023
+  paper. Affects the `assign`/`metrics`/`benchmark` summary tables only; the
+  `metrics_*.json` schema is unchanged.
 - Pareto CSV now carries `z1..zk` objective columns (adds `z3` for the
   humanitarian model); `pva metrics` auto-detects objective dimensionality.
 - `pva assign` gains `--model`, `--people`, and `--centers`; existing
@@ -50,6 +82,9 @@ Stantchev). The ED-staffing model is unchanged and remains the default.
 - CSV formula-injection hardening: record IDs written to `assignments_*.csv` are
   quote-prefixed when they begin with a spreadsheet formula trigger
   (`= + - @`, tab, CR). Closes a latent issue that predated v0.2.0.
+- Bumped the transitive `msgpack` pin to ≥ 1.2.1 in `uv.lock` to clear
+  GHSA-6v7p-g79w-8964 (pulled in via the `pip-audit` toolchain), keeping the
+  on-run and CI dependency audit green.
 
 ### Notes
 - The humanitarian FIS ship with explicit, documented Mamdani rule tables and

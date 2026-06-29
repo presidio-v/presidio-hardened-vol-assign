@@ -181,14 +181,19 @@ pva assign   [--model  ed-staffing|humanitarian]   (default: ed-staffing)
              # humanitarian model inputs:
              --people <csv>      --centers <csv>
 
-             [--solver  nsga2|nrga|nrga-ranked|both|all]   (default: both)
+             [--solver  nsga2|nrga|nrga-ranked|greedy|exact|both|all]   (default: both)
              [--seed    <int>]              (reproducibility)
              [--pop-size <int>]             (default: 100)
              [--generations <int>]          (default: 200)
+             # humanitarian hard-constraint mode (optional):
+             [--hard-capacity]              (enforce centre capacity via repair)
+             [--max-distance <km>]          (cap distance for low-mobility people)
+             [--mobility-threshold <0-10>]  (default: 3.0)
              [--output  <dir>]              (default: ./results)
 
 pva allocate-people  --people <csv> --centers <csv>   [solver/seed/... as above]
              # convenience alias for `assign --model humanitarian`
+             # also accepts --hard-capacity / --max-distance / --mobility-threshold
 
 pva metrics  --pareto <csv>     (auto-detects 2- or 3-objective fronts)
 
@@ -198,15 +203,22 @@ pva show     --pareto <csv> [--pareto <csv> ...]   (overlay solvers)
 pva benchmark [--model humanitarian|ed-staffing]
               [--size  small|large|both]   (default: both)
               [--instances <int>]          (default: 10, per size)
-              [--solver nsga2|nrga|nrga-ranked|both|all]
+              [--solver nsga2|nrga|nrga-ranked|greedy|both|all]
               [--seed <int>]               (default: 42)
               [--pop-size <int>] [--generations <int>]
               [--check-repro]              (report bit-for-bit REP)
+              [--baseline]                 (add greedy comparator + Wilcoxon HV test)
+              [--exact]                    (add exact weighted-sum comparator)
               [--output <dir>]
 
 pva sensitivity [--model humanitarian|ed-staffing]
               # inputs as for `assign` (--people/--centers or --volunteers/--eds)
               [--factors <csv>]            (default: -0.2,-0.1,0,0.1,0.2)
+              [--solver ...] [--seed <int>] [--pop-size <int>] [--generations <int>]
+              [--output <dir>]
+
+pva ablation  [--model humanitarian|ed-staffing]
+              # inputs as for `assign` (--people/--centers or --volunteers/--eds)
               [--solver ...] [--seed <int>] [--pop-size <int>] [--generations <int>]
               [--output <dir>]
 
@@ -228,6 +240,28 @@ pva sensitivity --model humanitarian \
   --factors -0.2,-0.1,0,0.1,0.2 --solver both --seed 42 --output results/
 ```
 
+### Objective ablation (indicator validation)
+
+`pva ablation` provides empirical evidence that each qualitative indicator
+contributes distinct, non-redundant information. It re-solves the problem with
+each objective **dropped from the optimisation** in turn, then measures the
+dropped objective — and the overall hypervolume — back in the full objective
+space, writing `ablation_<ts>.csv`:
+
+- **Δ dropped** — how much worse the dropped objective gets (mean over the front)
+  when it is no longer optimised. Large = the indicator is doing real work that
+  no other objective drives for free (non-redundant).
+- **Δ HV** — full-space hypervolume lost by ignoring the objective.
+
+A near-zero Δ would flag an indicator the other objectives already capture.
+Deterministic under `--seed`.
+
+```bash
+pva ablation --model humanitarian \
+  --people people.csv --centers centers.csv \
+  --solver nsga2 --seed 42 --output results/
+```
+
 ### Solvers
 
 | `--solver` | Algorithm |
@@ -235,6 +269,8 @@ pva sensitivity --model humanitarian \
 | `nsga2` | NSGA-II (crowding-distance elitism) |
 | `nrga` | Lightweight NRGA — front-fill with uniform random tie-break |
 | `nrga-ranked` | Canonical NRGA — rank-biased roulette-wheel survival (Al Jadaan et al., 2008); use this for results comparable to the NRGA literature |
+| `greedy` | **Non-evolutionary baseline** — deterministic weighted-sum constructive heuristic swept over the objective simplex; a literature-style comparator the GAs are measured against (see *Baseline comparison* below) |
+| `exact` | **Exact weighted-sum baseline** — the scalarisation solved *to optimality* per weight (Hungarian assignment for ed-staffing; MILP for humanitarian); a stronger, globally-optimal-per-scalarisation comparator than `greedy` |
 | `both` | `nsga2` + `nrga` |
 | `all` | `nsga2` + `nrga` + `nrga-ranked` |
 
@@ -250,6 +286,34 @@ hardware as a first-class resilience criterion.
 
 ```bash
 pva benchmark --model humanitarian --instances 10 --seed 42 --check-repro
+```
+
+### Baseline comparison & significance testing
+
+Comparing only NSGA-II against NRGA shows which *algorithm* wins, not whether the
+*framework* beats an existing allocation method. `--solver greedy` provides a
+non-evolutionary baseline: a deterministic weighted-sum constructive heuristic
+swept across the objective simplex (each weight vector yields one greedy
+allocation; the non-dominated subset is the baseline front). It is reproducible
+regardless of `--seed`.
+
+For a stronger comparator, `--solver exact` (or `pva benchmark --exact`) solves
+the weighted-sum scalarisation **to optimality** at each weight — an exact
+bipartite assignment (Hungarian) for ed-staffing, or a MILP for the humanitarian
+model (`z1`/`z2` exact, centre balance via a linear capacity-overload surrogate;
+the true FIS objectives are reported on the optimal assignment). It is
+globally-optimal-per-scalarisation, so it is a much harder baseline to beat than
+the myopic greedy. Both comparators use the existing `scipy` dependency.
+
+`pva benchmark --baseline` / `--exact` run those comparators on every instance and
+add `greedy` / `exact` rows to the Table-3 summary. When ≥ 2 solvers and ≥ 5
+instances are present, the benchmark also runs a **Wilcoxon rank-sum test** on the
+per-instance hypervolume distributions (each solver vs. a reference — the greedy
+baseline if present, else NSGA-II), prints a significance table, and writes
+`stats_<ts>.csv`.
+
+```bash
+pva benchmark --model humanitarian --solver all --baseline --exact --instances 10 --seed 42
 ```
 
 ### Figures
@@ -314,6 +378,22 @@ pva allocate-people \
 The output `pareto_*.csv` carries `z1,z2,z3`; `assignments_*.csv` carries
 `person_id, center_id, fairness, transport, overcrowding`.
 
+### Hard capacity & transport limits
+
+By default the humanitarian model treats capacity as a *soft* objective (`z3`
+overcrowding) and transport as a feasibility objective (`z2`). For settings where
+those are firm operational limits, `--hard-capacity` switches on a constraint
+mode: a deterministic repair guarantees **no centre exceeds its capacity** (people
+are placed most-constrained-first; overflow goes to the nearest centre with spare
+room), and `--max-distance` caps how far a **low-mobility** person (mobility below
+`--mobility-threshold`) may be sent. The soft model remains the default and is
+unchanged.
+
+```bash
+pva assign --model humanitarian --people people.csv --centers centers.csv \
+  --hard-capacity --max-distance 30 --mobility-threshold 3 --solver both --seed 42
+```
+
 The membership functions and the explicit Mamdani rule tables for all three FIS
 are documented — with a fully worked numeric example — in
 [docs/fis-worked-example.md](docs/fis-worked-example.md). Ready-to-run synthetic
@@ -333,10 +413,10 @@ pva assign --model humanitarian \
 
 | Metric | Description |
 |--------|-------------|
+| **HV** *(primary)* | Hypervolume — area/volume of objective space dominated by the front relative to reference point (1, …, 1) (higher = better). Captures both convergence and diversity, so it is the headline quality indicator |
 | **NNS** | Number of Non-dominated Solutions — Pareto front size |
-| **MID** | Mean Ideal Distance — mean Euclidean distance from each solution to the ideal point (0, 0) |
-| **SM** | Spacing Metric — standard deviation of consecutive inter-solution distances (lower = more uniform spread) |
-| **HV** | Hypervolume — area of objective space dominated by the front relative to reference point (1, 1) (higher = better) |
+| **SM** | Spacing Metric — standard deviation of nearest-neighbour inter-solution distances (lower = more uniform spread) |
+| **MID** *(diagnostic)* | Mean Ideal Distance — mean Euclidean distance from each solution to the ideal point (0, …, 0). Retained for backward-compatibility with the 2023 paper, but reported as a diagnostic only: it favours solutions near the ideal point, whereas every Pareto-front member is an equally valid trade-off, so it is not a sound stand-alone quality measure — prefer HV |
 
 ---
 

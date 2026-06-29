@@ -6,14 +6,20 @@ and the 3-objective humanitarian model.
 
 Metric definitions:
     NNS — Number of Non-dominated Solutions (front size).
-    MID — Mean Ideal Distance: mean Euclidean distance from each solution to the
-          ideal point (default = origin).
+    HV  — Hypervolume dominated relative to a reference point (default = all
+          ones), computed with DEAP's n-dimensional implementation. This is the
+          **primary** quality indicator: it captures both convergence and
+          diversity in a single number, and higher is better.
     SM  — Spacing Metric (Schott): standard deviation of each solution's
           nearest-neighbour distance to the rest of the front. Dimension-
           agnostic; lower = more uniform spread. (This replaces the v0.1.0
           sort-by-z1 consecutive-distance definition, which only worked in 2-D.)
-    HV  — Hypervolume dominated relative to a reference point (default = all
-          ones), computed with DEAP's n-dimensional implementation.
+    MID — Mean Ideal Distance: mean Euclidean distance from each solution to the
+          ideal point (default = origin). Retained for backward-compatibility
+          with the 2023 paper, but reported as a **diagnostic only**: MID rewards
+          solutions near the ideal point, whereas every member of a Pareto front
+          is an equally valid trade-off, so MID is not a sound stand-alone
+          quality measure (cf. ATRES reviewer comment). Prefer HV.
     REP — Reproducibility: 1.0 when repeated seeded runs yield bit-for-bit
           identical fronts (see ``reproducibility_score`` / ``front_signature``).
 
@@ -71,7 +77,9 @@ def _nns(solutions: list[Solution]) -> int:
 def _mid(solutions: list[Solution], ideal: tuple[float, ...] | None = None) -> float:
     """Mean Ideal Distance — mean Euclidean distance to the ideal point.
 
-    Defaults to the origin of the appropriate dimension.
+    Defaults to the origin of the appropriate dimension. Diagnostic only — see
+    the module docstring: MID favours proximity to the ideal point and so is not
+    a sound stand-alone Pareto-front quality measure; HV is preferred.
     """
     if not solutions:
         return 0.0

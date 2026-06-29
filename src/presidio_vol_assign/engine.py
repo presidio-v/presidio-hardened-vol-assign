@@ -109,12 +109,50 @@ def sel_nrga_ranked(individuals: list, k: int) -> list:
     return chosen
 
 
-# Survivor-selection strategy per solver type.
+# Survivor-selection strategy per evolutionary solver type.
 _SELECTORS = {
     SolverType.NSGA2: tools.selNSGA2,
     SolverType.NRGA: sel_nrga,
     SolverType.NRGA_RANKED: sel_nrga_ranked,
 }
+
+
+# ---------------------------------------------------------------------------
+# Non-evolutionary baseline comparators (greedy + exact)
+# ---------------------------------------------------------------------------
+
+# Maps each non-evolutionary solver to the Domain hook that builds its
+# candidate population. Anything not listed runs the evolutionary loop.
+_CONSTRUCTIVE_HOOKS = {
+    SolverType.GREEDY: "baseline_population",
+    SolverType.EXACT: "exact_baseline_population",
+}
+
+
+def _build_constructive(
+    solver_type: SolverType,
+    problem: ProblemInstance,
+    domain: Domain,
+    cache: object,
+    individual_cls: type,
+) -> list:
+    """Build and evaluate a deterministic constructive population for *domain*.
+
+    ``solver_type`` selects the domain hook (greedy heuristic or exact
+    weighted-sum). Returns the evaluated candidate individuals so the shared
+    Pareto extractor can trim them to a front. Raises ``ValueError`` if the
+    domain provides no comparator of that kind.
+    """
+    hook = getattr(domain, _CONSTRUCTIVE_HOOKS[solver_type])
+    population = hook(problem, cache, individual_cls)
+    if population is None:
+        raise ValueError(
+            f"domain {domain.name!r} provides no {solver_type.value!r} comparator "
+            f"(solver {solver_type.value!r} is unavailable for this model)"
+        )
+    for ind in population:
+        ind.fitness.values = domain.evaluate(ind, cache, problem)
+    return population
 
 
 # ---------------------------------------------------------------------------
@@ -232,14 +270,17 @@ def run(
     results: list[ParetoFront] = []
     for solver_type in solvers_to_run:
         t0 = time.monotonic()
-        population = _evolve(
-            problem,
-            config,
-            domain,
-            cache,
-            individual_cls,
-            select=_SELECTORS[solver_type],
-        )
+        if solver_type in _CONSTRUCTIVE_HOOKS:
+            population = _build_constructive(solver_type, problem, domain, cache, individual_cls)
+        else:
+            population = _evolve(
+                problem,
+                config,
+                domain,
+                cache,
+                individual_cls,
+                select=_SELECTORS[solver_type],
+            )
         elapsed = time.monotonic() - t0
         results.append(
             _extract_pareto_front(population, cache, problem, domain, solver_type, elapsed)

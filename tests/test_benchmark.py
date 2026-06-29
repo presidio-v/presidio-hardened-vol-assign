@@ -103,6 +103,26 @@ def test_run_benchmark_humanitarian_smoke() -> None:
     assert rows[0].size == "small"
 
 
+@pytest.mark.slow
+def test_run_benchmark_include_baseline_adds_greedy_row() -> None:
+    rows = run_benchmark(
+        "ed-staffing", ["small"], n_instances=2, config=_tiny_cfg("nsga2"), include_baseline=True
+    )
+    solvers = {r.solver for r in rows}
+    assert solvers == {"nsga2", "greedy"}
+    # Per-instance HV samples are retained for the stats layer.
+    for r in rows:
+        assert len(r.hv_samples) == 2
+
+
+@pytest.mark.slow
+def test_run_benchmark_include_exact_adds_exact_row() -> None:
+    rows = run_benchmark(
+        "ed-staffing", ["small"], n_instances=2, config=_tiny_cfg("nsga2"), include_exact=True
+    )
+    assert {r.solver for r in rows} == {"nsga2", "exact"}
+
+
 # ---------------------------------------------------------------------------
 # Summary writer
 # ---------------------------------------------------------------------------
@@ -126,6 +146,7 @@ def test_write_benchmark_summary(tmp_path: Path) -> None:
             cpu_mean=0.01,
             cpu_std=0.0,
             rep=1.0,
+            hv_samples=[0.46, 0.48],
         )
     ]
     csv_path, json_path = write_benchmark_summary(rows, tmp_path)
@@ -137,5 +158,8 @@ def test_write_benchmark_summary(tmp_path: Path) -> None:
 
     df = pd.read_csv(csv_path)
     assert {"model", "size", "solver", "nns_mean", "hv_mean", "rep"} <= set(df.columns)
+    # Per-instance sample arrays are stripped from the Table-3 summary.
+    assert "hv_samples" not in df.columns
     data = json.loads(json_path.read_text())
     assert data[0]["solver"] == "nsga2"
+    assert "hv_samples" not in data[0]

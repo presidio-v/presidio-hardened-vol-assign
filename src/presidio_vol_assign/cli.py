@@ -9,7 +9,7 @@ from rich.console import Console
 from rich.table import Table
 
 from presidio_vol_assign import __version__
-from presidio_vol_assign.domains import get_domain
+from presidio_vol_assign.domains import HumanitarianDomain, get_domain
 from presidio_vol_assign.engine import run as run_solvers
 from presidio_vol_assign.metrics import compute_metrics
 from presidio_vol_assign.models import RunConfig
@@ -70,6 +70,19 @@ def _run_security_preamble(log_dir: Path | None = None) -> tuple[StructuredLogge
 
 
 _SOLVER_HELP = "Solver: nsga2, nrga, nrga-ranked, both (nsga2+nrga), or all."
+
+
+def _build_hard_humanitarian(
+    model: str, max_distance: float | None, mobility_threshold: float
+) -> HumanitarianDomain:
+    """Construct the hard-capacity humanitarian domain, rejecting other models."""
+    if model != "humanitarian":
+        raise ValueError("--hard-capacity is only available for --model humanitarian")
+    return HumanitarianDomain(
+        hard_capacity=True,
+        max_distance=max_distance,
+        mobility_threshold=mobility_threshold,
+    )
 
 
 def _execute_assignment(
@@ -171,6 +184,22 @@ def assign(
     generations: int = typer.Option(
         200, "--generations", show_default=True, help="Number of generations."
     ),
+    hard_capacity: bool = typer.Option(
+        False,
+        "--hard-capacity",
+        help="[humanitarian] Enforce centre capacity as a hard constraint (repair).",
+    ),
+    max_distance: float = typer.Option(
+        None,
+        "--max-distance",
+        help="[humanitarian, hard mode] Max km a low-mobility person may be sent.",
+    ),
+    mobility_threshold: float = typer.Option(
+        3.0,
+        "--mobility-threshold",
+        show_default=True,
+        help="[humanitarian, hard mode] Mobility below this is transport-limited.",
+    ),
     output: Path = typer.Option(
         Path("./results"), "--output", show_default=True, help="Output directory."
     ),
@@ -178,6 +207,10 @@ def assign(
     """Run assignment optimisation and write Pareto front + metrics."""
     try:
         domain = get_domain(model)
+        model_label = model
+        if hard_capacity:
+            domain = _build_hard_humanitarian(model, max_distance, mobility_threshold)
+            model_label = f"{model} (hard-capacity)"
     except ValueError as exc:
         err_console.print(f"[red]Model error:[/red] {exc}")
         raise typer.Exit(code=1)
@@ -193,7 +226,7 @@ def assign(
         pop_size=pop_size,
         generations=generations,
         output=output,
-        model_label=model,
+        model_label=model_label,
     )
 
 
@@ -207,6 +240,18 @@ def allocate_people(
     generations: int = typer.Option(
         200, "--generations", show_default=True, help="Number of generations."
     ),
+    hard_capacity: bool = typer.Option(
+        False, "--hard-capacity", help="Enforce centre capacity as a hard constraint (repair)."
+    ),
+    max_distance: float = typer.Option(
+        None, "--max-distance", help="[hard mode] Max km a low-mobility person may be sent."
+    ),
+    mobility_threshold: float = typer.Option(
+        3.0,
+        "--mobility-threshold",
+        show_default=True,
+        help="[hard mode] Mobility below this is transport-limited.",
+    ),
     output: Path = typer.Option(
         Path("./results"), "--output", show_default=True, help="Output directory."
     ),
@@ -215,8 +260,16 @@ def allocate_people(
 
     Convenience alias for ``assign --model humanitarian``.
     """
+    if hard_capacity:
+        domain = HumanitarianDomain(
+            hard_capacity=True, max_distance=max_distance, mobility_threshold=mobility_threshold
+        )
+        model_label = "humanitarian (hard-capacity)"
+    else:
+        domain = get_domain("humanitarian")
+        model_label = "humanitarian"
     _execute_assignment(
-        get_domain("humanitarian"),
+        domain,
         people,
         centers,
         solver=solver,
@@ -224,7 +277,7 @@ def allocate_people(
         pop_size=pop_size,
         generations=generations,
         output=output,
-        model_label="humanitarian",
+        model_label=model_label,
     )
 
 
@@ -276,6 +329,16 @@ def benchmark(
     check_repro: bool = typer.Option(
         False, "--check-repro", help="Re-run each instance and report bit-for-bit REP."
     ),
+    baseline: bool = typer.Option(
+        False,
+        "--baseline",
+        help="Also run the greedy baseline comparator and add it as a 'greedy' row.",
+    ),
+    exact: bool = typer.Option(
+        False,
+        "--exact",
+        help="Also run the exact weighted-sum comparator and add it as an 'exact' row.",
+    ),
     output: Path = typer.Option(
         Path("./results"), "--output", show_default=True, help="Output directory."
     ),
@@ -286,6 +349,7 @@ def benchmark(
         run_benchmark,
         write_benchmark_summary,
     )
+    from presidio_vol_assign.stats import wilcoxon_hv_tests, write_hv_tests_csv
 
     try:
         get_domain(model)  # validate model early
@@ -318,12 +382,21 @@ def benchmark(
     console.print(
         f"Benchmark: [bold]{model}[/bold] | sizes: {', '.join(sizes)} "
         f"| instances/size: {instances} | solver: {solver} | pop: {pop_size} gen: {generations}"
+        + ("  (+greedy baseline)" if baseline else "")
+        + ("  (+exact baseline)" if exact else "")
         + ("  (+reproducibility check)" if check_repro else "")
     )
 
     with console.status("[bold green]Running benchmark…[/bold green]"):
         rows = run_benchmark(
-            model, sizes, instances, config, base_seed=seed, check_repro=check_repro
+            model,
+            sizes,
+            instances,
+            config,
+            base_seed=seed,
+            check_repro=check_repro,
+            include_baseline=baseline,
+            include_exact=exact,
         )
 
     _print_benchmark_table(model, rows, check_repro)
@@ -337,6 +410,15 @@ def benchmark(
     )
     console.print(f"  Summary CSV  → [cyan]{csv_path}[/cyan]")
     console.print(f"  Summary JSON → [cyan]{json_path}[/cyan]")
+
+    # Wilcoxon rank-sum HV significance tests (skipped silently when too few
+    # instances or only one solver per size — wilcoxon_hv_tests returns []).
+    comparisons = wilcoxon_hv_tests(rows)
+    if comparisons:
+        _print_stats_table(comparisons)
+        stats_path = write_hv_tests_csv(comparisons, out_dir)
+        logger.info("benchmark stats computed", n_comparisons=len(comparisons))
+        console.print(f"  HV stats CSV → [cyan]{stats_path}[/cyan]")
 
 
 # ---------------------------------------------------------------------------
@@ -487,6 +569,98 @@ def sensitivity(
 
 
 # ---------------------------------------------------------------------------
+# pva ablation
+# ---------------------------------------------------------------------------
+
+
+@app.command()
+def ablation(
+    model: str = typer.Option(
+        "humanitarian", "--model", show_default=True, help="Problem model to analyse."
+    ),
+    volunteers: Path = typer.Option(None, "--volunteers", help="[ed-staffing] Volunteer CSV."),
+    eds: Path = typer.Option(None, "--eds", help="[ed-staffing] ED vacancies CSV."),
+    people: Path = typer.Option(None, "--people", help="[humanitarian] Affected-people CSV."),
+    centers: Path = typer.Option(None, "--centers", help="[humanitarian] Relief-centres CSV."),
+    solver: str = typer.Option("nsga2", "--solver", show_default=True, help=_SOLVER_HELP),
+    seed: int = typer.Option(42, "--seed", show_default=True, help="Random seed."),
+    pop_size: int = typer.Option(100, "--pop-size", show_default=True, help="GA population size."),
+    generations: int = typer.Option(
+        200, "--generations", show_default=True, help="Number of generations."
+    ),
+    output: Path = typer.Option(
+        Path("./results"), "--output", show_default=True, help="Output directory."
+    ),
+) -> None:
+    """Leave-one-objective-out ablation: show how much each objective contributes.
+
+    Re-solves the problem with each objective dropped in turn and reports how the
+    dropped objective and the overall hypervolume degrade — empirical evidence
+    that each qualitative indicator is non-redundant.
+    """
+    from presidio_vol_assign.ablation import run_ablation, write_ablation_csv
+
+    try:
+        domain = get_domain(model)
+    except ValueError as exc:
+        err_console.print(f"[red]Error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    try:
+        out_dir = guard_output_path(output)
+    except ValueError as exc:
+        err_console.print(f"[red]Security:[/red] {exc}")
+        raise typer.Exit(code=1)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    logger, _audit = _run_security_preamble(out_dir)
+
+    provided = {"volunteers": volunteers, "eds": eds, "people": people, "centers": centers}
+    primary_name, secondary_name = domain.required_inputs
+    primary, secondary = provided[primary_name], provided[secondary_name]
+    if primary is None or secondary is None:
+        err_console.print(
+            f"[red]Input error:[/red] model {model!r} requires "
+            f"--{primary_name} and --{secondary_name}."
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        problem = domain.load(primary, secondary)
+    except (FileNotFoundError, ValueError) as exc:
+        err_console.print(f"[red]Input error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    config = RunConfig(
+        solver=solver,
+        pop_size=pop_size,
+        generations=generations,
+        seed=seed,
+        output_dir=str(out_dir),
+    )
+    try:
+        validate_run_config(config)
+    except ValueError as exc:
+        err_console.print(f"[red]Config error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    console.print(
+        f"Ablation: [bold]{model}[/bold] | solver: {solver} | pop: {pop_size} gen: {generations}"
+    )
+
+    try:
+        with console.status("[bold green]Running objective ablation…[/bold green]"):
+            rows = run_ablation(domain, problem, config)
+    except ValueError as exc:
+        err_console.print(f"[red]Error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    _print_ablation_table(model, rows)
+    csv_path = write_ablation_csv(rows, out_dir)
+    logger.info("ablation completed", model=model, n_rows=len(rows))
+    console.print(f"  Ablation CSV → [cyan]{csv_path}[/cyan]")
+
+
+# ---------------------------------------------------------------------------
 # pva version
 # ---------------------------------------------------------------------------
 
@@ -508,12 +682,17 @@ def version() -> None:
 
 
 def _print_benchmark_table(model: str, rows: list, check_repro: bool) -> None:
-    """Render the Table-3-style mean±std benchmark summary."""
+    """Render the Table-3-style mean±std benchmark summary.
+
+    HV (the primary convergence+diversity indicator) leads; MID is reported last
+    as a diagnostic only — it rewards proximity to the ideal point and so is not
+    a sound stand-alone quality measure for a Pareto front.
+    """
     table = Table(title=f"Benchmark summary — {model}", show_header=True, header_style="bold")
     table.add_column("Size", style="dim")
     table.add_column("Solver", style="dim")
     table.add_column("N", justify="right")
-    for col in ("NNS", "MID", "SM", "HV", "CPU (s)"):
+    for col in ("HV (primary)", "NNS", "SM", "CPU (s)", "MID (diag.)"):
         table.add_column(col, justify="right")
     if check_repro:
         table.add_column("REP", justify="right")
@@ -523,15 +702,44 @@ def _print_benchmark_table(model: str, rows: list, check_repro: bool) -> None:
             r.size,
             r.solver,
             str(r.n_instances),
-            f"{r.nns_mean:.1f} ± {r.nns_std:.1f}",
-            f"{r.mid_mean:.3f} ± {r.mid_std:.3f}",
-            f"{r.sm_mean:.4f} ± {r.sm_std:.4f}",
             f"{r.hv_mean:.3f} ± {r.hv_std:.3f}",
+            f"{r.nns_mean:.1f} ± {r.nns_std:.1f}",
+            f"{r.sm_mean:.4f} ± {r.sm_std:.4f}",
             f"{r.cpu_mean:.2f} ± {r.cpu_std:.2f}",
+            f"{r.mid_mean:.3f} ± {r.mid_std:.3f}",
         ]
         if check_repro:
             cells.append("—" if r.rep is None else f"{r.rep:.2f}")
         table.add_row(*cells)
+    console.print(table)
+
+
+def _print_stats_table(comparisons: list) -> None:
+    """Render the Wilcoxon rank-sum HV significance comparisons."""
+    table = Table(
+        title="HV significance — Wilcoxon rank-sum (vs. reference solver)",
+        show_header=True,
+        header_style="bold",
+    )
+    table.add_column("Size", style="dim")
+    table.add_column("Solver", style="dim")
+    table.add_column("Reference", style="dim")
+    for col in ("median HV", "ref median HV", "p-value"):
+        table.add_column(col, justify="right")
+    table.add_column("Better")
+    table.add_column("Sig. (α=.05)", justify="center")
+
+    for c in comparisons:
+        table.add_row(
+            c.size,
+            c.solver,
+            c.reference,
+            f"{c.median:.3f}",
+            f"{c.reference_median:.3f}",
+            f"{c.p_value:.4f}",
+            c.better,
+            "✓" if c.significant else "—",
+        )
     console.print(table)
 
 
@@ -555,6 +763,35 @@ def _print_sensitivity_table(model: str, rows: list) -> None:
     console.print(table)
 
 
+def _print_ablation_table(model: str, rows: list) -> None:
+    """Render the leave-one-objective-out ablation summary."""
+    table = Table(
+        title=f"Objective ablation — {model} (larger Δ = more non-redundant)",
+        show_header=True,
+        header_style="bold",
+    )
+    table.add_column("Dropped", style="dim")
+    table.add_column("NNS (full→abl.)", justify="right")
+    table.add_column("mean (full)", justify="right")
+    table.add_column("mean (ablated)", justify="right")
+    table.add_column("Δ dropped", justify="right")
+    table.add_column("HV (full)", justify="right")
+    table.add_column("HV (ablated)", justify="right")
+    table.add_column("Δ HV", justify="right")
+    for r in rows:
+        table.add_row(
+            r.dropped,
+            f"{r.nns_full}→{r.nns_ablated}",
+            f"{r.mean_dropped_full:.4f}",
+            f"{r.mean_dropped_ablated:.4f}",
+            f"{r.delta_dropped:+.4f}",
+            f"{r.hv_full:.4f}",
+            f"{r.hv_ablated:.4f}",
+            f"{r.delta_hv:+.4f}",
+        )
+    console.print(table)
+
+
 def _problem_size(problem: object) -> str:
     """Human-readable size description, model-agnostic."""
     if hasattr(problem, "n_volunteers"):
@@ -567,13 +804,16 @@ def _problem_size(problem: object) -> str:
 def _print_run_summary(solver_label: str, m: Metrics) -> None:  # noqa: F821
 
     table = Table(title=f"Results — {solver_label}", show_header=True, header_style="bold")
-    table.add_column("Metric", style="dim", width=14)
+    table.add_column("Metric", style="dim", width=16)
     table.add_column("Value", justify="right")
 
+    # HV first: it is the primary indicator (captures convergence + diversity).
+    table.add_row("HV (primary)", f"{m.hv:.4f}")
     table.add_row("NNS", str(m.nns))
-    table.add_row("MID", f"{m.mid:.4f}")
     table.add_row("SM", f"{m.sm:.4f}")
-    table.add_row("HV", f"{m.hv:.4f}")
     table.add_row("CPU time", f"{m.cpu_time_sec:.2f}s")
+    # MID last and flagged diagnostic: it favours solutions near the ideal point,
+    # so it is not a sound stand-alone quality measure for a Pareto front.
+    table.add_row("MID (diag.)", f"{m.mid:.4f}")
 
     console.print(table)
