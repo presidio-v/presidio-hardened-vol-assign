@@ -509,6 +509,98 @@ def sensitivity(
 
 
 # ---------------------------------------------------------------------------
+# pva ablation
+# ---------------------------------------------------------------------------
+
+
+@app.command()
+def ablation(
+    model: str = typer.Option(
+        "humanitarian", "--model", show_default=True, help="Problem model to analyse."
+    ),
+    volunteers: Path = typer.Option(None, "--volunteers", help="[ed-staffing] Volunteer CSV."),
+    eds: Path = typer.Option(None, "--eds", help="[ed-staffing] ED vacancies CSV."),
+    people: Path = typer.Option(None, "--people", help="[humanitarian] Affected-people CSV."),
+    centers: Path = typer.Option(None, "--centers", help="[humanitarian] Relief-centres CSV."),
+    solver: str = typer.Option("nsga2", "--solver", show_default=True, help=_SOLVER_HELP),
+    seed: int = typer.Option(42, "--seed", show_default=True, help="Random seed."),
+    pop_size: int = typer.Option(100, "--pop-size", show_default=True, help="GA population size."),
+    generations: int = typer.Option(
+        200, "--generations", show_default=True, help="Number of generations."
+    ),
+    output: Path = typer.Option(
+        Path("./results"), "--output", show_default=True, help="Output directory."
+    ),
+) -> None:
+    """Leave-one-objective-out ablation: show how much each objective contributes.
+
+    Re-solves the problem with each objective dropped in turn and reports how the
+    dropped objective and the overall hypervolume degrade — empirical evidence
+    that each qualitative indicator is non-redundant.
+    """
+    from presidio_vol_assign.ablation import run_ablation, write_ablation_csv
+
+    try:
+        domain = get_domain(model)
+    except ValueError as exc:
+        err_console.print(f"[red]Error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    try:
+        out_dir = guard_output_path(output)
+    except ValueError as exc:
+        err_console.print(f"[red]Security:[/red] {exc}")
+        raise typer.Exit(code=1)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    logger, _audit = _run_security_preamble(out_dir)
+
+    provided = {"volunteers": volunteers, "eds": eds, "people": people, "centers": centers}
+    primary_name, secondary_name = domain.required_inputs
+    primary, secondary = provided[primary_name], provided[secondary_name]
+    if primary is None or secondary is None:
+        err_console.print(
+            f"[red]Input error:[/red] model {model!r} requires "
+            f"--{primary_name} and --{secondary_name}."
+        )
+        raise typer.Exit(code=1)
+
+    try:
+        problem = domain.load(primary, secondary)
+    except (FileNotFoundError, ValueError) as exc:
+        err_console.print(f"[red]Input error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    config = RunConfig(
+        solver=solver,
+        pop_size=pop_size,
+        generations=generations,
+        seed=seed,
+        output_dir=str(out_dir),
+    )
+    try:
+        validate_run_config(config)
+    except ValueError as exc:
+        err_console.print(f"[red]Config error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    console.print(
+        f"Ablation: [bold]{model}[/bold] | solver: {solver} | pop: {pop_size} gen: {generations}"
+    )
+
+    try:
+        with console.status("[bold green]Running objective ablation…[/bold green]"):
+            rows = run_ablation(domain, problem, config)
+    except ValueError as exc:
+        err_console.print(f"[red]Error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    _print_ablation_table(model, rows)
+    csv_path = write_ablation_csv(rows, out_dir)
+    logger.info("ablation completed", model=model, n_rows=len(rows))
+    console.print(f"  Ablation CSV → [cyan]{csv_path}[/cyan]")
+
+
+# ---------------------------------------------------------------------------
 # pva version
 # ---------------------------------------------------------------------------
 
@@ -607,6 +699,35 @@ def _print_sensitivity_table(model: str, rows: list) -> None:
             f"{r.sm:.4f}",
             f"{r.hv:.4f}",
             f"{r.cpu_time_sec:.2f}",
+        )
+    console.print(table)
+
+
+def _print_ablation_table(model: str, rows: list) -> None:
+    """Render the leave-one-objective-out ablation summary."""
+    table = Table(
+        title=f"Objective ablation — {model} (larger Δ = more non-redundant)",
+        show_header=True,
+        header_style="bold",
+    )
+    table.add_column("Dropped", style="dim")
+    table.add_column("NNS (full→abl.)", justify="right")
+    table.add_column("mean (full)", justify="right")
+    table.add_column("mean (ablated)", justify="right")
+    table.add_column("Δ dropped", justify="right")
+    table.add_column("HV (full)", justify="right")
+    table.add_column("HV (ablated)", justify="right")
+    table.add_column("Δ HV", justify="right")
+    for r in rows:
+        table.add_row(
+            r.dropped,
+            f"{r.nns_full}→{r.nns_ablated}",
+            f"{r.mean_dropped_full:.4f}",
+            f"{r.mean_dropped_ablated:.4f}",
+            f"{r.delta_dropped:+.4f}",
+            f"{r.hv_full:.4f}",
+            f"{r.hv_ablated:.4f}",
+            f"{r.delta_hv:+.4f}",
         )
     console.print(table)
 

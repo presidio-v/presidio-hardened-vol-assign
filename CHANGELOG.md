@@ -46,6 +46,10 @@ Stantchev). The ED-staffing model is unchanged and remains the default.
   baseline when present) with the Wilcoxon rank-sum test, prints a significance
   table, and writes `stats_<ts>.csv` (runs automatically with ≥2 solvers and
   ≥5 instances; uses the existing `scipy` dependency — no new package).
+- **`pva ablation`** (`ablation.py`): leave-one-objective-out analysis that
+  re-solves with each objective dropped in turn and reports how the dropped
+  objective and the overall hypervolume degrade (`ablation_<ts>.csv`) — empirical
+  evidence that each qualitative indicator is non-redundant (ATRES reviewer R2.2).
 
 ### Changed
 - **HV is now the primary reported metric**; MID is shown last and flagged
@@ -67,6 +71,9 @@ Stantchev). The ED-staffing model is unchanged and remains the default.
 - CSV formula-injection hardening: record IDs written to `assignments_*.csv` are
   quote-prefixed when they begin with a spreadsheet formula trigger
   (`= + - @`, tab, CR). Closes a latent issue that predated v0.2.0.
+- Bumped the transitive `msgpack` pin to ≥ 1.2.1 in `uv.lock` to clear
+  GHSA-6v7p-g79w-8964 (pulled in via the `pip-audit` toolchain), keeping the
+  on-run and CI dependency audit green.
 
 ### Notes
 - The humanitarian FIS ship with explicit, documented Mamdani rule tables and

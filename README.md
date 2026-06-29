@@ -211,6 +211,11 @@ pva sensitivity [--model humanitarian|ed-staffing]
               [--solver ...] [--seed <int>] [--pop-size <int>] [--generations <int>]
               [--output <dir>]
 
+pva ablation  [--model humanitarian|ed-staffing]
+              # inputs as for `assign` (--people/--centers or --volunteers/--eds)
+              [--solver ...] [--seed <int>] [--pop-size <int>] [--generations <int>]
+              [--output <dir>]
+
 pva version
 ```
 
@@ -227,6 +232,28 @@ deterministic under `--seed`.
 pva sensitivity --model humanitarian \
   --people people.csv --centers centers.csv \
   --factors -0.2,-0.1,0,0.1,0.2 --solver both --seed 42 --output results/
+```
+
+### Objective ablation (indicator validation)
+
+`pva ablation` provides empirical evidence that each qualitative indicator
+contributes distinct, non-redundant information. It re-solves the problem with
+each objective **dropped from the optimisation** in turn, then measures the
+dropped objective — and the overall hypervolume — back in the full objective
+space, writing `ablation_<ts>.csv`:
+
+- **Δ dropped** — how much worse the dropped objective gets (mean over the front)
+  when it is no longer optimised. Large = the indicator is doing real work that
+  no other objective drives for free (non-redundant).
+- **Δ HV** — full-space hypervolume lost by ignoring the objective.
+
+A near-zero Δ would flag an indicator the other objectives already capture.
+Deterministic under `--seed`.
+
+```bash
+pva ablation --model humanitarian \
+  --people people.csv --centers centers.csv \
+  --solver nsga2 --seed 42 --output results/
 ```
 
 ### Solvers
