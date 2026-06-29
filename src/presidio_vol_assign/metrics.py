@@ -13,7 +13,8 @@ Metric definitions:
           agnostic; lower = more uniform spread. (This replaces the v0.1.0
           sort-by-z1 consecutive-distance definition, which only worked in 2-D.)
     HV  — Hypervolume dominated relative to a reference point (default = all
-          ones), computed with DEAP's n-dimensional implementation.
+          ones), computed with DEAP's n-dimensional implementation (pymoo
+          fallback when DEAP's compiled module is unavailable).
     REP — Reproducibility: 1.0 when repeated seeded runs yield bit-for-bit
           identical fronts (see ``reproducibility_score`` / ``front_signature``).
 
@@ -30,7 +31,19 @@ import math
 from collections.abc import Sequence
 
 import numpy as np
-from deap.tools._hypervolume import hv as _pyhv
+
+try:  # deap's compiled n-d hypervolume; some deap wheels omit this module
+    from deap.tools._hypervolume import hv as _deap_hv
+
+    def _hypervolume(pts: np.ndarray, ref: np.ndarray) -> float:
+        return float(_deap_hv.hypervolume(pts, ref))
+
+except ImportError:  # fall back to pymoo (already a dependency) so fresh
+    from pymoo.indicators.hv import HV as _PymooHV  # installs stay reproducible
+
+    def _hypervolume(pts: np.ndarray, ref: np.ndarray) -> float:
+        return float(_PymooHV(ref_point=ref)(pts))
+
 
 from presidio_vol_assign.models import Metrics, ParetoFront, Solution
 
@@ -102,7 +115,8 @@ def _sm(solutions: list[Solution]) -> float:
 def _hv(solutions: list[Solution], ref: tuple[float, ...] | None = None) -> float:
     """Hypervolume dominated by the front relative to reference point *ref*.
 
-    Uses DEAP's n-dimensional hypervolume. ``ref`` defaults to the all-ones
+    Uses DEAP's n-dimensional hypervolume, or the pymoo fallback when DEAP's
+    compiled module is unavailable. ``ref`` defaults to the all-ones
     point (both objective families have objectives in [0, 1]). Only solutions
     strictly inside the reference box contribute; returns 0.0 for empty fronts
     or fronts that do not dominate the reference point.
@@ -116,7 +130,7 @@ def _hv(solutions: list[Solution], ref: tuple[float, ...] | None = None) -> floa
     pts = [v for v in vectors if all(v[k] < ref[k] for k in range(dim))]
     if not pts:
         return 0.0
-    return float(_pyhv.hypervolume(np.array(pts, dtype=float), np.array(ref, dtype=float)))
+    return _hypervolume(np.array(pts, dtype=float), np.array(ref, dtype=float))
 
 
 # ---------------------------------------------------------------------------
