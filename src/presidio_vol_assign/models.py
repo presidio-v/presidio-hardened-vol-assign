@@ -29,16 +29,22 @@ class SolverType(str, Enum):
     NRGA_RANKED is the canonical Non-dominated Ranked Genetic Algorithm with
     rank-biased roulette-wheel survival (Al Jadaan et al., 2008).
 
-    GREEDY is a non-evolutionary **baseline comparator** — a deterministic
-    weighted-sum constructive heuristic — included so the evolutionary framework
-    can be evaluated against an existing-style allocation method rather than only
-    against the other GAs (addresses the ATRES reviewers' benchmarking gap).
+    GREEDY and EXACT are non-evolutionary **baseline comparators**, included so
+    the evolutionary framework can be evaluated against existing-style allocation
+    methods rather than only against the other GAs (addresses the ATRES
+    reviewers' benchmarking gap):
+
+    * GREEDY — a deterministic weighted-sum constructive heuristic (myopic).
+    * EXACT  — the weighted-sum scalarisation solved *to optimality* at each
+      weight (Hungarian assignment for ed-staffing; MILP for humanitarian),
+      a globally-optimal-per-scalarisation comparator stronger than GREEDY.
     """
 
     NSGA2 = "nsga2"
     NRGA = "nrga"
     NRGA_RANKED = "nrga-ranked"
     GREEDY = "greedy"
+    EXACT = "exact"
 
 
 # ---------------------------------------------------------------------------

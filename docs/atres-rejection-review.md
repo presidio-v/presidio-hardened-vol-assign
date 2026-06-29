@@ -325,3 +325,103 @@ and to feed a revision checklist. They cannot be resolved in this repository.
 > None of the reviewers identified a correctness error in the model or the code.
 > The objections are venue, framing, benchmarking, and presentation — all
 > addressable. Recommend **revise & resubmit elsewhere**, not abandonment.
+
+---
+
+## 3. Manuscript revision plan (two submissions)
+
+Planning context: **one submission in the next few days**, and **a second in
+2–3 months**. The code-addressable gaps are now closed in this repo (§2.3), so
+what remains is overwhelmingly *manuscript* work — the authors' to write — plus
+two deeper modelling extensions now also implemented (see §4). Checklist below;
+"✅ code-ready" means the evidence/feature exists and only needs to be written up.
+
+### 3.1 Submission 1 (next few days) — writing & framing only, no new experiments
+
+**Positioning**
+- [ ] State an explicit **hypothesis** and sharpen the **contribution** — the
+  contribution is the *integration + the three indicators + a reproducible tool*,
+  not a new MOO operator (answers R1.1, R2.1, R3 "vague objectives / no hypothesis").
+- [ ] **Re-home the journal** to an in-scope OR / disaster-management /
+  decision-support venue (the dominant rejection reason — R1 "out of scope").
+- [ ] Add an **AI-use acknowledgement** if AI tools were used (R1.2; integrity).
+
+**Paste in evidence the code now generates** (the reviewers' #1 technical gap)
+- [ ] ✅ **Baseline comparison** + **Wilcoxon HV** significance — `pva benchmark
+  --baseline` (R1.4 / R2.4 / R3.2).
+- [ ] ✅ **HV leads; MID dropped/footnoted** (R3, eq. 18).
+- [ ] ✅ **Experimental params** — population, generations, stopping criterion,
+  seeds, repeated runs (R3, p30).
+- [ ] ✅ **Sensitivity** (`pva sensitivity`, R2.3) and **ablation** (`pva
+  ablation`, R2.2) tables as robustness / indicator-non-redundancy evidence.
+- [ ] ✅ **Fix the chromosome description** to match the integer n×1 encoding the
+  code already uses (R3, p21 / expr 17).
+- [ ] ✅ **Results figures** via `pva show` (R3 — "only two figures, none of results").
+
+**Structure & clarity** (the bulk of R3's line-by-line)
+- [ ] Reorder so **Section 3 follows Section 4**; introduce **Tables 2–5 earlier**;
+  move **Table 1 and the pp. 36–37 raw tables to an appendix**; add **intuitive
+  prose before every equation** (R3).
+- [ ] Add a **fuzzy-systems primer** (MFs, triangular/trapezoidal numbers, why
+  fuzzy) — seed from [`docs/fis-worked-example.md`](fis-worked-example.md) (R3 p8/p19).
+- [ ] Fix **"qualitative" overuse**: distance/travel-duration are quantitative
+  inputs; only the fuzzy-aggregated outputs are qualitative. State sub-index
+  weighting up front (R3 p10/p11).
+- [ ] Explain **why the objectives conflict** (R3 p7).
+- [ ] **Copy-edit pass** for the rough-draft prose and every specific line fix
+  (p4 "global/regional?", p6 gerunds, p7 punctuation, p9 "exceeds much further" /
+  "highlighting→exacerbation", p16 "Travel→travel", etc.).
+
+### 3.2 Submission 2 (2–3 months) — deeper experiments & validation
+
+- [ ] ✅ **Stronger / exact baseline** — `--solver exact` (exact weighted-sum:
+  Hungarian assignment for ed-staffing, MILP for humanitarian) gives a
+  globally-optimal-per-scalarization comparator beyond the myopic greedy
+  (R2.4 / R3.2). See §4.1.
+- [ ] ✅ **Hard capacity + transport limits** — `--hard-capacity` /
+  `--max-distance` repair mode, complementing the soft-capacity default (R2.5).
+  See §4.2.
+- [ ] **Empirical indicator validation** — a real-data **case study** and/or
+  **expert-elicitation / inter-rater agreement** study for the rule bases and MFs,
+  beyond the statistical non-redundancy the ablation already shows (R2.2 / R2.3).
+- [ ] **Social-science grounding** — literature support for the vulnerability /
+  fairness / prioritisation assumptions from humanitarian and social-science
+  research (R1.3).
+
+---
+
+## 4. Modelling extensions delivered for Submission 2
+
+### 4.1 Exact weighted-sum baseline (`--solver exact`)
+
+A non-myopic comparator stronger than the greedy heuristic: the weighted-sum
+scalarisation solved **to optimality** at each weight on the objective simplex
+(`Domain.exact_baseline_population`).
+
+- **ed-staffing** — exact min-cost type-feasible bipartite assignment per weight
+  via `scipy.optimize.linear_sum_assignment` (Hungarian), encoded as the
+  permutation the greedy decoder reproduces.
+- **humanitarian** — exact weighted-sum MILP per weight via
+  `scipy.optimize.milp`: `z1`/`z2` are linear in the assignment and modelled
+  exactly; centre balance uses a **linear capacity-overload surrogate** (so the
+  programme stays an exact MILP). The true FIS objectives (`z1`, `z2`, `z3`) are
+  then reported on the optimal assignment. For weights with no balance term the
+  result is the exact `z1+z2` optimum.
+
+Uses the existing `scipy` dependency (no new package). Run standalone
+(`--solver exact`) or as a benchmark comparator.
+
+### 4.2 Hard-capacity & transport-limit mode (humanitarian)
+
+The default humanitarian model treats capacity as a *soft* objective (`Z3`) and
+transport as a feasibility objective (`Z2`). The new constraint mode adds, on top:
+
+- **Hard capacity** — a deterministic greedy **repair decoder** guarantees no
+  centre exceeds its capacity (overflow people, lowest-priority first, are moved
+  to the nearest centre with spare room).
+- **Transport limit** — low-mobility people (`mobility` below a threshold) are not
+  placed beyond a maximum distance during repair, with a documented nearest-
+  feasible fallback.
+
+Enabled with `--hard-capacity` (and `--max-distance` / `--mobility-threshold`);
+the soft-capacity default is unchanged.

@@ -115,6 +115,14 @@ def test_run_benchmark_include_baseline_adds_greedy_row() -> None:
         assert len(r.hv_samples) == 2
 
 
+@pytest.mark.slow
+def test_run_benchmark_include_exact_adds_exact_row() -> None:
+    rows = run_benchmark(
+        "ed-staffing", ["small"], n_instances=2, config=_tiny_cfg("nsga2"), include_exact=True
+    )
+    assert {r.solver for r in rows} == {"nsga2", "exact"}
+
+
 # ---------------------------------------------------------------------------
 # Summary writer
 # ---------------------------------------------------------------------------

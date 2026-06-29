@@ -268,6 +268,45 @@ class EDStaffingDomain(Domain):
             population.append(individual_cls(sorted(range(n), key=key)))
         return population
 
+    def exact_baseline_population(
+        self, problem: ProblemInstance, cache: FISCache, individual_cls: type
+    ) -> list:
+        """Exact min-cost type-feasible assignment per weight (Hungarian).
+
+        For each weight vector ``(w1, w2)`` on the simplex, solve the bipartite
+        assignment that fills every vacancy with a distinct, skill-matching
+        volunteer minimising total ``w1·importance + w2·preference`` — to
+        optimality, via ``scipy.optimize.linear_sum_assignment``. The optimal
+        matching is then encoded as the permutation the greedy decoder
+        reproduces (chosen volunteers first, in vacancy order). Deterministic.
+        """
+        from scipy.optimize import linear_sum_assignment
+
+        from presidio_vol_assign.baselines import weight_simplex
+
+        n_vol = problem.n_volunteers
+        n_vac = problem.n_vacancies
+        # Cost of assigning volunteer vi to vacancy vj; infeasible (type-mismatch)
+        # pairs get a prohibitive cost so the optimum never uses them.
+        big = 1.0e6
+        imp = np.full((n_vac, n_vol), big)
+        pref = np.full((n_vac, n_vol), big)
+        for (vi, vj), entry in cache.items():
+            if entry is not None:
+                imp[vj, vi], pref[vj, vi] = entry
+
+        population: list = []
+        for w1, w2 in weight_simplex(2, steps=8):
+            cost = w1 * imp + w2 * pref
+            rows, cols = linear_sum_assignment(cost)  # rows = vacancies, cols = volunteers
+            chosen = [0] * n_vac
+            for r, c in zip(rows, cols):
+                chosen[r] = int(c)
+            used = set(chosen)
+            perm = chosen + [vi for vi in range(n_vol) if vi not in used]
+            population.append(individual_cls(perm))
+        return population
+
     def mate(self, ind1: list, ind2: list) -> tuple[list, list]:
         return tools.cxOrdered(ind1, ind2)
 

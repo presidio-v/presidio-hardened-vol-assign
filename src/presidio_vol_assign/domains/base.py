@@ -103,6 +103,19 @@ class Domain(ABC):
         """
         return None
 
+    def exact_baseline_population(
+        self, problem: Any, cache: Any, individual_cls: type
+    ) -> list | None:
+        """Build candidate individuals for the **exact** weighted-sum baseline.
+
+        Like :meth:`baseline_population`, but each weight vector is solved to
+        optimality (e.g. Hungarian assignment or MILP) rather than greedily — a
+        stronger, globally-optimal-per-scalarisation comparator. The default
+        returns ``None`` (no exact baseline available); domains override it.
+        Deterministic; no randomness.
+        """
+        return None
+
     @abstractmethod
     def mate(self, ind1: list, ind2: list) -> tuple[list, list]:
         """Apply crossover in place and return the two children."""

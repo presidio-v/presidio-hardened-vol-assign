@@ -50,6 +50,17 @@ Stantchev). The ED-staffing model is unchanged and remains the default.
   re-solves with each objective dropped in turn and reports how the dropped
   objective and the overall hypervolume degrade (`ablation_<ts>.csv`) — empirical
   evidence that each qualitative indicator is non-redundant (ATRES reviewer R2.2).
+- **Exact weighted-sum baseline** (`--solver exact`): the scalarisation solved to
+  optimality per weight — Hungarian assignment (`scipy.optimize.linear_sum_assignment`)
+  for ed-staffing, MILP (`scipy.optimize.milp`) for humanitarian — a
+  globally-optimal-per-scalarisation comparator stronger than greedy
+  (`Domain.exact_baseline_population`; `pva benchmark --exact`). Uses the existing
+  `scipy` dependency (ATRES reviewers R2.4 / R3.2).
+- **Hard-capacity / transport-limit mode** for the humanitarian model
+  (`--hard-capacity`, `--max-distance`, `--mobility-threshold`): a deterministic
+  repair decoder guarantees no centre exceeds capacity and keeps low-mobility
+  people within a maximum distance, complementing the default soft-capacity
+  objective (ATRES reviewer R2.5). The soft model remains the default.
 
 ### Changed
 - **HV is now the primary reported metric**; MID is shown last and flagged

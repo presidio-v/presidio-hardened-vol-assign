@@ -9,7 +9,7 @@ from rich.console import Console
 from rich.table import Table
 
 from presidio_vol_assign import __version__
-from presidio_vol_assign.domains import get_domain
+from presidio_vol_assign.domains import HumanitarianDomain, get_domain
 from presidio_vol_assign.engine import run as run_solvers
 from presidio_vol_assign.metrics import compute_metrics
 from presidio_vol_assign.models import RunConfig
@@ -70,6 +70,19 @@ def _run_security_preamble(log_dir: Path | None = None) -> tuple[StructuredLogge
 
 
 _SOLVER_HELP = "Solver: nsga2, nrga, nrga-ranked, both (nsga2+nrga), or all."
+
+
+def _build_hard_humanitarian(
+    model: str, max_distance: float | None, mobility_threshold: float
+) -> HumanitarianDomain:
+    """Construct the hard-capacity humanitarian domain, rejecting other models."""
+    if model != "humanitarian":
+        raise ValueError("--hard-capacity is only available for --model humanitarian")
+    return HumanitarianDomain(
+        hard_capacity=True,
+        max_distance=max_distance,
+        mobility_threshold=mobility_threshold,
+    )
 
 
 def _execute_assignment(
@@ -171,6 +184,22 @@ def assign(
     generations: int = typer.Option(
         200, "--generations", show_default=True, help="Number of generations."
     ),
+    hard_capacity: bool = typer.Option(
+        False,
+        "--hard-capacity",
+        help="[humanitarian] Enforce centre capacity as a hard constraint (repair).",
+    ),
+    max_distance: float = typer.Option(
+        None,
+        "--max-distance",
+        help="[humanitarian, hard mode] Max km a low-mobility person may be sent.",
+    ),
+    mobility_threshold: float = typer.Option(
+        3.0,
+        "--mobility-threshold",
+        show_default=True,
+        help="[humanitarian, hard mode] Mobility below this is transport-limited.",
+    ),
     output: Path = typer.Option(
         Path("./results"), "--output", show_default=True, help="Output directory."
     ),
@@ -178,6 +207,10 @@ def assign(
     """Run assignment optimisation and write Pareto front + metrics."""
     try:
         domain = get_domain(model)
+        model_label = model
+        if hard_capacity:
+            domain = _build_hard_humanitarian(model, max_distance, mobility_threshold)
+            model_label = f"{model} (hard-capacity)"
     except ValueError as exc:
         err_console.print(f"[red]Model error:[/red] {exc}")
         raise typer.Exit(code=1)
@@ -193,7 +226,7 @@ def assign(
         pop_size=pop_size,
         generations=generations,
         output=output,
-        model_label=model,
+        model_label=model_label,
     )
 
 
@@ -207,6 +240,18 @@ def allocate_people(
     generations: int = typer.Option(
         200, "--generations", show_default=True, help="Number of generations."
     ),
+    hard_capacity: bool = typer.Option(
+        False, "--hard-capacity", help="Enforce centre capacity as a hard constraint (repair)."
+    ),
+    max_distance: float = typer.Option(
+        None, "--max-distance", help="[hard mode] Max km a low-mobility person may be sent."
+    ),
+    mobility_threshold: float = typer.Option(
+        3.0,
+        "--mobility-threshold",
+        show_default=True,
+        help="[hard mode] Mobility below this is transport-limited.",
+    ),
     output: Path = typer.Option(
         Path("./results"), "--output", show_default=True, help="Output directory."
     ),
@@ -215,8 +260,16 @@ def allocate_people(
 
     Convenience alias for ``assign --model humanitarian``.
     """
+    if hard_capacity:
+        domain = HumanitarianDomain(
+            hard_capacity=True, max_distance=max_distance, mobility_threshold=mobility_threshold
+        )
+        model_label = "humanitarian (hard-capacity)"
+    else:
+        domain = get_domain("humanitarian")
+        model_label = "humanitarian"
     _execute_assignment(
-        get_domain("humanitarian"),
+        domain,
         people,
         centers,
         solver=solver,
@@ -224,7 +277,7 @@ def allocate_people(
         pop_size=pop_size,
         generations=generations,
         output=output,
-        model_label="humanitarian",
+        model_label=model_label,
     )
 
 
@@ -281,6 +334,11 @@ def benchmark(
         "--baseline",
         help="Also run the greedy baseline comparator and add it as a 'greedy' row.",
     ),
+    exact: bool = typer.Option(
+        False,
+        "--exact",
+        help="Also run the exact weighted-sum comparator and add it as an 'exact' row.",
+    ),
     output: Path = typer.Option(
         Path("./results"), "--output", show_default=True, help="Output directory."
     ),
@@ -325,6 +383,7 @@ def benchmark(
         f"Benchmark: [bold]{model}[/bold] | sizes: {', '.join(sizes)} "
         f"| instances/size: {instances} | solver: {solver} | pop: {pop_size} gen: {generations}"
         + ("  (+greedy baseline)" if baseline else "")
+        + ("  (+exact baseline)" if exact else "")
         + ("  (+reproducibility check)" if check_repro else "")
     )
 
@@ -337,6 +396,7 @@ def benchmark(
             base_seed=seed,
             check_repro=check_repro,
             include_baseline=baseline,
+            include_exact=exact,
         )
 
     _print_benchmark_table(model, rows, check_repro)

@@ -181,14 +181,19 @@ pva assign   [--model  ed-staffing|humanitarian]   (default: ed-staffing)
              # humanitarian model inputs:
              --people <csv>      --centers <csv>
 
-             [--solver  nsga2|nrga|nrga-ranked|both|all]   (default: both)
+             [--solver  nsga2|nrga|nrga-ranked|greedy|exact|both|all]   (default: both)
              [--seed    <int>]              (reproducibility)
              [--pop-size <int>]             (default: 100)
              [--generations <int>]          (default: 200)
+             # humanitarian hard-constraint mode (optional):
+             [--hard-capacity]              (enforce centre capacity via repair)
+             [--max-distance <km>]          (cap distance for low-mobility people)
+             [--mobility-threshold <0-10>]  (default: 3.0)
              [--output  <dir>]              (default: ./results)
 
 pva allocate-people  --people <csv> --centers <csv>   [solver/seed/... as above]
              # convenience alias for `assign --model humanitarian`
+             # also accepts --hard-capacity / --max-distance / --mobility-threshold
 
 pva metrics  --pareto <csv>     (auto-detects 2- or 3-objective fronts)
 
@@ -203,6 +208,7 @@ pva benchmark [--model humanitarian|ed-staffing]
               [--pop-size <int>] [--generations <int>]
               [--check-repro]              (report bit-for-bit REP)
               [--baseline]                 (add greedy comparator + Wilcoxon HV test)
+              [--exact]                    (add exact weighted-sum comparator)
               [--output <dir>]
 
 pva sensitivity [--model humanitarian|ed-staffing]
@@ -264,6 +270,7 @@ pva ablation --model humanitarian \
 | `nrga` | Lightweight NRGA — front-fill with uniform random tie-break |
 | `nrga-ranked` | Canonical NRGA — rank-biased roulette-wheel survival (Al Jadaan et al., 2008); use this for results comparable to the NRGA literature |
 | `greedy` | **Non-evolutionary baseline** — deterministic weighted-sum constructive heuristic swept over the objective simplex; a literature-style comparator the GAs are measured against (see *Baseline comparison* below) |
+| `exact` | **Exact weighted-sum baseline** — the scalarisation solved *to optimality* per weight (Hungarian assignment for ed-staffing; MILP for humanitarian); a stronger, globally-optimal-per-scalarisation comparator than `greedy` |
 | `both` | `nsga2` + `nrga` |
 | `all` | `nsga2` + `nrga` + `nrga-ranked` |
 
@@ -290,14 +297,23 @@ swept across the objective simplex (each weight vector yields one greedy
 allocation; the non-dominated subset is the baseline front). It is reproducible
 regardless of `--seed`.
 
-`pva benchmark --baseline` runs that baseline on every instance and adds a
-`greedy` row to the Table-3 summary. When ≥ 2 solvers and ≥ 5 instances are
-present, the benchmark also runs a **Wilcoxon rank-sum test** on the per-instance
-hypervolume distributions (each solver vs. the greedy baseline), prints a
-significance table, and writes `stats_<ts>.csv`.
+For a stronger comparator, `--solver exact` (or `pva benchmark --exact`) solves
+the weighted-sum scalarisation **to optimality** at each weight — an exact
+bipartite assignment (Hungarian) for ed-staffing, or a MILP for the humanitarian
+model (`z1`/`z2` exact, centre balance via a linear capacity-overload surrogate;
+the true FIS objectives are reported on the optimal assignment). It is
+globally-optimal-per-scalarisation, so it is a much harder baseline to beat than
+the myopic greedy. Both comparators use the existing `scipy` dependency.
+
+`pva benchmark --baseline` / `--exact` run those comparators on every instance and
+add `greedy` / `exact` rows to the Table-3 summary. When ≥ 2 solvers and ≥ 5
+instances are present, the benchmark also runs a **Wilcoxon rank-sum test** on the
+per-instance hypervolume distributions (each solver vs. a reference — the greedy
+baseline if present, else NSGA-II), prints a significance table, and writes
+`stats_<ts>.csv`.
 
 ```bash
-pva benchmark --model humanitarian --solver all --baseline --instances 10 --seed 42
+pva benchmark --model humanitarian --solver all --baseline --exact --instances 10 --seed 42
 ```
 
 ### Figures
@@ -361,6 +377,22 @@ pva allocate-people \
 
 The output `pareto_*.csv` carries `z1,z2,z3`; `assignments_*.csv` carries
 `person_id, center_id, fairness, transport, overcrowding`.
+
+### Hard capacity & transport limits
+
+By default the humanitarian model treats capacity as a *soft* objective (`z3`
+overcrowding) and transport as a feasibility objective (`z2`). For settings where
+those are firm operational limits, `--hard-capacity` switches on a constraint
+mode: a deterministic repair guarantees **no centre exceeds its capacity** (people
+are placed most-constrained-first; overflow goes to the nearest centre with spare
+room), and `--max-distance` caps how far a **low-mobility** person (mobility below
+`--mobility-threshold`) may be sent. The soft model remains the default and is
+unchanged.
+
+```bash
+pva assign --model humanitarian --people people.csv --centers centers.csv \
+  --hard-capacity --max-distance 30 --mobility-threshold 3 --solver both --seed 42
+```
 
 The membership functions and the explicit Mamdani rule tables for all three FIS
 are documented — with a fully worked numeric example — in

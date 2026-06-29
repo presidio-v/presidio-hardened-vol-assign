@@ -176,18 +176,24 @@ def run_benchmark(
     base_seed: int = 42,
     check_repro: bool = False,
     include_baseline: bool = False,
+    include_exact: bool = False,
 ) -> list[BenchmarkRow]:
     """Run the benchmark and return one aggregated row per (size, solver).
 
     Each instance is solved with ``config`` (its seed drives the solver). When
     ``check_repro`` is set, every instance is solved a second time and the
     fraction of bit-for-bit identical results is reported as REP. When
-    ``include_baseline`` is set, the deterministic greedy baseline comparator is
-    additionally run on every instance and reported as a ``greedy`` solver row,
-    enabling a framework-vs-baseline comparison (and the Wilcoxon HV tests).
+    ``include_baseline`` / ``include_exact`` are set, the deterministic greedy
+    and/or exact weighted-sum comparators are additionally run on every instance
+    and reported as ``greedy`` / ``exact`` solver rows, enabling a
+    framework-vs-baseline comparison (and the Wilcoxon HV tests).
     """
     domain = get_domain(model)
-    baseline_config = replace(config, solver="greedy")
+    extra_configs = []
+    if include_baseline:
+        extra_configs.append(replace(config, solver="greedy"))
+    if include_exact:
+        extra_configs.append(replace(config, solver="exact"))
     rows: list[BenchmarkRow] = []
 
     for size in sizes:
@@ -198,8 +204,8 @@ def run_benchmark(
         for i in range(n_instances):
             problem = generate_instance(model, size, base_seed + _SIZE_OFFSET[size] + i)
             fronts = run(problem, config, domain)
-            if include_baseline:
-                fronts = [*fronts, *run(problem, baseline_config, domain)]
+            for extra_cfg in extra_configs:
+                fronts = [*fronts, *run(problem, extra_cfg, domain)]
 
             for front in fronts:
                 m = compute_metrics(front)

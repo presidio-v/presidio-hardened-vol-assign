@@ -118,27 +118,37 @@ _SELECTORS = {
 
 
 # ---------------------------------------------------------------------------
-# Non-evolutionary baseline comparator
+# Non-evolutionary baseline comparators (greedy + exact)
 # ---------------------------------------------------------------------------
 
+# Maps each non-evolutionary solver to the Domain hook that builds its
+# candidate population. Anything not listed runs the evolutionary loop.
+_CONSTRUCTIVE_HOOKS = {
+    SolverType.GREEDY: "baseline_population",
+    SolverType.EXACT: "exact_baseline_population",
+}
 
-def _build_baseline(
+
+def _build_constructive(
+    solver_type: SolverType,
     problem: ProblemInstance,
     domain: Domain,
     cache: object,
     individual_cls: type,
 ) -> list:
-    """Build and evaluate the deterministic baseline population for *domain*.
+    """Build and evaluate a deterministic constructive population for *domain*.
 
-    Returns the evaluated candidate individuals so the shared Pareto extractor
-    can trim them to the baseline front. Raises ``ValueError`` if the domain
-    provides no baseline comparator.
+    ``solver_type`` selects the domain hook (greedy heuristic or exact
+    weighted-sum). Returns the evaluated candidate individuals so the shared
+    Pareto extractor can trim them to a front. Raises ``ValueError`` if the
+    domain provides no comparator of that kind.
     """
-    population = domain.baseline_population(problem, cache, individual_cls)
+    hook = getattr(domain, _CONSTRUCTIVE_HOOKS[solver_type])
+    population = hook(problem, cache, individual_cls)
     if population is None:
         raise ValueError(
-            f"domain {domain.name!r} provides no baseline comparator "
-            "(solver 'greedy' is unavailable for this model)"
+            f"domain {domain.name!r} provides no {solver_type.value!r} comparator "
+            f"(solver {solver_type.value!r} is unavailable for this model)"
         )
     for ind in population:
         ind.fitness.values = domain.evaluate(ind, cache, problem)
@@ -260,8 +270,8 @@ def run(
     results: list[ParetoFront] = []
     for solver_type in solvers_to_run:
         t0 = time.monotonic()
-        if solver_type == SolverType.GREEDY:
-            population = _build_baseline(problem, domain, cache, individual_cls)
+        if solver_type in _CONSTRUCTIVE_HOOKS:
+            population = _build_constructive(solver_type, problem, domain, cache, individual_cls)
         else:
             population = _evolve(
                 problem,

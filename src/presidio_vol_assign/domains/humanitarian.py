@@ -97,10 +97,28 @@ class HumanitarianDomain(Domain):
         "overcrowding",
     )
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        hard_capacity: bool = False,
+        max_distance: float | None = None,
+        mobility_threshold: float = 3.0,
+    ) -> None:
         # Set in precompute(); needed by mutate(), which the engine calls
         # without the problem in scope. One domain instance per run.
         self._n_centers = 0
+
+        # Hard-constraint mode (default off → original soft-capacity behaviour).
+        # When on, every genome is repaired to a capacity-feasible assignment
+        # (see _repair), and people whose mobility is below ``mobility_threshold``
+        # are not placed beyond ``max_distance`` km.
+        self._hard_capacity = hard_capacity
+        self._max_distance = max_distance
+        self._mobility_threshold = mobility_threshold
+        # Repair structures, built in precompute() only when hard_capacity is on.
+        self._allowed: list[frozenset[int]] = []  # transport-allowed centres per person
+        self._allowed_order: list[list[int]] = []  # candidate centres, nearest first
+        self._priority_order: list[int] = []  # people, most-vulnerable first
 
     # ------------------------------------------------------------------
     # I/O hooks
@@ -139,12 +157,84 @@ class HumanitarianDomain(Domain):
             [evaluate_overcrowding(u) for u in np.linspace(0.0, 2.0, _LUT_POINTS)],
             dtype=float,
         )
+        if self._hard_capacity:
+            self._build_repair_structures(problem)
+
         return _HumCache(
             pairs=pairs,
             group_sizes=[p.group_size for p in problem.people],
             capacities=[c.capacity for c in problem.centers],
             util_lut=util_lut,
         )
+
+    # ------------------------------------------------------------------
+    # Hard-constraint repair (only used when hard_capacity is on)
+    # ------------------------------------------------------------------
+
+    def _build_repair_structures(self, problem: HumanitarianProblem) -> None:
+        """Precompute per-person transport-allowed centres and processing order."""
+        n_centers = problem.n_centers
+        self._allowed = []
+        self._allowed_order = []
+        for person in problem.people:
+            dists = [person.distance_to(c.center_id) for c in problem.centers]
+            by_distance = sorted(range(n_centers), key=lambda cj: dists[cj])
+            limited = self._max_distance is not None and person.mobility < self._mobility_threshold
+            if limited:
+                allowed = {cj for cj in range(n_centers) if dists[cj] <= self._max_distance}
+            else:
+                allowed = set(range(n_centers))
+            if not allowed:  # no centre within reach → documented nearest-feasible fallback
+                allowed = set(range(n_centers))
+            # Allowed centres first (nearest-first), then the rest as a last resort.
+            order = [cj for cj in by_distance if cj in allowed]
+            order += [cj for cj in by_distance if cj not in allowed]
+            self._allowed.append(frozenset(allowed))
+            self._allowed_order.append(order)
+        # Claim capacity most-constrained-first so transport-limited people (who
+        # can reach the fewest centres) secure a feasible centre before flexible
+        # people exhaust it; break ties by vulnerability (most vulnerable first).
+        self._priority_order = sorted(
+            range(problem.n_people),
+            key=lambda pi: (len(self._allowed[pi]), -problem.people[pi].vulnerability),
+        )
+
+    def _repair(self, individual: list[int], cache: _HumCache) -> list[int]:
+        """Return a capacity-feasible, transport-respecting assignment.
+
+        People are placed most-vulnerable first; each takes its genome-preferred
+        centre when that centre is transport-allowed and still has room, otherwise
+        the nearest allowed centre with spare capacity. If every allowed centre is
+        full (rare; only under capacity contention), it falls back to the centre
+        with the most remaining capacity. Deterministic.
+        """
+        remaining = list(cache.capacities)
+        assign = [0] * len(individual)
+        for pi in self._priority_order:
+            group = cache.group_sizes[pi]
+            pref = individual[pi]
+            if pref in self._allowed[pi]:
+                candidates = [pref] + [cj for cj in self._allowed_order[pi] if cj != pref]
+            else:
+                candidates = self._allowed_order[pi]
+            placed = False
+            for cj in candidates:
+                if remaining[cj] >= group:
+                    assign[pi] = cj
+                    remaining[cj] -= group
+                    placed = True
+                    break
+            if not placed:  # capacity-contention fallback: most room available
+                cj = max(range(self._n_centers), key=lambda c: remaining[c])
+                assign[pi] = cj
+                remaining[cj] -= group
+        return assign
+
+    def _effective(self, individual: list[int], cache: _HumCache) -> list[int]:
+        """The assignment actually scored: the repaired genome in hard mode, else as-is."""
+        if self._hard_capacity:
+            return self._repair(individual, cache)
+        return list(individual)
 
     def perturb(self, cache: _HumCache, factor: float) -> _HumCache:
         scale = 1.0 + factor
@@ -201,6 +291,92 @@ class HumanitarianDomain(Domain):
             population.append(individual_cls(genome))
         return population
 
+    def exact_baseline_population(
+        self, problem: HumanitarianProblem, cache: _HumCache, individual_cls: type
+    ) -> list:
+        """Exact weighted-sum MILP per weight (``scipy.optimize.milp``).
+
+        For each weight vector ``(w1, w2, w3)`` on the simplex, solve to
+        optimality::
+
+            min  w1·Σ fairness·x + w2·Σ transport·x + w3·Σ overload
+            s.t. Σ_c x[p,c] = 1                       (each person to one centre)
+                 Σ_p group[p]·x[p,c] − overload[c] ≤ capacity[c]
+                 x ∈ {0,1},  overload ≥ 0
+
+        ``z1``/``z2`` are linear in the assignment and modelled exactly; centre
+        balance uses a **linear capacity-overload surrogate** so the programme
+        stays an exact MILP (the true FIS ``z3`` is recomputed for reporting by
+        the engine's ``evaluate``). For weights with ``w3 = 0`` this is the exact
+        ``z1+z2`` optimum. Deterministic; globally optimal per scalarisation.
+        """
+        from scipy.optimize import Bounds, LinearConstraint, milp
+        from scipy.sparse import coo_matrix
+
+        from presidio_vol_assign.baselines import weight_simplex
+
+        n_people = problem.n_people
+        n_centers = problem.n_centers
+        groups = cache.group_sizes
+        caps = cache.capacities
+        n_x = n_people * n_centers  # x[p, c] flattened C-order as p*n_centers + c
+        n_vars = n_x + n_centers  # + one overload var per centre
+
+        # Per-pair fairness / transport as (n_people, n_centers) matrices.
+        fair = np.zeros((n_people, n_centers))
+        trans = np.zeros((n_people, n_centers))
+        for (pi, cj), (f, t) in cache.pairs.items():
+            fair[pi, cj] = f
+            trans[pi, cj] = t
+
+        # Each person assigned to exactly one centre.
+        eq_rows = [pi for pi in range(n_people) for _ in range(n_centers)]
+        eq_cols = [pi * n_centers + cj for pi in range(n_people) for cj in range(n_centers)]
+        a_eq = coo_matrix((np.ones(len(eq_rows)), (eq_rows, eq_cols)), shape=(n_people, n_vars))
+        eq_con = LinearConstraint(a_eq, lb=1, ub=1)
+
+        # Σ_p group[p]·x[p,c] − overload[c] ≤ capacity[c].
+        ov_rows: list[int] = []
+        ov_cols: list[int] = []
+        ov_data: list[float] = []
+        for cj in range(n_centers):
+            for pi in range(n_people):
+                ov_rows.append(cj)
+                ov_cols.append(pi * n_centers + cj)
+                ov_data.append(float(groups[pi]))
+            ov_rows.append(cj)
+            ov_cols.append(n_x + cj)
+            ov_data.append(-1.0)
+        a_ov = coo_matrix((ov_data, (ov_rows, ov_cols)), shape=(n_centers, n_vars))
+        ov_con = LinearConstraint(
+            a_ov, lb=-np.inf, ub=np.array([float(caps[cj]) for cj in range(n_centers)])
+        )
+
+        integrality = np.zeros(n_vars)
+        integrality[:n_x] = 1  # x binary; overload continuous
+        ub = np.empty(n_vars)
+        ub[:n_x] = 1.0
+        ub[n_x:] = np.inf
+        bounds = Bounds(lb=np.zeros(n_vars), ub=ub)
+
+        population: list = []
+        for w1, w2, w3 in weight_simplex(3, steps=6):
+            c_obj = np.empty(n_vars)
+            c_obj[:n_x] = (w1 * fair + w2 * trans).ravel()
+            c_obj[n_x:] = w3
+            res = milp(
+                c=c_obj, constraints=[eq_con, ov_con], integrality=integrality, bounds=bounds
+            )
+            if not res.success or res.x is None:
+                continue
+            xs = np.asarray(res.x[:n_x]).reshape(n_people, n_centers)
+            genome = [int(np.argmax(xs[pi])) for pi in range(n_people)]
+            population.append(individual_cls(genome))
+
+        if not population:  # pragma: no cover - assignment MILP is always feasible
+            raise ValueError("exact MILP failed to produce any solution")
+        return population
+
     def mate(self, ind1: list, ind2: list) -> tuple[list, list]:
         return tools.cxTwoPoint(ind1, ind2)
 
@@ -210,15 +386,16 @@ class HumanitarianDomain(Domain):
     def evaluate(
         self, individual: list, cache: _HumCache, problem: HumanitarianProblem
     ) -> tuple[float, ...]:
+        effective = self._effective(individual, cache)
         n_people = problem.n_people
         fairness_sum = 0.0
         transport_sum = 0.0
-        for pi, cj in enumerate(individual):
+        for pi, cj in enumerate(effective):
             f, t = cache.pairs[(pi, cj)]
             fairness_sum += f
             transport_sum += t
 
-        loads, overcrowding = _center_overcrowding(individual, cache, problem.n_centers)
+        loads, overcrowding = _center_overcrowding(effective, cache, problem.n_centers)
         total_load = sum(loads)
         if total_load == 0:
             z3 = 0.0
@@ -230,9 +407,10 @@ class HumanitarianDomain(Domain):
     def to_solution(
         self, individual: list, cache: _HumCache, problem: HumanitarianProblem
     ) -> Solution:
-        _loads, overcrowding = _center_overcrowding(individual, cache, problem.n_centers)
+        effective = self._effective(individual, cache)
+        _loads, overcrowding = _center_overcrowding(effective, cache, problem.n_centers)
         assignments: list[CenterAssignment] = []
-        for pi, cj in enumerate(individual):
+        for pi, cj in enumerate(effective):
             fairness, transport = cache.pairs[(pi, cj)]
             assignments.append(
                 CenterAssignment(
