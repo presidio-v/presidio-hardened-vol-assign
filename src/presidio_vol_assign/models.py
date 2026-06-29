@@ -22,16 +22,23 @@ class SkillType(str, Enum):
 
 
 class SolverType(str, Enum):
-    """Available metaheuristic solvers.
+    """Available solvers.
 
+    NSGA2, NRGA and NRGA_RANKED are the evolutionary multi-objective solvers:
     NRGA is the lightweight variant (front-fill with uniform random tie-break);
     NRGA_RANKED is the canonical Non-dominated Ranked Genetic Algorithm with
     rank-biased roulette-wheel survival (Al Jadaan et al., 2008).
+
+    GREEDY is a non-evolutionary **baseline comparator** — a deterministic
+    weighted-sum constructive heuristic — included so the evolutionary framework
+    can be evaluated against an existing-style allocation method rather than only
+    against the other GAs (addresses the ATRES reviewers' benchmarking gap).
     """
 
     NSGA2 = "nsga2"
     NRGA = "nrga"
     NRGA_RANKED = "nrga-ranked"
+    GREEDY = "greedy"
 
 
 # ---------------------------------------------------------------------------
@@ -217,12 +224,15 @@ class Metrics:
     Attributes:
         solver: The solver that produced the front.
         nns: Number of Non-dominated Solutions.
-        mid: Mean Ideal Distance — mean Euclidean distance from each solution
-             to the ideal point (0, 0) in objective space.
+        hv: Hypervolume — volume of objective space dominated by the front
+            (higher = better coverage). Primary quality indicator (convergence
+            + diversity in one number).
         sm: Spacing Metric — standard deviation of distances between consecutive
             solutions on the front (lower = more evenly spread).
-        hv: Hypervolume — volume of objective space dominated by the front
-            (higher = better coverage).
+        mid: Mean Ideal Distance — mean Euclidean distance from each solution
+             to the ideal point (0, 0) in objective space. Diagnostic only:
+             favours proximity to the ideal point, so it is not a sound
+             stand-alone Pareto quality measure; prefer HV.
         cpu_time_sec: Wall-clock solver time.
         rep: Reproducibility score in [0, 1] — 1.0 when repeated seeded runs
             produce bit-for-bit identical fronts. None when not assessed.

@@ -232,6 +232,42 @@ class EDStaffingDomain(Domain):
         n = problem.n_volunteers
         return individual_cls(_random.sample(range(n), n))
 
+    def baseline_population(
+        self, problem: ProblemInstance, cache: FISCache, individual_cls: type
+    ) -> list:
+        """Weighted-sum greedy orderings across the objective simplex.
+
+        For each weight vector ``(w1, w2)`` on the simplex, score every
+        volunteer by the best (lowest) ``w1·importance + w2·preference`` it can
+        achieve over its feasible vacancies, then order the chromosome
+        best-score-first. The greedy type-matching decoder then fills each
+        vacancy from these front-loaded high-quality volunteers — a constructive
+        heuristic expressed as a permutation. Deterministic (no RNG); one
+        candidate per weight.
+        """
+        from presidio_vol_assign.baselines import weight_simplex
+
+        n = problem.n_volunteers
+        # Per-volunteer feasible (importance, preference) pairs, precomputed once.
+        feasible: dict[int, list[tuple[float, float]]] = {
+            vi: [
+                cache[(vi, vj)] for vj in range(problem.n_vacancies) if cache[(vi, vj)] is not None
+            ]
+            for vi in range(n)
+        }
+
+        population: list = []
+        for w1, w2 in weight_simplex(2, steps=8):
+
+            def key(vi: int, _w1: float = w1, _w2: float = w2) -> tuple[float, int]:
+                pairs = feasible[vi]
+                # Volunteers with no feasible vacancy sort last; ``vi`` breaks ties.
+                best = min((_w1 * imp + _w2 * pref for imp, pref in pairs), default=float("inf"))
+                return (best, vi)
+
+            population.append(individual_cls(sorted(range(n), key=key)))
+        return population
+
     def mate(self, ind1: list, ind2: list) -> tuple[list, list]:
         return tools.cxOrdered(ind1, ind2)
 

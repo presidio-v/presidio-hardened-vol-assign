@@ -198,10 +198,11 @@ pva show     --pareto <csv> [--pareto <csv> ...]   (overlay solvers)
 pva benchmark [--model humanitarian|ed-staffing]
               [--size  small|large|both]   (default: both)
               [--instances <int>]          (default: 10, per size)
-              [--solver nsga2|nrga|nrga-ranked|both|all]
+              [--solver nsga2|nrga|nrga-ranked|greedy|both|all]
               [--seed <int>]               (default: 42)
               [--pop-size <int>] [--generations <int>]
               [--check-repro]              (report bit-for-bit REP)
+              [--baseline]                 (add greedy comparator + Wilcoxon HV test)
               [--output <dir>]
 
 pva sensitivity [--model humanitarian|ed-staffing]
@@ -235,6 +236,7 @@ pva sensitivity --model humanitarian \
 | `nsga2` | NSGA-II (crowding-distance elitism) |
 | `nrga` | Lightweight NRGA — front-fill with uniform random tie-break |
 | `nrga-ranked` | Canonical NRGA — rank-biased roulette-wheel survival (Al Jadaan et al., 2008); use this for results comparable to the NRGA literature |
+| `greedy` | **Non-evolutionary baseline** — deterministic weighted-sum constructive heuristic swept over the objective simplex; a literature-style comparator the GAs are measured against (see *Baseline comparison* below) |
 | `both` | `nsga2` + `nrga` |
 | `all` | `nsga2` + `nrga` + `nrga-ranked` |
 
@@ -250,6 +252,25 @@ hardware as a first-class resilience criterion.
 
 ```bash
 pva benchmark --model humanitarian --instances 10 --seed 42 --check-repro
+```
+
+### Baseline comparison & significance testing
+
+Comparing only NSGA-II against NRGA shows which *algorithm* wins, not whether the
+*framework* beats an existing allocation method. `--solver greedy` provides a
+non-evolutionary baseline: a deterministic weighted-sum constructive heuristic
+swept across the objective simplex (each weight vector yields one greedy
+allocation; the non-dominated subset is the baseline front). It is reproducible
+regardless of `--seed`.
+
+`pva benchmark --baseline` runs that baseline on every instance and adds a
+`greedy` row to the Table-3 summary. When ≥ 2 solvers and ≥ 5 instances are
+present, the benchmark also runs a **Wilcoxon rank-sum test** on the per-instance
+hypervolume distributions (each solver vs. the greedy baseline), prints a
+significance table, and writes `stats_<ts>.csv`.
+
+```bash
+pva benchmark --model humanitarian --solver all --baseline --instances 10 --seed 42
 ```
 
 ### Figures
@@ -333,10 +354,10 @@ pva assign --model humanitarian \
 
 | Metric | Description |
 |--------|-------------|
+| **HV** *(primary)* | Hypervolume — area/volume of objective space dominated by the front relative to reference point (1, …, 1) (higher = better). Captures both convergence and diversity, so it is the headline quality indicator |
 | **NNS** | Number of Non-dominated Solutions — Pareto front size |
-| **MID** | Mean Ideal Distance — mean Euclidean distance from each solution to the ideal point (0, 0) |
-| **SM** | Spacing Metric — standard deviation of consecutive inter-solution distances (lower = more uniform spread) |
-| **HV** | Hypervolume — area of objective space dominated by the front relative to reference point (1, 1) (higher = better) |
+| **SM** | Spacing Metric — standard deviation of nearest-neighbour inter-solution distances (lower = more uniform spread) |
+| **MID** *(diagnostic)* | Mean Ideal Distance — mean Euclidean distance from each solution to the ideal point (0, …, 0). Retained for backward-compatibility with the 2023 paper, but reported as a diagnostic only: it favours solutions near the ideal point, whereas every Pareto-front member is an equally valid trade-off, so it is not a sound stand-alone quality measure — prefer HV |
 
 ---
 

@@ -90,6 +90,19 @@ class Domain(ABC):
     def init_individual(self, problem: Any, individual_cls: type) -> list:
         """Create one random feasible individual wrapped in ``individual_cls``."""
 
+    def baseline_population(self, problem: Any, cache: Any, individual_cls: type) -> list | None:
+        """Build candidate individuals for the non-evolutionary baseline comparator.
+
+        Returns a list of feasible individuals (each wrapped in
+        ``individual_cls``) produced by a deterministic weighted-sum
+        constructive heuristic — the non-dominated subset becomes a baseline
+        Pareto front the evolutionary solvers are compared against. The default
+        returns ``None`` (no baseline available); domains override it.
+        Implementations must not use randomness, so the baseline is reproducible
+        independent of the run seed.
+        """
+        return None
+
     @abstractmethod
     def mate(self, ind1: list, ind2: list) -> tuple[list, list]:
         """Apply crossover in place and return the two children."""

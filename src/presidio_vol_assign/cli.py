@@ -276,6 +276,11 @@ def benchmark(
     check_repro: bool = typer.Option(
         False, "--check-repro", help="Re-run each instance and report bit-for-bit REP."
     ),
+    baseline: bool = typer.Option(
+        False,
+        "--baseline",
+        help="Also run the greedy baseline comparator and add it as a 'greedy' row.",
+    ),
     output: Path = typer.Option(
         Path("./results"), "--output", show_default=True, help="Output directory."
     ),
@@ -286,6 +291,7 @@ def benchmark(
         run_benchmark,
         write_benchmark_summary,
     )
+    from presidio_vol_assign.stats import wilcoxon_hv_tests, write_hv_tests_csv
 
     try:
         get_domain(model)  # validate model early
@@ -318,12 +324,19 @@ def benchmark(
     console.print(
         f"Benchmark: [bold]{model}[/bold] | sizes: {', '.join(sizes)} "
         f"| instances/size: {instances} | solver: {solver} | pop: {pop_size} gen: {generations}"
+        + ("  (+greedy baseline)" if baseline else "")
         + ("  (+reproducibility check)" if check_repro else "")
     )
 
     with console.status("[bold green]Running benchmark…[/bold green]"):
         rows = run_benchmark(
-            model, sizes, instances, config, base_seed=seed, check_repro=check_repro
+            model,
+            sizes,
+            instances,
+            config,
+            base_seed=seed,
+            check_repro=check_repro,
+            include_baseline=baseline,
         )
 
     _print_benchmark_table(model, rows, check_repro)
@@ -337,6 +350,15 @@ def benchmark(
     )
     console.print(f"  Summary CSV  → [cyan]{csv_path}[/cyan]")
     console.print(f"  Summary JSON → [cyan]{json_path}[/cyan]")
+
+    # Wilcoxon rank-sum HV significance tests (skipped silently when too few
+    # instances or only one solver per size — wilcoxon_hv_tests returns []).
+    comparisons = wilcoxon_hv_tests(rows)
+    if comparisons:
+        _print_stats_table(comparisons)
+        stats_path = write_hv_tests_csv(comparisons, out_dir)
+        logger.info("benchmark stats computed", n_comparisons=len(comparisons))
+        console.print(f"  HV stats CSV → [cyan]{stats_path}[/cyan]")
 
 
 # ---------------------------------------------------------------------------
@@ -508,12 +530,17 @@ def version() -> None:
 
 
 def _print_benchmark_table(model: str, rows: list, check_repro: bool) -> None:
-    """Render the Table-3-style mean±std benchmark summary."""
+    """Render the Table-3-style mean±std benchmark summary.
+
+    HV (the primary convergence+diversity indicator) leads; MID is reported last
+    as a diagnostic only — it rewards proximity to the ideal point and so is not
+    a sound stand-alone quality measure for a Pareto front.
+    """
     table = Table(title=f"Benchmark summary — {model}", show_header=True, header_style="bold")
     table.add_column("Size", style="dim")
     table.add_column("Solver", style="dim")
     table.add_column("N", justify="right")
-    for col in ("NNS", "MID", "SM", "HV", "CPU (s)"):
+    for col in ("HV (primary)", "NNS", "SM", "CPU (s)", "MID (diag.)"):
         table.add_column(col, justify="right")
     if check_repro:
         table.add_column("REP", justify="right")
@@ -523,15 +550,44 @@ def _print_benchmark_table(model: str, rows: list, check_repro: bool) -> None:
             r.size,
             r.solver,
             str(r.n_instances),
-            f"{r.nns_mean:.1f} ± {r.nns_std:.1f}",
-            f"{r.mid_mean:.3f} ± {r.mid_std:.3f}",
-            f"{r.sm_mean:.4f} ± {r.sm_std:.4f}",
             f"{r.hv_mean:.3f} ± {r.hv_std:.3f}",
+            f"{r.nns_mean:.1f} ± {r.nns_std:.1f}",
+            f"{r.sm_mean:.4f} ± {r.sm_std:.4f}",
             f"{r.cpu_mean:.2f} ± {r.cpu_std:.2f}",
+            f"{r.mid_mean:.3f} ± {r.mid_std:.3f}",
         ]
         if check_repro:
             cells.append("—" if r.rep is None else f"{r.rep:.2f}")
         table.add_row(*cells)
+    console.print(table)
+
+
+def _print_stats_table(comparisons: list) -> None:
+    """Render the Wilcoxon rank-sum HV significance comparisons."""
+    table = Table(
+        title="HV significance — Wilcoxon rank-sum (vs. reference solver)",
+        show_header=True,
+        header_style="bold",
+    )
+    table.add_column("Size", style="dim")
+    table.add_column("Solver", style="dim")
+    table.add_column("Reference", style="dim")
+    for col in ("median HV", "ref median HV", "p-value"):
+        table.add_column(col, justify="right")
+    table.add_column("Better")
+    table.add_column("Sig. (α=.05)", justify="center")
+
+    for c in comparisons:
+        table.add_row(
+            c.size,
+            c.solver,
+            c.reference,
+            f"{c.median:.3f}",
+            f"{c.reference_median:.3f}",
+            f"{c.p_value:.4f}",
+            c.better,
+            "✓" if c.significant else "—",
+        )
     console.print(table)
 
 
@@ -567,13 +623,16 @@ def _problem_size(problem: object) -> str:
 def _print_run_summary(solver_label: str, m: Metrics) -> None:  # noqa: F821
 
     table = Table(title=f"Results — {solver_label}", show_header=True, header_style="bold")
-    table.add_column("Metric", style="dim", width=14)
+    table.add_column("Metric", style="dim", width=16)
     table.add_column("Value", justify="right")
 
+    # HV first: it is the primary indicator (captures convergence + diversity).
+    table.add_row("HV (primary)", f"{m.hv:.4f}")
     table.add_row("NNS", str(m.nns))
-    table.add_row("MID", f"{m.mid:.4f}")
     table.add_row("SM", f"{m.sm:.4f}")
-    table.add_row("HV", f"{m.hv:.4f}")
     table.add_row("CPU time", f"{m.cpu_time_sec:.2f}s")
+    # MID last and flagged diagnostic: it favours solutions near the ideal point,
+    # so it is not a sound stand-alone quality measure for a Pareto front.
+    table.add_row("MID (diag.)", f"{m.mid:.4f}")
 
     console.print(table)

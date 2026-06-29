@@ -35,8 +35,25 @@ Stantchev). The ED-staffing model is unchanged and remains the default.
 - **`pva sensitivity`**: sweeps FIS-output perturbations (default ±10 %, ±20 %)
   and reports how NNS/MID/SM/HV shift, to gauge robustness to FIS rule-base
   uncertainty (`Domain.perturb`; `engine.run` accepts a pre-computed cache).
+- **Greedy baseline comparator** (`--solver greedy`): a deterministic
+  weighted-sum constructive heuristic, swept over the objective simplex, that
+  provides a non-evolutionary baseline Pareto front for both models
+  (`baselines.py`, `Domain.baseline_population`). `pva benchmark --baseline`
+  adds it as a `greedy` row so the framework can be measured against an
+  existing-style allocation method rather than only NSGA-II vs NRGA.
+- **Wilcoxon rank-sum HV testing** (`stats.py`): `pva benchmark` now compares
+  per-instance hypervolume distributions between solvers (vs. the greedy
+  baseline when present) with the Wilcoxon rank-sum test, prints a significance
+  table, and writes `stats_<ts>.csv` (runs automatically with ≥2 solvers and
+  ≥5 instances; uses the existing `scipy` dependency — no new package).
 
 ### Changed
+- **HV is now the primary reported metric**; MID is shown last and flagged
+  *diagnostic*. MID rewards proximity to the ideal point, so it is not a sound
+  stand-alone quality measure for a Pareto front — HV captures both convergence
+  and diversity. MID is still computed for backward-compatibility with the 2023
+  paper. Affects the `assign`/`metrics`/`benchmark` summary tables only; the
+  `metrics_*.json` schema is unchanged.
 - Pareto CSV now carries `z1..zk` objective columns (adds `z3` for the
   humanitarian model); `pva metrics` auto-detects objective dimensionality.
 - `pva assign` gains `--model`, `--people`, and `--centers`; existing

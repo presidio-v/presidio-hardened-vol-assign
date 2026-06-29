@@ -50,6 +50,45 @@ def test_benchmark_ed_small_writes_summary(tmp_path: Path) -> None:
 
 
 @pytest.mark.slow
+def test_benchmark_baseline_adds_greedy_and_stats(tmp_path: Path) -> None:
+    # 5 instances → meets the Wilcoxon MIN_SAMPLES threshold, so a stats file too.
+    result = runner.invoke(
+        app,
+        [
+            "benchmark",
+            "--model",
+            "ed-staffing",
+            "--size",
+            "small",
+            "--solver",
+            "nsga2",
+            "--baseline",
+            "--instances",
+            "5",
+            "--pop-size",
+            "6",
+            "--generations",
+            "2",
+            "--seed",
+            "7",
+            "--output",
+            str(tmp_path),
+        ],
+    )
+    assert result.exit_code == 0, result.output + (result.stderr or "")
+
+    df = pd.read_csv(next(tmp_path.glob("benchmark_*.csv")))
+    assert {"nsga2", "greedy"} == set(df["solver"])
+
+    # A separate stats_*.csv is written and does NOT pollute the benchmark glob.
+    stats_files = list(tmp_path.glob("stats_*.csv"))
+    assert len(stats_files) == 1
+    assert len(list(tmp_path.glob("benchmark_*.csv"))) == 1
+    stats = pd.read_csv(stats_files[0])
+    assert set(stats["reference"]) == {"greedy"}
+
+
+@pytest.mark.slow
 def test_benchmark_check_repro_reports_rep(tmp_path: Path) -> None:
     result = runner.invoke(
         app,

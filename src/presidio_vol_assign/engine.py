@@ -109,12 +109,40 @@ def sel_nrga_ranked(individuals: list, k: int) -> list:
     return chosen
 
 
-# Survivor-selection strategy per solver type.
+# Survivor-selection strategy per evolutionary solver type.
 _SELECTORS = {
     SolverType.NSGA2: tools.selNSGA2,
     SolverType.NRGA: sel_nrga,
     SolverType.NRGA_RANKED: sel_nrga_ranked,
 }
+
+
+# ---------------------------------------------------------------------------
+# Non-evolutionary baseline comparator
+# ---------------------------------------------------------------------------
+
+
+def _build_baseline(
+    problem: ProblemInstance,
+    domain: Domain,
+    cache: object,
+    individual_cls: type,
+) -> list:
+    """Build and evaluate the deterministic baseline population for *domain*.
+
+    Returns the evaluated candidate individuals so the shared Pareto extractor
+    can trim them to the baseline front. Raises ``ValueError`` if the domain
+    provides no baseline comparator.
+    """
+    population = domain.baseline_population(problem, cache, individual_cls)
+    if population is None:
+        raise ValueError(
+            f"domain {domain.name!r} provides no baseline comparator "
+            "(solver 'greedy' is unavailable for this model)"
+        )
+    for ind in population:
+        ind.fitness.values = domain.evaluate(ind, cache, problem)
+    return population
 
 
 # ---------------------------------------------------------------------------
@@ -232,14 +260,17 @@ def run(
     results: list[ParetoFront] = []
     for solver_type in solvers_to_run:
         t0 = time.monotonic()
-        population = _evolve(
-            problem,
-            config,
-            domain,
-            cache,
-            individual_cls,
-            select=_SELECTORS[solver_type],
-        )
+        if solver_type == SolverType.GREEDY:
+            population = _build_baseline(problem, domain, cache, individual_cls)
+        else:
+            population = _evolve(
+                problem,
+                config,
+                domain,
+                cache,
+                individual_cls,
+                select=_SELECTORS[solver_type],
+            )
         elapsed = time.monotonic() - t0
         results.append(
             _extract_pareto_front(population, cache, problem, domain, solver_type, elapsed)

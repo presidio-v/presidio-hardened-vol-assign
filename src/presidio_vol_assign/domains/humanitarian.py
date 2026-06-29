@@ -163,6 +163,44 @@ class HumanitarianDomain(Domain):
         n_centers = problem.n_centers
         return individual_cls(_random.randrange(n_centers) for _ in range(problem.n_people))
 
+    def baseline_population(
+        self, problem: HumanitarianProblem, cache: _HumCache, individual_cls: type
+    ) -> list:
+        """Weighted-sum greedy allocations across the objective simplex.
+
+        For each weight vector ``(w1, w2, w3)`` on the simplex, allocate people
+        one at a time — most-vulnerable first — to the centre minimising
+        ``w1·fairness + w2·transport + w3·marginal_overcrowding``, where the
+        overcrowding term reflects the centre's utilisation *after* adding this
+        person's group. Running loads make the construction capacity-aware
+        without a repair step. Deterministic (no RNG); one candidate per weight.
+        """
+        from presidio_vol_assign.baselines import weight_simplex
+
+        n_people = problem.n_people
+        n_centers = problem.n_centers
+        # Most-vulnerable-first, stable on ties → deterministic processing order.
+        order = sorted(range(n_people), key=lambda pi: -problem.people[pi].vulnerability)
+
+        population: list = []
+        for w1, w2, w3 in weight_simplex(3, steps=6):
+            genome = [0] * n_people
+            loads = [0] * n_centers
+            for pi in order:
+                group = cache.group_sizes[pi]
+                best_cj, best_cost = 0, float("inf")
+                for cj in range(n_centers):
+                    fairness, transport = cache.pairs[(pi, cj)]
+                    util = (loads[cj] + group) / cache.capacities[cj]
+                    overcrowding = _overcrowding_from_lut(util, cache.util_lut)
+                    cost = w1 * fairness + w2 * transport + w3 * overcrowding
+                    if cost < best_cost:
+                        best_cj, best_cost = cj, cost
+                genome[pi] = best_cj
+                loads[best_cj] += group
+            population.append(individual_cls(genome))
+        return population
+
     def mate(self, ind1: list, ind2: list) -> tuple[list, list]:
         return tools.cxTwoPoint(ind1, ind2)
 

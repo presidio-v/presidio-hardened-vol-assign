@@ -267,14 +267,18 @@ manuscript**. These are low-cost wins:
 > exists* and align notation (especially the chromosome encoding) with the
 > implementation.
 
-### 2.3 Genuine gaps the code does **not** yet answer
+### 2.3 Genuine gaps the code did **not** yet answer
 
-| Reviewer point | Gap | Suggested action |
+> **Status update (2026-06-29):** the three code-addressable gaps below have now
+> been implemented on this branch — see the ✅ rows. The remaining item (R2.2) is
+> study-design work.
+
+| Reviewer point | Gap | Action / status |
 |---|---|---|
-| **R1.4 / R2.4 / R3.2 — benchmark vs an existing method** (the recurring #1 technical objection) | The repo only compares NSGA-II / NRGA / nrga-ranked **to each other**. There is no baseline allocation/decision method (e.g. greedy nearest-centre, weighted-sum MILP, or a published humanitarian-allocation heuristic). | Add a baseline solver/heuristic and report the framework against it on the benchmark instances. This is the single highest-value addition for a resubmission and is a concrete code task for this repo. |
-| **R3 — MID is a poor MOO indicator; drop it, HV suffices** | `metrics.py` computes and reports MID prominently. Reviewer's argument is methodologically sound (MID rewards proximity to the ideal point, penalising legitimate trade-off solutions). | Keep MID for backward-compat with the 2023 paper but **de-emphasise** it; lead with HV (already implemented, n-dim via DEAP). Document the rationale. Manuscript: drop or footnote eq. 18. |
-| **R3 — statistical testing (Wilcoxon rank-sum)** | No statistical test is implemented; benchmark reports mean ± std only. | Add a Wilcoxon rank-sum test across repeated seeded runs for the HV comparison; report compactly (replaces R3's objected-to "14 pages" of stats). Modest code task. |
-| **R2.2 — empirical justification of FLPP/TFL/CABL indicators** | The indicators are defined and computed, but there is no empirical validation that they capture what they claim. | Largely a manuscript/study-design task (case study, expert validation, ablation). Code can support via an ablation mode (drop one objective, observe Pareto effect). |
+| **R1.4 / R2.4 / R3.2 — benchmark vs an existing method** (the recurring #1 technical objection) | The repo only compared NSGA-II / NRGA / nrga-ranked **to each other**; no baseline allocation method. | ✅ **Done.** Added a deterministic weighted-sum greedy baseline comparator (`SolverType.GREEDY`, `baselines.py`, `Domain.baseline_population`) for both models; `--solver greedy` and `pva benchmark --baseline` report it as a `greedy` row so the framework is measured against an existing-style heuristic. |
+| **R3 — MID is a poor MOO indicator; drop it, HV suffices** | `metrics.py` reported MID prominently; MID rewards proximity to the ideal point, penalising legitimate trade-offs. | ✅ **Done.** HV is now the primary reported metric; MID is shown last and flagged *diagnostic* (still computed for 2023-paper backward-compat). Docstrings/README/CHANGELOG updated. Manuscript: drop or footnote eq. 18. |
+| **R3 — statistical testing (Wilcoxon rank-sum)** | No statistical test; benchmark reported mean ± std only. | ✅ **Done.** `stats.py` runs a Wilcoxon rank-sum test on per-instance HV distributions (each solver vs. the greedy baseline), auto-invoked by `pva benchmark` with ≥2 solvers and ≥5 instances; prints a significance table and writes `stats_<ts>.csv`. Uses the existing `scipy` dependency. |
+| **R2.2 — empirical justification of FLPP/TFL/CABL indicators** | The indicators are defined and computed, but there is no empirical validation that they capture what they claim. | ⏳ Open — largely a manuscript/study-design task (case study, expert validation, ablation). Code can support via an ablation mode (drop one objective, observe Pareto effect). |
 
 ### 2.4 Manuscript-only items (no code impact)
 
@@ -305,13 +309,15 @@ and to feed a revision checklist. They cannot be resolved in this repository.
 ### 2.5 Priority recommendation
 
 1. **Re-home the paper** to an in-scope journal (addresses the dominant rejection reason).
-2. **Close the benchmarking gap** — add a literature/baseline comparison
-   (code task in this repo + manuscript) — the only objection raised by all three reviewers.
+2. **Close the benchmarking gap** — the only objection raised by all three
+   reviewers. ✅ Code-ready: greedy baseline comparator + `pva benchmark
+   --baseline`; report the framework against it in the manuscript.
 3. **Surface existing capability in the manuscript:** sensitivity analysis,
    seeds/parameters/repeated runs, REP reproducibility, results figures (`pva show`),
    and **fix the chromosome-encoding description to match the integer encoding the
    code already uses** (directly answers R3's encoding question).
 4. **Metrics:** lead with HV, de-emphasise MID; add Wilcoxon rank-sum.
+   ✅ Code-ready (HV primary in all summaries; Wilcoxon HV test in `pva benchmark`).
 5. **Major rewrite pass** for clarity/structure/figures and the fuzzy-systems primer.
 6. **Add the AI-use acknowledgement** if AI tools were used (R1.2 + integrity).
 
