@@ -61,34 +61,28 @@
 % =====================================================================
 \begin{abstract}
 \noindent
-Disaster frequency is rising and response-phase planners face a binding
+Disaster frequency is rising, and response-phase planners face a binding
 constraint: relief capacity is always smaller than need, so directing
-affected people to relief centres is a triage decision under time
-pressure. Published optimisation models for this problem use
-operations-research vocabulary (cost, distance, equity); civil-protection
-planners use supply-chain-resilience vocabulary (the 4R framework of
-Bruneau et al.). We close the gap. We develop a four-objective humanitarian
-last-mile allocation model whose objectives map one-to-one onto the 4R
-components --- Resourcefulness, Robustness, Rapidity, Redundancy ---
-evaluated by Mamdani fuzzy inference systems and solved by NSGA-II, NRGA,
-and NSGA-III. On 540 runs across three problem sizes the four-objective
-formulation surfaces independent Robustness and Rapidity axes that the
-baseline three-objective formulation fuses into one --- a visibility gain
-for the decision-maker, established by rank-correlation analysis.
-NSGA-III is 32\% faster than NSGA-II at every size with comparable
-Pareto-front quality, the HV ranking depending on the reference-point scheme. Weight-perturbation sweeps (100
-Latin-Hypercube samples, $\pm 20\%$) confirm the recommendations are
-robust under expert-elicitation noise at every problem size; rule-base
-deletion sweeps confirm the same for the three larger fuzzy systems,
-with the three-rule Rapidity classifier flagged as a structural
-sensitivity hot-spot. The framework is released not as throwaway research
-code but as a production-grade, openly licensed decision-support tool ---
-continuously tested, dependency-audited, and reproducible bit-for-bit on
-stock hardware --- at
-\url{https://github.com/presidio-v/presidio-hardened-vol-assign}, treating
-reproducibility as a first-class resilience criterion and positioning
-audit-ready operational tooling as the digital-technology innovation the
-supply-chain-resilience literature repeatedly calls for.
+affected people to relief centres is a triage decision under time pressure.
+Published optimisation models speak operations-research vocabulary (cost,
+distance, equity); civil-protection planners speak supply-chain-resilience
+vocabulary (the 4R framework of Bruneau et al.). We close the gap with a
+four-objective humanitarian last-mile allocation model whose objectives map
+one-to-one onto the 4R components --- Resourcefulness, Robustness, Rapidity,
+Redundancy --- evaluated by Mamdani fuzzy inference systems and solved by
+NSGA-II, NRGA, and NSGA-III. Across 540 runs over three problem sizes, the
+four-objective formulation surfaces independent Robustness and Rapidity axes
+that the baseline three-objective formulation fuses into one, a visibility
+gain established by rank-correlation analysis; NSGA-III is 32\% faster than
+NSGA-II at every size with comparable Pareto-front quality. Weight- and
+rule-perturbation sweeps confirm the recommendations are robust to
+expert-elicitation noise, flagging the three-rule Rapidity classifier as a
+sensitivity hot-spot. The framework is released as a production-grade, openly
+licensed decision-support tool --- continuously tested, dependency-audited,
+and reproducible bit-for-bit on stock hardware --- treating reproducibility
+as a first-class resilience criterion and positioning audit-ready operational
+tooling as the digital-technology innovation supply-chain-resilience practice
+needs.
 \end{abstract}
 
 \noindent\textbf{Keywords:}
