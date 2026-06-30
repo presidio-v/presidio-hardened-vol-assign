@@ -3,7 +3,7 @@
 **To:** Guest Editors, Special Issue *Innovations in Supply Chain Resilience*
 (Prof. Agnusdei, Prof. Silvestri, Prof. Di Pietro)
 **Journal:** *Applied Sciences* (MDPI)
-**Date:** 28 June 2026
+**Date:** 30 June 2026
 
 **Manuscript:** *Resilient Last-Mile Allocation in Humanitarian Supply Chains:
 A Reproducible Many-Objective Fuzzy Framework*
@@ -64,11 +64,18 @@ consideration by any other journal. All authors have read and approved the
 submission and agree to its content. The authors declare no competing
 interests.
 
+**Special Issue invitation and APC waiver.**
+This submission follows correspondence with the Section Managing Editor,
+Dr. Dominic Ling, who confirmed the manuscript's fit with the Special Issue
+*Innovations in Supply Chain Resilience* and the applicability of a full
+(100%) waiver of the Article Processing Charges, to be applied by the
+editorial office after submission.
+
 **Data and code availability.**
 The reference implementation, experiment drivers, and result manifests are
 publicly available at
 `github.com/presidio-v/presidio-hardened-vol-assign`, archived at Zenodo
-(DOI: _[to be inserted on v0.2.0 release tag]_).
+(DOI: 10.5281/zenodo.21083547).
 
 We thank you for considering our work and look forward to the reviewers'
 comments.
