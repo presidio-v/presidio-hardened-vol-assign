@@ -8,8 +8,9 @@ abstract: >-
   evolutionary algorithms.
 type: software
 version: 0.2.0
-date-released: 2026-06-05
+date-released: 2026-06-30
 license: MIT
+doi: "10.5281/zenodo.21083544"
 repository-code: "https://github.com/presidio-v/presidio-hardened-vol-assign"
 keywords:
   - multi-objective optimization
