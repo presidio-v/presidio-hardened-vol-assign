@@ -62,7 +62,7 @@ https://www.mdpi.com/authors/latex; place under `author/Definitions/`.
 \AuthorNames{Peyman Rabiei, Daniel Arias-Aranda, Vladimir Stantchev}
 \address{%
 $^{1}$ \quad Faculty of Economics and Business, University of Granada, Spain\\
-$^{2}$ \quad Institute of Information Systems, SRH Berlin University, Germany}
+$^{2}$ \quad Institute of Information Systems, SRH University Heidelberg, Germany}
 \corres{Correspondence: stantchev@computer.org}
 
 % --- Bibliography ---

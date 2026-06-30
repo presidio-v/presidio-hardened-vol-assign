@@ -83,7 +83,7 @@ comments.
 Sincerely,
 
 **Vladimir Stantchev** (corresponding author)
-Institute of Information Systems, SRH Berlin University of Applied Sciences,
+Institute of Information Systems, SRH University Heidelberg,
 Germany
 stantchev@computer.org
 
