@@ -1,20 +1,24 @@
 {
   "title": "presidio-hardened-vol-assign",
-  "description": "Multi-objective post-disaster assignment tool: emergency-department volunteer staffing (Rabiei et al., ESWA 2023) and humanitarian people-to-centre allocation, combining fuzzy inference systems with the NSGA-II and NRGA evolutionary algorithms.",
+  "description": "Reproducible multi-objective post-disaster assignment tool combining fuzzy inference systems with the NSGA-II, NRGA, and NSGA-III evolutionary algorithms. Two domains: humanitarian people-to-relief-centre allocation (four-objective, mapped to the Bruneau et al. 4R resilience framework, plus a baseline three-objective model) and emergency-department volunteer staffing (Rabiei et al., ESWA 2023). Includes bit-for-bit reproducibility, sensitivity/ablation tooling, and the experiment drivers behind the Applied Sciences (MDPI) paper.",
   "upload_type": "software",
   "version": "0.2.0",
   "license": "MIT",
   "creators": [
-    { "name": "Rabiei, Peyman", "affiliation": "University of Granada" },
-    { "name": "Arias-Aranda, Daniel", "affiliation": "University of Granada" },
-    { "name": "Stantchev, Vladimir", "affiliation": "SRH University Heidelberg" }
+    { "name": "Rabiei, Peyman", "affiliation": "University of Granada", "orcid": "0000-0003-1534-6680" },
+    { "name": "Arias-Aranda, Daniel", "affiliation": "University of Granada", "orcid": "0000-0003-0292-7435" },
+    { "name": "Stantchev, Vladimir", "affiliation": "SRH University Heidelberg", "orcid": "0000-0002-1551-419X" }
   ],
   "keywords": [
     "multi-objective optimization",
     "NSGA-II",
     "NRGA",
+    "NSGA-III",
     "fuzzy inference systems",
+    "supply chain resilience",
+    "4R framework",
     "humanitarian logistics",
-    "disaster response"
+    "disaster response",
+    "reproducible research"
   ]
 }

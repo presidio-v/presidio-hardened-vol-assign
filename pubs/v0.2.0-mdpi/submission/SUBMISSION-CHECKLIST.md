@@ -37,8 +37,8 @@ submission; do **not** pay at submission. Email Ling once the manuscript ID is i
 
 ## Pre-flight (author-owned)
 - [x] Co-author final approval of the PDF (Rabiei, Arias-Aranda)
-- [ ] Refresh the Zenodo record *description* to mention NSGA-III + people-to-relief-centre
-      allocation (audit m-2) so the artifact matches the paper
+- [x] Refresh the Zenodo record *description* (audit m-2) — live record updated by author;
+      `.zenodo.json` updated in repo (NSGA-III + 4R + allocation framing; author ORCIDs) for future releases
 - [ ] After manuscript ID issued: email Dr. Ling to apply the 100% APC waiver
 
 ## Blocking gate — CLEARED
