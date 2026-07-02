@@ -20,24 +20,23 @@ submission; do **not** pay at submission. Email Ling once the manuscript ID is i
 - [ ] Affiliations: Rabiei & Arias-Aranda — Faculty of Economics and Business, University of
       Granada, Spain; Stantchev — Institute of Information Systems, SRH University Heidelberg, Germany
 - [ ] Corresponding email: stantchev@computer.org
-- [ ] ORCIDs — **TODO: collect for all three authors** (SuSy requires at least the corresponding author's)
+- [x] ORCIDs — in the manuscript: Rabiei 0000-0003-1534-6680; Arias-Aranda 0000-0003-0292-7435;
+      Stantchev 0000-0002-1551-419X. Emails: prabiei@correo.ugr.es; darias@ugr.es; stantchev@computer.org
 - [ ] Article type: **Article**
 - [ ] Special Issue: "Innovations in Supply Chain Resilience" (auto-selected via the express link)
 - [ ] Keywords (from the manuscript)
 - [ ] Suggested reviewers (3–5) and any excluded reviewers — **TODO: authors to provide**
 
 ## Declarations (all present in the manuscript back matter)
-- [ ] Author Contributions (CRediT) — **co-authors confirm roles** before submitting
+- [x] Author Contributions (CRediT) — co-authors confirmed
 - [ ] Funding — "This research received no external funding."
 - [ ] IRB / Informed Consent — Not applicable (synthetic data)
 - [ ] Data Availability — repo + Zenodo DOIs (concept 10.5281/zenodo.21083544; version 10.5281/zenodo.21083547)
-- [ ] AI-use disclosure — **co-authors confirm** the "no generative AI tools" statement is literally
-      accurate for manuscript preparation (audit M-4); if any AI assistance was used, switch to MDPI's
-      standard disclosure form
+- [x] AI-use disclosure — co-authors confirmed the "no generative AI tools" statement is accurate (audit M-4)
 - [ ] Conflicts of Interest — none declared
 
 ## Pre-flight (author-owned)
-- [ ] Co-author final approval of the PDF (Rabiei, Arias-Aranda)
+- [x] Co-author final approval of the PDF (Rabiei, Arias-Aranda)
 - [ ] Refresh the Zenodo record *description* to mention NSGA-III + people-to-relief-centre
       allocation (audit m-2) so the artifact matches the paper
 - [ ] After manuscript ID issued: email Dr. Ling to apply the 100% APC waiver
