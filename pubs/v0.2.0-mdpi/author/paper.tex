@@ -8,53 +8,43 @@
 %
 % =====================================================================
 
-\documentclass[11pt,a4paper]{article}
+\documentclass[applsci,article,submit,moreauthors,pdftex]{Definitions/mdpi}
 
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[final,expansion=true,protrusion=true]{microtype}
-\usepackage{newtxtext,newtxmath}
-\usepackage{graphicx}
+% --- Compatibility guards (no-ops under the current MDPI class) ---
+\providecommand{\TitleCitation}[1]{}
+\providecommand{\AuthorCitation}[1]{}
+\providecommand{\orcidA}{}
+\providecommand{\dataavailability}[1]{\vspace{6pt}\noindent\textbf{Data Availability Statement:} #1\par}
+\providecommand{\institutionalreview}[1]{\vspace{6pt}\noindent\textbf{Institutional Review Board Statement:} #1\par}
+\providecommand{\informedconsent}[1]{\vspace{6pt}\noindent\textbf{Informed Consent Statement:} #1\par}
+
+% --- Extra packages used by the body (harmless if already provided by the class) ---
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{multirow}
 \usepackage{amsmath}
-\let\Bbbk\relax % newtxmath predefines \Bbbk; avoid amssymb redefinition clash
 \usepackage{amssymb}
-\usepackage{xcolor}
-\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black]{hyperref}
 \usepackage{xurl}
-\usepackage[margin=2.5cm]{geometry}
-\usepackage{caption}
-\usepackage{subcaption}
-\usepackage{authblk}
-\usepackage{titlesec}
 
-\titleformat{\section}{\Large\bfseries}{\thesection.}{0.5em}{}
-\titleformat{\subsection}{\large\bfseries}{\thesubsection}{0.5em}{}
 \graphicspath{{../figures/}}
 
-\title{Resilient Last-Mile Allocation in Humanitarian Supply Chains:\\
-       A Reproducible Many-Objective Fuzzy Framework}
+% --- Article metadata ---
+\Title{Resilient Last-Mile Allocation in Humanitarian Supply Chains: A Reproducible Many-Objective Fuzzy Framework}
+\TitleCitation{Resilient Last-Mile Allocation in Humanitarian Supply Chains}
 
-\author[1]{Peyman Rabiei}
-\author[1]{Daniel Arias-Aranda}
-\author[2,*]{Vladimir Stantchev}
-\affil[1]{Faculty of Economics and Business, University of Granada, Spain}
-\affil[2]{Institute of Information Systems, SRH University Heidelberg, Germany}
-\affil[*]{Correspondence: \href{mailto:stantchev@computer.org}{stantchev@computer.org}}
+\newcommand{\orcidauthorA}{0000-0002-1551-419X}
 
-\date{}
+\Author{Peyman Rabiei $^{1}$, Daniel Arias-Aranda $^{1}$ and Vladimir Stantchev $^{2,}$*\orcidA{}}
+\AuthorNames{Peyman Rabiei, Daniel Arias-Aranda and Vladimir Stantchev}
+\AuthorCitation{Rabiei, P.; Arias-Aranda, D.; Stantchev, V.}
 
-\begin{document}
-\maketitle
+\address{%
+$^{1}$ \quad Faculty of Economics and Business, University of Granada, Granada, Spain\\
+$^{2}$ \quad Institute of Information Systems, SRH University Heidelberg, Heidelberg, Germany; stantchev@computer.org}
 
-% (Extended-version disclosure removed: the earlier manuscript is unpublished;
-% this paper is the primary publication of the model.)
+\corres{Correspondence: stantchev@computer.org}
 
-% =====================================================================
-\begin{abstract}
-\noindent
+\abstract{%
 Disaster frequency is rising, and response-phase planners face a binding
 constraint: relief capacity is always smaller than need, so directing
 affected people to relief centres is a triage decision under time pressure.
@@ -78,11 +68,11 @@ and reproducible bit-for-bit on stock hardware --- treating reproducibility
 as a first-class resilience criterion and positioning audit-ready operational
 tooling as the digital-technology innovation supply-chain-resilience practice
 needs.
-\end{abstract}
+}
 
-\noindent\textbf{Keywords:}
-supply chain resilience; humanitarian logistics; multi-objective optimization;
-fuzzy inference systems; NSGA-III; reproducible research; 4R framework
+\keyword{supply chain resilience; humanitarian logistics; multi-objective optimization; fuzzy inference systems; NSGA-II; NRGA; NSGA-III; 4R framework; reproducible research}
+
+\begin{document}
 
 % =====================================================================
 \section{Introduction}\label{sec:intro}
@@ -1770,38 +1760,29 @@ resilience theory and computational allocation practice. For the
 civil-protection planner, this delivers a tool whose outputs read
 directly in the vocabulary the planner already uses.
 
-% =====================================================================
-\section*{Data Availability Statement}
-The full experimental data, including 540 H1+H2+H4 runs, 100 H3b samples,
-and 66 H3a deletions, is reproducible from the open-source implementation
-at \url{https://github.com/presidio-v/presidio-hardened-vol-assign}, tag
-\texttt{v0.2.0}, archived on Zenodo (DOI:~\url{https://doi.org/10.5281/zenodo.21083547}).
-
-% =====================================================================
-\section*{Author Contributions}
-Conceptualization, P.R., D.A.-A. and V.S.; methodology, P.R., D.A.-A. and V.S.;
+\authorcontributions{Conceptualization, P.R., D.A.-A. and V.S.; methodology, P.R., D.A.-A. and V.S.;
 software, P.R. and V.S.; validation, D.A.-A. and V.S.; formal analysis, V.S.;
 investigation, P.R.; data curation, V.S.; writing---original draft preparation,
 P.R. and V.S.; writing---review and editing, D.A.-A. and V.S.; visualization,
 V.S.; supervision, D.A.-A. All authors have read and agreed to the published
-version of the manuscript.
+version of the manuscript.}
 
-\section*{Funding}
-This research received no external funding.
+\funding{This research received no external funding.}
 
-\section*{Institutional Review Board Statement}
-Not applicable. This study used only synthetically generated problem instances
-and involved no human participants or animals.
+\institutionalreview{Not applicable. This study used only synthetically generated problem instances
+and involved no human participants or animals.}
 
-\section*{Informed Consent Statement}
-Not applicable.
+\informedconsent{Not applicable.}
 
-\section*{Acknowledgments}
-The authors declare that no generative AI tools were used in the preparation of
-this manuscript.
+\dataavailability{The full experimental data, including 540 H1+H2+H4 runs, 100 H3b samples,
+and 66 H3a deletions, is reproducible from the open-source implementation
+at \url{https://github.com/presidio-v/presidio-hardened-vol-assign}, tag
+\texttt{v0.2.0}, archived on Zenodo (DOI:~\url{https://doi.org/10.5281/zenodo.21083547}).}
 
-\section*{Conflicts of Interest}
-The authors declare no conflicts of interest.
+\acknowledgments{The authors declare that no generative AI tools were used in the preparation of
+this manuscript.}
+
+\conflictsofinterest{The authors declare no conflicts of interest.}
 
 % =====================================================================
 \appendix
@@ -2058,7 +2039,7 @@ Size & Pair & NNS & HV & SM & CPU & MID$^{\dagger}$ \\
 \end{table}
 
 % =====================================================================
-\bibliographystyle{plain}
+\reftitle{References}
 \bibliography{lit}
 
 \end{document}

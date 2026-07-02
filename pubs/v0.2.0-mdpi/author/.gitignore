@@ -8,3 +8,6 @@
 *.fls
 *.synctex.gz
 paper.pdf
+
+# MDPI template logo binaries (restore from the MDPI template download or submission bundle)
+Definitions/*.eps

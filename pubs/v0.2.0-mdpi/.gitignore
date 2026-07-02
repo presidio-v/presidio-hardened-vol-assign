@@ -1,0 +1,3 @@
+# Submission binaries (kept local / shipped via the bundle, not in git)
+submission/*.zip
+submission/paperA-mdpi-source/

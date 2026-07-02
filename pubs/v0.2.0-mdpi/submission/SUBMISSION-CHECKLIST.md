@@ -6,8 +6,9 @@
 submission; do **not** pay at submission. Email Ling once the manuscript ID is issued.
 
 ## Files to upload
-- [ ] **Manuscript** — MDPI-template LaTeX source + PDF *(GATED on template conversion, CR-1)*.
-      Current source: `author/paper.tex` (+ `lit.bib`, `../figures/fig5–9`). Builds clean, 29 pp.
+- [x] **Manuscript** — MDPI-template LaTeX source + PDF. **CR-1 done:** `author/paper.tex`
+      converted to `\documentclass[applsci,...]{Definitions/mdpi}`, builds clean (29 pp,
+      0 undefined refs). Upload `submission/paperA-mdpi-source.zip` + `submission/paperA-mdpi.pdf`.
 - [ ] **Cover letter** — `cover-letter-applsci.md` (ready; addressed to the GEs, carries the
       APC-waiver note). Paste into the SuSy cover-letter box or upload as PDF.
 - [ ] **Figures** — high-res PDFs already in `../figures/` (embedded in the build).
@@ -41,7 +42,7 @@ submission; do **not** pay at submission. Email Ling once the manuscript ID is i
       allocation (audit m-2) so the artifact matches the paper
 - [ ] After manuscript ID issued: email Dr. Ling to apply the 100% APC waiver
 
-## Blocking gate
-- [ ] **CR-1 — convert manuscript to the MDPI `applsci`/`mdpi.cls` template** (currently generic
-      `article` + `authblk`). This is the single most likely cause of an editorial bounce-back and
-      must be done before upload. See the quality audit (`../quality-audit-paperA.md`, CR-1).
+## Blocking gate — CLEARED
+- [x] **CR-1 — MDPI `applsci`/`mdpi.cls` template conversion — DONE.** Source: `author/paper.tex`
+      (+ `author/Definitions/`, text files committed; logos git-ignored, see `author/README-mdpi.md`).
+      Builds clean, 29 pp, 0 undefined refs, references in MDPI style.
