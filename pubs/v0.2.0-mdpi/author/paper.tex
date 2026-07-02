@@ -6,12 +6,6 @@
 %   "Innovations in Supply Chain Resilience"
 %   (Guest Editors: Agnusdei, Silvestri, Di Pietro)
 %
-% Tier 1 skeleton — section structure + 1-sentence placeholders per
-% subsection per book-implementation-plan.md. To swap in MDPI's official
-% applsci-mdpi.cls before submission:
-%   1. Download from https://www.mdpi.com/authors/latex into ./Definitions/
-%   2. Replace the documentclass line below with the MDPI version
-%   3. Move the article metadata into MDPI's macros (\Title, \Author, …)
 % =====================================================================
 
 \documentclass[11pt,a4paper]{article}
@@ -74,7 +68,8 @@ NSGA-II, NRGA, and NSGA-III. Across 540 runs over three problem sizes, the
 four-objective formulation surfaces independent Robustness and Rapidity axes
 that the baseline three-objective formulation fuses into one, a visibility
 gain established by rank-correlation analysis; NSGA-III is 32\% faster than
-NSGA-II at every size with comparable Pareto-front quality. Weight- and
+NSGA-II at every size, with the hypervolume ranking depending on the
+reference-point scheme. Weight- and
 rule-perturbation sweeps confirm the recommendations are robust to
 expert-elicitation noise, flagging the three-rule Rapidity classifier as a
 sensitivity hot-spot. The framework is released as a production-grade, openly
@@ -91,12 +86,6 @@ fuzzy inference systems; NSGA-III; reproducible research; 4R framework
 
 % =====================================================================
 \section{Introduction}\label{sec:intro}
-% TIER 1 PLACEHOLDER — target ~1{,}200 words.
-% Lead with disaster-frequency claim (CRED 2023). Pivot fast to humanitarian
-% supply chain resilience. Bruneau's 4R named in second/third paragraph.
-% Bounded problem statement (lift from explore/problem-statement.md).
-% Five contributions, listed numbered.
-% Closing paragraph: paper structure pointer.
 
 The 2023 EM-DAT record lists 399 natural disasters worldwide, claiming
 86{,}473 lives and inflicting US\$202.7\,bn in economic damage
@@ -162,8 +151,9 @@ others can run and check. Concretely, the paper makes five contributions to
 the literature on humanitarian last-mile allocation and supply chain
 resilience:
 \begin{enumerate}
-    \item The first explicit 4R$\leftrightarrow$objective mapping in FIS-MOEA disaster
-          allocation, formalised in Section~\ref{sec:resilience-mapping}.
+    \item To our knowledge, the first explicit 4R$\leftrightarrow$objective mapping in the
+          surveyed FIS-MOEA disaster-allocation literature, formalised in
+          Section~\ref{sec:resilience-mapping}.
     \item A four-objective formulation that splits the transportation
           infeasibility level into separate Robustness (TRD) and Rapidity (RPD)
           components, exposing trade-offs the three-objective formulation
@@ -1229,7 +1219,6 @@ opposite directions; MID and SM add no separating information.
 
 % =====================================================================
 \section{Pareto Trade-off Analysis (4-obj vs 3-obj)}\label{sec:tradeoff-analysis}
-% TIER 1 PLACEHOLDER — target ~1{,}200 words. Tests H1.
 
 The four-objective formulation has to do empirical work, not just
 theoretical work. The H1 hypothesis tests whether splitting the baseline TIL
@@ -1407,7 +1396,6 @@ is not statistically distinguishable from random fusion.
 
 % =====================================================================
 \section{Sensitivity Analysis}\label{sec:sensitivity}
-% TIER 1 PLACEHOLDER — target ~1{,}200 words. Tests H3.
 
 \subsection{Rule-base perturbation (H3a)}\label{sec:sens-rules}
 
@@ -1764,7 +1752,8 @@ Section~\ref{sec:tradeoff-analysis} (the H1 evidence that the 4-obj split
 exposes a Robustness/Rapidity trade-off the 3-obj formulation cannot
 represent),
 Section~\ref{sec:performance} (the NSGA-III empirical comparison and the
-32\% mean CPU advantage at unchanged Pareto-front quality),
+32\% mean CPU advantage, the hypervolume ranking depending on the
+reference-point scheme),
 Section~\ref{sec:sensitivity} (the rule-base and weight sensitivity
 studies establishing $\le 1\%$ CV under realistic expert-elicitation
 noise), and the open artifact at
@@ -1790,7 +1779,6 @@ at \url{https://github.com/presidio-v/presidio-hardened-vol-assign}, tag
 
 % =====================================================================
 \section*{Author Contributions}
-% DRAFT CRediT — co-authors to confirm/adjust roles before submission.
 Conceptualization, P.R., D.A.-A. and V.S.; methodology, P.R., D.A.-A. and V.S.;
 software, P.R. and V.S.; validation, D.A.-A. and V.S.; formal analysis, V.S.;
 investigation, P.R.; data curation, V.S.; writing---original draft preparation,
