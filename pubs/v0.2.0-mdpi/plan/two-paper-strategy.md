@@ -12,7 +12,7 @@ allocation tool — feeds **two genuinely distinct papers** at two MDPI venues.
 | Editors | GEs Agnusdei / Silvestri / Di Pietro; Managing Ed. **Dr. Dominic Ling** | GEs **Jong-min Kim** & **Rob Kim Marjerison**; AE **Belinda Zhao** (belinda.zhao@mdpi.com) |
 | APC | **100% waiver CONFIRMED** (Ling applies it after submission) | **No waiver yet** — "may qualify for discount, contact Belinda Zhao" |
 | Deadline | ~31 Aug 2026 (per committed proposal) | **30 Nov 2026** (~20-day first decision; free English editing post-accept) |
-| SI link | (Applied Sciences SCR SI) | https://www.mdpi.com/journal/systems/special_issues/105O3VCX29 |
+| SI link | https://www.mdpi.com/journal/applsci/special_issues/VJP0XS756S | https://www.mdpi.com/journal/systems/special_issues/105O3VCX29 |
 
 ## Mapping (confirmed)
 
