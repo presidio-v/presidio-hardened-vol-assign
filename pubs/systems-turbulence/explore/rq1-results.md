@@ -36,7 +36,7 @@ worse *realised objectives* for person-attribute and travel-time perturbations.
 | IDL / noise | 1.44 | 0.37 | 0.008 | 7.5 | 2.4 | 0.008 |
 | IDL / missingness | 1.42 | 0.16 | 0.008 | 5.4 | 4.8 | 0.55 |
 | centre-occ. / noise | 1.45 | **1.44** | **0.95** | 8.5 | **23.4** | 0.016 |
-| road-condition / flip | *pending* | | | | | |
+| road-condition / flip | 1.42 | 1.16 | 0.008 | 5.4 | **9.2** | 0.008 |
 
 **Scale changes the picture:** the small-instance "8/8 universal" churn gap does **not**
 hold at scale. For the person-priority inputs (IDL) the fuzzy fragility stays sharp

@@ -5,3 +5,5 @@ infrastructure_damage_level,missingness,objective_drift,5.43826,4.84846,True,0.5
 infrastructure_damage_level,missingness,allocation_churn,1.42208,0.1575,True,0.00781,8
 infrastructure_damage_level,noise,objective_drift,7.46012,2.37826,True,0.00781,8
 infrastructure_damage_level,noise,allocation_churn,1.435,0.3725,True,0.00781,8
+road_condition,flip,objective_drift,5.40928,9.20433,False,0.00781,8
+road_condition,flip,allocation_churn,1.41542,1.1625,True,0.00781,8
