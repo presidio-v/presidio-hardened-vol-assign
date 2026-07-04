@@ -65,18 +65,17 @@ Shared: the tool + a minimal model recap (cross-cited to Paper A, not reproduced
 RQ, methods emphasis, results, and framing. Keep this statement in our records for any
 same-group scrutiny.
 
-## 5. Decisions needed before building experiments
+## 5. Decisions — RESOLVED (2026-07-04)
 
-**Daniel (SI invitee of record):**
-1. Confirm framing **B1** (recommended) vs B2.
-2. Economic instance: (a) frame disaster-relief as the acute economic-shock case only, or
-   (b) also add a synthetic economic-allocation instance? (b) strengthens SI fit but adds work.
-3. One-line **GE scope check** (Kim/Marjerison): is a humanitarian primary case acceptable in
-   this SI, or must the primary instance be economic?
-4. Corresponding author for Systems (likely Daniel).
-5. Article vs Review (invite welcomes both; **Article** assumed).
+1. Framing: **B1 confirmed.**
+2. Economic instance: **relief only** — frame post-disaster relief allocation as the acute
+   economic-shock case; do **not** add a separate synthetic economic instance (Daniel).
+3. Scope fit: **humanitarian primary case is acceptable** (Daniel, as SI invitee). No separate
+   GE scope-check email; instead carry a one-sentence scope-fit note in Paper B's cover letter.
+4. Corresponding author: **Vladimir Stantchev** (same as Paper A).
+5. Article (not Review).
 
-**Belinda Zhao:** APC-discount enquiry (email already drafted — send in parallel).
+**Belinda Zhao APC-discount enquiry:** email sent 2026-06-30; **no response yet** (pending).
 
 ## 6. Next steps once §5 clears
 
