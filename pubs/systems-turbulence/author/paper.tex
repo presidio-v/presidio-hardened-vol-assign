@@ -1,0 +1,131 @@
+% =====================================================================
+% Paper B — Systems (MDPI), SI "Using Digital AI Systems as a Response
+% to High Economic Turbulence and Uncertainty"
+%
+% SCAFFOLD: section bodies are visible [DRAFT ...] placeholders to be
+% written as results land. See ../plan/ and ../explore/ for the design.
+% =====================================================================
+
+\documentclass[systems,article,submit,moreauthors,pdftex]{Definitions/mdpi}
+
+% --- Compatibility guards (no-ops under the current MDPI class) ---
+\providecommand{\TitleCitation}[1]{}
+\providecommand{\AuthorCitation}[1]{}
+\providecommand{\orcidA}{}
+\providecommand{\orcidB}{}
+\providecommand{\orcidC}{}
+\providecommand{\dataavailability}[1]{\vspace{6pt}\noindent\textbf{Data Availability Statement:} #1\par}
+\providecommand{\institutionalreview}[1]{\vspace{6pt}\noindent\textbf{Institutional Review Board Statement:} #1\par}
+\providecommand{\informedconsent}[1]{\vspace{6pt}\noindent\textbf{Informed Consent Statement:} #1\par}
+
+% --- Extra packages used by the body (harmless if already provided by the class) ---
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xurl}
+
+\graphicspath{{../figures/}}
+
+% --- Article metadata (tentative) ---
+\Title{Decision Fragility of a Fuzzy Multi-Objective Allocation System under Input Turbulence: Reproducibility and Operability as Guardrails}
+\TitleCitation{Decision Fragility of a Fuzzy Multi-Objective Allocation System under Input Turbulence}
+
+\newcommand{\orcidauthorA}{0000-0003-1534-6680}% Peyman Rabiei
+\newcommand{\orcidauthorB}{0000-0003-0292-7435}% Daniel Arias-Aranda
+\newcommand{\orcidauthorC}{0000-0002-1551-419X}% Vladimir Stantchev
+
+\Author{Peyman Rabiei $^{1}$\orcidA{}, Daniel Arias-Aranda $^{1}$\orcidB{} and Vladimir Stantchev $^{2,}$*\orcidC{}}
+\AuthorNames{Peyman Rabiei, Daniel Arias-Aranda and Vladimir Stantchev}
+\AuthorCitation{Rabiei, P.; Arias-Aranda, D.; Stantchev, V.}
+
+\address{%
+$^{1}$ \quad Faculty of Economics and Business, University of Granada, Granada, Spain; prabiei@correo.ugr.es (P.R.); darias@ugr.es (D.A.-A.)\\
+$^{2}$ \quad Institute of Information Systems, SRH University Heidelberg, Heidelberg, Germany; stantchev@computer.org}
+
+\corres{Correspondence: stantchev@computer.org}
+
+\abstract{%
+\emph{[DRAFT abstract — finalise once the full RQ1--RQ3 runs land.]} Digital AI
+systems are increasingly used to allocate scarce resources under turbulence and
+uncertainty, yet whether such a system can be trusted when its inputs are degraded
+mid-shock is rarely evaluated. We study a fuzzy multi-objective allocation system
+(Mamdani fuzzy inference plus NSGA-II/NRGA) as a digital decision system under input
+turbulence, on the acute economic-shock case of post-disaster relief allocation. We
+find that the system is markedly \emph{input-fragile} --- modest input degradation
+re-routes most of the allocation, substantially more than a crisp baseline --- and
+argue that this fragility makes bit-for-bit reproducibility and auditability
+load-bearing guardrails rather than niceties. We further characterise the system's
+operability envelope (latency, memory) to establish deployability. The reference
+implementation is open source and reproducible.}
+
+\keyword{digital decision systems; multi-objective optimization; fuzzy inference systems; input uncertainty; reproducibility; auditability; decision stability; humanitarian logistics}
+
+\begin{document}
+
+% =====================================================================
+\section{Introduction}\label{sec:intro}
+\emph{[DRAFT]} Decision-making under high economic turbulence combines scarcity with
+degraded information. This paper studies a digital AI decision system --- a fuzzy
+multi-objective allocation engine --- for its trustworthiness under input turbulence,
+building on the authors' prior FIS-MOEA work~\cite{rabiei2021,rabiei2023} and
+cross-citing the companion resilience-theoretic study~\cite{paperA2026}. Contributions:
+(i) an input-turbulence fragility analysis vs a crisp baseline; (ii) reproducibility
+and auditability as the guardrails the fragility necessitates; (iii) an operability
+envelope for deployability.
+
+\section{Background}\label{sec:background}
+\emph{[DRAFT]} Digital AI decision systems; fuzzy reasoning under uncertainty; the
+systems-theoretic lens on decision stability, reproducibility, and operability.
+
+\section{The Decision System}\label{sec:system}
+\emph{[DRAFT]} Architecture of the 3-objective FIS-MOEA allocation engine (FLPP/TFL/CABL
+via Mamdani FIS, solved by NSGA-II/NRGA) and the production-grade tool
+(\texttt{presidio-hardened-vol-assign}).
+
+\section{Method}\label{sec:method}
+\emph{[DRAFT]} Input-turbulence protocol (perturbation of the raw input fields; decide on
+degraded inputs, score on clean ground truth; decision-stability metrics), the
+reproducibility protocol (front signatures across environments), and the operability
+measurements.
+
+\section{Results}\label{sec:results}
+
+\subsection{RQ1 --- Decision fragility under input turbulence}\label{sec:rq1}
+\emph{[DRAFT — full matrix pending.]} Fuzzy-MOEA vs crisp degradation curves and the
+allocation-churn gap.
+
+\subsection{RQ2 --- Reproducibility and auditability}\label{sec:rq2}
+\emph{[DRAFT]} Bit-for-bit reproducibility across environments; the audit trail.
+
+\subsection{RQ3 --- Operability envelope}\label{sec:rq3}
+\emph{[DRAFT]} Latency, memory, throughput; deployability under pressure.
+
+\section{Discussion}\label{sec:discussion}
+\emph{[DRAFT]} Implications for AI-assisted decision-making under turbulence; why
+fragility makes reproducibility/auditability load-bearing; limitations.
+
+\section{Conclusions}\label{sec:conclusion}
+\emph{[DRAFT]}
+
+% =====================================================================
+\authorcontributions{\emph{[DRAFT — confirm with co-authors.]} Conceptualization, P.R., D.A.-A.\ and V.S.; software, P.R.\ and V.S.; formal analysis, V.S.; writing, P.R., D.A.-A.\ and V.S. All authors have read and agreed to the published version of the manuscript.}
+
+\funding{This research received no external funding.}
+
+\institutionalreview{Not applicable. This study used only synthetically generated problem instances and involved no human participants or animals.}
+
+\informedconsent{Not applicable.}
+
+\dataavailability{\emph{[DRAFT]} The open-source implementation, experiment drivers, and result manifests are available at \url{https://github.com/presidio-v/presidio-hardened-vol-assign}; a citable Zenodo release will be minted for this study.}
+
+\acknowledgments{\emph{[DRAFT — AI-use disclosure to be confirmed with co-authors before submission.]}}
+
+\conflictsofinterest{The authors declare no conflicts of interest.}
+
+% =====================================================================
+\reftitle{References}
+\bibliography{lit}
+
+\end{document}

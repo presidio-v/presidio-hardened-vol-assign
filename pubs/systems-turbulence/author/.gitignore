@@ -1,0 +1,12 @@
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.toc
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+paper.pdf
+# MDPI template logo binaries (restore from the MDPI template download)
+Definitions/*.eps
