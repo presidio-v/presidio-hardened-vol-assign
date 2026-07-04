@@ -2,8 +2,9 @@
 % Paper B — Systems (MDPI), SI "Using Digital AI Systems as a Response
 % to High Economic Turbulence and Uncertainty"
 %
-% SCAFFOLD: section bodies are visible [DRAFT ...] placeholders to be
-% written as results land. See ../plan/ and ../explore/ for the design.
+% Full first draft: abstract, narrative sections, and RQ1--RQ3 results written.
+% Remaining [DRAFT] markers are back-matter only (CRediT, AI-use disclosure,
+% Zenodo DOI) pending co-author confirmation. See ../plan/ and ../explore/.
 % =====================================================================
 
 \documentclass[systems,article,submit,moreauthors,pdftex]{Definitions/mdpi}
@@ -47,18 +48,19 @@ $^{2}$ \quad Institute of Information Systems, SRH University Heidelberg, Heidel
 \corres{Correspondence: stantchev@computer.org}
 
 \abstract{%
-\emph{[DRAFT abstract — finalise once the full RQ1--RQ3 runs land.]} Digital AI
-systems are increasingly used to allocate scarce resources under turbulence and
-uncertainty, yet whether such a system can be trusted when its inputs are degraded
-mid-shock is rarely evaluated. We study a fuzzy multi-objective allocation system
-(Mamdani fuzzy inference plus NSGA-II/NRGA) as a digital decision system under input
-turbulence, on the acute economic-shock case of post-disaster relief allocation. We
-find that the system is markedly \emph{input-fragile} --- modest input degradation
-re-routes most of the allocation, substantially more than a crisp baseline --- and
-argue that this fragility makes bit-for-bit reproducibility and auditability
-load-bearing guardrails rather than niceties. We further characterise the system's
-operability envelope (latency, memory) to establish deployability. The reference
-implementation is open source and reproducible.}
+Digital AI systems increasingly allocate scarce resources under turbulence and uncertainty,
+yet whether such a system can be trusted when its inputs are degraded mid-shock is rarely
+evaluated. We study a fuzzy multi-objective allocation system (Mamdani fuzzy inference with
+NSGA-II/NRGA) as a digital decision system under input turbulence, on the acute
+resource-allocation shock of post-disaster relief. Perturbing the raw input fields and scoring
+every decision on the clean ground truth, we find the system is markedly \emph{input-fragile}:
+modest degradation of the inputs its objectives are computed from re-routes most of the
+allocation --- far more than a crisp baseline --- onto worse decisions, at two problem scales,
+whereas turbulence in other inputs attenuates the effect. We argue this localised fragility
+makes bit-for-bit reproducibility and auditability load-bearing trust guarantees rather than
+niceties, and show the system is reproducible (within-environment REP $=1$, with an audit
+trail) and operable (a full Pareto set in seconds using a few megabytes on commodity
+hardware). The reference implementation is open source.}
 
 \keyword{digital decision systems; multi-objective optimization; fuzzy inference systems; input uncertainty; reproducibility; auditability; decision stability; humanitarian logistics}
 
@@ -66,29 +68,144 @@ implementation is open source and reproducible.}
 
 % =====================================================================
 \section{Introduction}\label{sec:intro}
-\emph{[DRAFT]} Decision-making under high economic turbulence combines scarcity with
-degraded information. This paper studies a digital AI decision system --- a fuzzy
-multi-objective allocation engine --- for its trustworthiness under input turbulence,
-building on the authors' prior FIS-MOEA work~\cite{rabiei2021,rabiei2023} and
-cross-citing the companion resilience-theoretic study~\cite{paperA2026}. Contributions:
-(i) an input-turbulence fragility analysis vs a crisp baseline; (ii) reproducibility
-and auditability as the guardrails the fragility necessitates; (iii) an operability
-envelope for deployability.
+
+High economic turbulence turns resource allocation into a decision made under two pressures at
+once: scarcity, because a shock has pushed demand past supply, and degraded information,
+because the data a decision rests on is itself disrupted while the shock unfolds. Digital AI
+systems increasingly make these calls, yet the property that determines whether such a system
+can be trusted in turbulence --- how its decisions behave when its inputs are degraded --- is
+rarely evaluated. A system validated only for decision \emph{quality} on clean data can still
+be unfit for turbulence if small input degradation makes it re-decide unpredictably.
+
+We study this question on a fuzzy multi-objective allocation system: a Mamdani
+fuzzy-inference front-end feeding NSGA-II/NRGA, which allocates scarce capacity across demand
+points. Post-disaster relief allocation --- directing affected people to relief centres when
+capacity is short and the situational data is disrupted --- is the acute instance we use: a
+resource-allocation decision under an information-degrading shock. The system builds on the
+authors' prior FIS-MOEA work for disaster operations~\cite{rabiei2021,rabiei2023}; a companion
+study treats its resilience-theoretic formulation~\cite{paperA2026}, whereas here the object of
+study is the \emph{system} --- its trustworthiness and deployability under input turbulence ---
+rather than the optimisation theory.
+
+We expected the fuzzy encoding to buy graceful degradation. It does not. The MOEA decision is
+markedly input-fragile, and the fragility is localised to the inputs its objectives are
+computed from; where turbulence hits other inputs, a crisp baseline is at least as fragile.
+Because a single run's decision is this sensitive, we argue that bit-for-bit reproducibility
+and auditability are the load-bearing trust guarantees for such a system, and we show the
+decision is cheap enough to be deployable on commodity hardware. Concretely, the paper
+contributes: (i) an input-turbulence fragility analysis of the fuzzy-MOEA decision against a
+crisp baseline, at two problem scales; (ii) reproducibility and auditability as the guardrails
+that fragility necessitates, with an operational reproducibility test; and (iii) an operability
+envelope establishing deployability. Section~\ref{sec:background} sets the systems context;
+Section~\ref{sec:system} describes the decision system; Section~\ref{sec:method} the protocols;
+Section~\ref{sec:results} the results; and Sections~\ref{sec:discussion}--\ref{sec:conclusion}
+the implications.
 
 \section{Background}\label{sec:background}
-\emph{[DRAFT]} Digital AI decision systems; fuzzy reasoning under uncertainty; the
-systems-theoretic lens on decision stability, reproducibility, and operability.
+
+We take a systems view of an AI decision aid: not only the algorithm that computes an
+allocation, but the running artefact that ingests disrupted data, commits to a decision, and
+must be trusted and operated under pressure. Three strands meet in that view.
+
+\emph{Fuzzy inference under uncertainty.} Mamdani fuzzy inference systems encode expert
+judgement as linguistic if--then rules over graded membership functions, and are attractive
+precisely when inputs are imprecise or partially known --- as situational data is during a
+shock. Combined with multi-objective evolutionary optimisation, they have been applied to
+post-disaster operations, including vehicle routing and relief distribution~\cite{rabiei2021}
+and volunteer-to-vacancy assignment~\cite{rabiei2023}.
+
+\emph{Multi-objective evolutionary optimisation.} Algorithms such as NSGA-II and NRGA return a
+Pareto front of non-dominated trade-offs rather than a single optimum, leaving the final
+commitment to a decision-maker. This is a strength for transparency but, as we show, a source
+of instability under input turbulence: the front, and the point committed from it, both move
+when the objective landscape moves.
+
+\emph{Decision stability, reproducibility, and operability.} Robustness of multi-objective
+methods is usually studied against algorithmic stochasticity or against perturbation of
+elicited preferences; the companion study~\cite{paperA2026} takes the latter route. Far less
+attention is paid to stability of the committed decision under degradation of the \emph{input
+data} itself, or to whether the running system is bit-for-bit reproducible and auditable ---
+the properties that let a stakeholder trust a fragile decision at all. This paper addresses
+that gap for a concrete digital allocation system.
 
 \section{The Decision System}\label{sec:system}
-\emph{[DRAFT]} Architecture of the 3-objective FIS-MOEA allocation engine (FLPP/TFL/CABL
-via Mamdani FIS, solved by NSGA-II/NRGA) and the production-grade tool
-(\texttt{presidio-hardened-vol-assign}).
+
+The system allocates scarce relief capacity by directing a subset of affected people to
+relief centres. It reads situational inputs --- per-person attributes (age, disability,
+injury and living status, local infrastructure-damage level, and remaining resource time),
+per-centre state (occupancy and resource-depletion rates), and per-route information (travel
+duration, road condition, possible hazard) --- and converts them, through three Mamdani fuzzy
+inference systems, into three objectives to be minimised: a fairness-in-prioritisation level,
+a transport-infeasibility level, and a centre-allocation-imbalance level. The fuzzy front-end
+is the design choice under test: it encodes expert judgement as linguistic rules that tolerate
+imprecise inputs, rather than assuming precise ones.
+
+A multi-objective evolutionary optimiser (NSGA-II, with NRGA as an alternative) searches the
+space of allocations and returns a Pareto front of non-dominated trade-offs. Each candidate
+is an integer-plus-real encoding that names which people are directed and to which centre;
+every candidate the operators can produce is feasible by construction. The objective of any
+allocation is computed at a single evaluation point against a pre-computed FIS cache, which
+lets a decision made on one instance be scored against another's ground truth.
+
+\textbf{Crisp baseline.} The foil is a deterministic greedy allocator that ranks people by a
+crisp weighted sum of the same criteria and sends each to the crisp-cheapest centre, with no
+fuzzy inference anywhere. It is scored through the identical evaluator, so any difference in
+behaviour is attributable to the fuzzy front-end, not to a different objective.
+
+\textbf{The tool.} The system is released as an open-source, MIT-licensed Python package
+(\texttt{presidio-hardened-vol-assign}) with the experiment drivers and result manifests. It
+is continuously tested and dependency-audited, and --- as Section~\ref{sec:rq2} establishes
+--- reproducible bit-for-bit on stock hardware. We treat that production-grade,
+audit-ready engineering as part of the contribution: a digital decision system intended for
+use under turbulence must be one that others can run, check, and hold to account.
 
 \section{Method}\label{sec:method}
-\emph{[DRAFT]} Input-turbulence protocol (perturbation of the raw input fields; decide on
-degraded inputs, score on clean ground truth; decision-stability metrics), the
-reproducibility protocol (front signatures across environments), and the operability
-measurements.
+
+\subsection{Instances and solver}\label{sec:method-setup}
+We evaluate on two synthetic relief instances: \emph{small} (5 centres, 150 affected people,
+50 directed) and \emph{large} (10 centres, 300 people, 100 directed). Both use the
+three-objective model of Section~\ref{sec:system}, solved with NSGA-II (population 100,
+150--200 generations); NRGA is included for the operability comparison. All runs are seeded;
+determinism is a property we test rather than assume (Section~\ref{sec:rq2}).
+
+\subsection{Input-turbulence protocol (RQ1)}\label{sec:method-turbulence}
+Turbulence perturbs the raw input fields --- the situational data a planner collects
+mid-shock --- not the elicitation weights. We perturb one field at a time in one of four
+modes: additive Gaussian \emph{noise} (standard deviation a fraction of the field's plausible
+range), \emph{bias} (a systematic shift), \emph{missingness} (a fraction of entries blanked
+and imputed with the instance median or mode), and, for categorical fields, \emph{flip} (a
+fraction relabelled). Each perturbation is applied at five levels ($0, 0.05, 0.1, 0.2, 0.4$;
+level $0$ is an identity check) over twelve independent realisations, and every perturbed
+value is clipped to its field's valid range so degradation cannot manufacture an
+out-of-domain input.
+
+The decision is \emph{made} on the degraded inputs but \emph{scored} on the clean ground
+truth --- the realised consequence of deciding on bad data. Because the solver returns a
+Pareto front rather than one allocation, we reduce each front to a single \emph{canonical
+decision} (the solution minimising the equal-weight, min--max-normalised objective sum) and
+compare it to the clean-input canonical decision. We report three stability metrics per
+realisation: \emph{objective drift} (Euclidean distance between the two decisions' realised
+objective vectors), \emph{allocation churn} (fraction of directed people re-routed), and
+centre-load rank stability. For each realisation we regress a metric on the turbulence level
+to obtain a degradation \emph{slope}, and test the fuzzy-vs-crisp slopes with a paired
+Wilcoxon test. The crisp baseline (Section~\ref{sec:system}) decides by a deterministic
+weighted-sum greedy rule on the same inputs and is scored through the identical evaluator, so
+only the decision rule differs. We confirmed the fragility finding is not an artifact of the
+canonical-decision rule by repeating it with a fixed-reference (nearest-ideal) rule
+(Appendix / robustness).
+
+\subsection{Reproducibility protocol (RQ2)}\label{sec:method-repro}
+We hash each allocation front to a canonical, order-invariant SHA-256 signature over its
+rounded objective vectors and person-to-centre assignments. Within-environment
+reproducibility solves each (size, seed) twice and checks the signatures match; the signature
+is recorded with an environment fingerprint (platform, Python, and library versions).
+Cross-environment reproducibility compares the signature for matching (size, seed) across
+target OS/Python builds, automated by the continuous-integration matrix.
+
+\subsection{Operability measurements (RQ3)}\label{sec:method-operability}
+We time one \texttt{solve()} call with a monotonic clock and capture its peak Python memory
+with \texttt{tracemalloc}, excluding the one-off FIS pre-computation, over ten seeds per
+(size, algorithm), and report median latency, peak memory, and throughput.
 
 \section{Results}\label{sec:results}
 
@@ -236,11 +353,54 @@ Large & NRGA    & 6.78 & 531 & 2.6\\
 \end{table}
 
 \section{Discussion}\label{sec:discussion}
-\emph{[DRAFT]} Implications for AI-assisted decision-making under turbulence; why
-fragility makes reproducibility/auditability load-bearing; limitations.
+
+Our starting expectation --- that a fuzzy front-end would let the system degrade gracefully
+under input turbulence --- was wrong, and instructively so. The MOEA decision is
+\emph{input-fragile}: modest degradation of the inputs its objectives are built from re-routes
+most of the allocation, far more than a crisp baseline, and onto genuinely worse decisions.
+The mechanism is direct: the optimiser chases objectives computed from the perturbed data, so
+input noise reshapes the very landscape it searches. Where turbulence hits inputs the
+objectives do not consume --- centre occupancy, road condition at scale --- the effect
+attenuates and the crisp heuristic, which uses those inputs only weakly, is if anything the
+more fragile of the two. Fragility is thus a property of the coupling between the perturbed
+input and the objective, not of the solver in the abstract.
+
+For AI-assisted decision-making under turbulence this carries two lessons. First, the inputs a
+multi-objective system optimises over are exactly the inputs whose data quality must be
+hardened before deployment; a system can look robust on held-out quality metrics yet re-decide
+wildly when those specific inputs are noisy. Second, and more general: a decision system whose
+single-run output is this sensitive to imperceptible input changes cannot be trusted from one
+run. That is why we treat reproducibility and auditability not as software hygiene but as the
+load-bearing trust guarantees (Section~\ref{sec:rq2}). They do not remove the fragility; they
+make the fragile decision \emph{accountable} --- a stakeholder can establish which run produced
+which allocation, and reproduce it --- which is the minimum precondition for using such a
+system responsibly under pressure. The operability envelope (Section~\ref{sec:rq3}) shows that
+this accountability comes at no practical cost: the system decides in seconds on a laptop.
+
+\textbf{Limitations.} The study uses synthetic instances of a single application (post-disaster
+relief, framed as an acute resource-allocation shock) and one solver family; the
+economic-turbulence setting is engaged by analogy rather than with market data. The
+input-fragility result is established at two problem sizes but on a four-cell large-instance
+subset. Cross-environment reproducibility is defined and instrumented but is completed by the
+continuous-integration matrix rather than reported here. These bound the claims to
+allocation-style decision systems under input turbulence; whether the objective-coupling
+mechanism generalises to other multi-objective decision systems is the natural next question.
 
 \section{Conclusions}\label{sec:conclusion}
-\emph{[DRAFT]}
+
+A fuzzy multi-objective allocation system, studied as a digital decision system under input
+turbulence, is not robust in the way its expert-knowledge encoding suggests. Its committed
+allocation is input-fragile --- degrading the inputs its objectives are built from re-routes
+most of the allocation onto worse decisions, more so than a crisp baseline --- and the effect
+holds at two problem scales, localised to those objective-coupled inputs. Rather than a defect
+to hide, this reframes the trust question: because a single run is this sensitive, the
+minimum requirement for deploying such a system under turbulence is that the run be
+reproducible and auditable. We show it is (bit-for-bit within an environment, with an
+audit trail), and that the decision is cheap enough --- seconds, a few megabytes --- to deploy
+on commodity hardware. The practical takeaway is to harden the data quality of the specific
+inputs a multi-objective system optimises over, and to make the system's decisions accountable
+by construction. Whether the objective-coupling mechanism generalises to other multi-objective
+decision systems under turbulence is the question we leave open.
 
 % =====================================================================
 \authorcontributions{\emph{[DRAFT — confirm with co-authors.]} Conceptualization, P.R., D.A.-A.\ and V.S.; software, P.R.\ and V.S.; formal analysis, V.S.; writing, P.R., D.A.-A.\ and V.S. All authors have read and agreed to the published version of the manuscript.}
