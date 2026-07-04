@@ -3,7 +3,7 @@
 **To:** Guest Editors, Special Issue *Innovations in Supply Chain Resilience*
 (Prof. Agnusdei, Prof. Silvestri, Prof. Di Pietro)
 **Journal:** *Applied Sciences* (MDPI)
-**Date:** 30 June 2026
+**Date:** 4 July 2026
 
 **Manuscript:** *Resilient Last-Mile Allocation in Humanitarian Supply Chains:
 A Reproducible Many-Objective Fuzzy Framework*
