@@ -26,8 +26,12 @@ assumptions break: inputs are imprecise, and the decision balances competing aim
 transport feasibility, centre balance). A **Mamdani fuzzy-inference front-end** encodes expert
 judgement as linguistic rules that tolerate imprecise inputs, and a **multi-objective
 evolutionary optimiser** (NSGA-II / NRGA) exposes the trade-offs rather than hiding them in a
-weighted sum. The hypothesis is that this design *degrades more gracefully* under input
-turbulence than a crisp baseline.
+weighted sum. We expected this design to *degrade gracefully* under input turbulence — but a
+pilot refuted that (see `pilot-findings.md`): because the optimiser chases objectives built
+from the degraded inputs, the fuzzy-MOEA is in fact markedly *more input-fragile* than a crisp
+baseline, re-routing most of the allocation under modest noise. That fragility, not graceful
+degradation, is the finding — and it is exactly what makes the reproducibility and audit
+guardrails below necessary.
 
 ## The gap
 
@@ -45,9 +49,11 @@ turbulence*:
 ## Contribution (systems, not theory)
 
 An auditable, reproducible digital AI decision system for scarce-resource allocation under
-turbulence, evaluated on the acute relief case for: graceful degradation vs a crisp baseline,
-cross-environment reproducibility, and operability. The contribution is the **system and its
-trust/operability properties**, cross-citing Paper A for the underlying model.
+turbulence, evaluated on the acute relief case for: **decision fragility under input
+turbulence** (fuzzy-MOEA vs a crisp baseline), cross-environment reproducibility, and
+operability. The contribution is the **system and its trust/operability properties** — and the
+cautionary result that MOEA decision quality is input-fragile, which is why reproducibility and
+auditability are load-bearing rather than optional — cross-citing Paper A for the model.
 
 ## Boundaries
 

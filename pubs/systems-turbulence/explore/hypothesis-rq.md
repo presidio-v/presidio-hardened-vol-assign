@@ -3,15 +3,24 @@
 Three RQs, each with a testable hypothesis, a baseline/comparator, and metrics. All are
 **new** relative to Paper A (distinctness table in `scoping.md` §4).
 
-## RQ1 — graceful degradation under input turbulence (primary)
+## RQ1 — decision fragility under input turbulence (primary)
 
-**Question.** As the system's inputs degrade (noise / missingness / bias), how stable are its
-allocation decisions, and does the fuzzy-MOEA design degrade more gracefully than a crisp
-optimisation baseline?
+> **Reframed after a pilot (see `pilot-findings.md`).** We originally hypothesised that the
+> fuzzy front-end would make the system *degrade gracefully*; a full-budget pilot and a
+> decision-rule diagnostic refuted that cleanly. RQ1 is now the honest question — how
+> *fragile* is the MOEA decision, and does the crisp baseline hold up better? — and the full
+> matrix is its confirmatory test.
 
-**H-B1.** Under increasing input degradation, the fuzzy-MOEA system's decision quality declines
-*more slowly* (smaller degradation slope) and *more predictably* (lower variance) than a crisp
-weighted-sum / greedy baseline on the same inputs.
+**Question.** As the system's inputs degrade (noise / missingness / bias), how much does the
+fuzzy-MOEA allocation *change*, and does it change more than a crisp baseline on the same
+inputs?
+
+**H-B1 (reframed).** Under increasing input degradation, the fuzzy-MOEA system re-decides
+substantially more than the crisp greedy baseline — higher allocation churn and larger
+realised-objective drift, both rising with turbulence — because the MOEA optimises objectives
+that depend on the degraded inputs while the crisp heuristic uses them only weakly. (Pilot:
+~85% fuzzy churn vs 10–34% crisp, robust to the decision rule; the full matrix quantifies the
+gap with the stats below.)
 
 - **Turbulence knobs:** additive noise on FIS inputs (σ sweep), random missingness on demand
   fields (rate sweep), and systematic bias (shift). One-factor-at-a-time + a combined stress
@@ -57,8 +66,8 @@ specialised infrastructure.
 
 ## Success criteria
 
-- RQ1: a statistically supported gentler/steadier degradation curve for fuzzy-MOEA vs crisp
-  under ≥1 turbulence mode (Wilcoxon on per-instance degradation slopes).
+- RQ1: a statistically supported fragility gap — fuzzy-MOEA higher churn/drift slope than the
+  crisp baseline — under ≥1 turbulence mode (Wilcoxon on per-instance degradation slopes).
 - RQ2: REP = 1.0 across the environment matrix, with a documented audit-trail mapping.
 - RQ3: reported latency/memory envelope with a defensible "deployable on a laptop" claim.
 

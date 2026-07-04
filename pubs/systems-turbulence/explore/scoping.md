@@ -27,10 +27,10 @@ cleaner economic-turbulence hook.
 
 ## 2. Research questions (proposed lock)
 
-- **RQ1 (primary).** When the decision system's inputs are degraded by turbulence
-  (noisy / missing / biased data), how stable are its allocation decisions — and does
-  fuzzy expert-knowledge encoding degrade *more gracefully* than a crisp optimisation
-  baseline?
+- **RQ1 (primary, reframed after the pilot — see `pilot-findings.md`).** When the decision
+  system's inputs are degraded by turbulence (noisy / missing / biased data), how much does its
+  allocation *change* — and is the fuzzy-MOEA more input-fragile than a crisp baseline? (The
+  pilot refuted the original "degrades gracefully" hypothesis; the reframed claim is fragility.)
 - **RQ2.** Is the system's decision **reproducible and auditable** across hardware, seeds,
   and software environments, and why does that matter for trust in AI-assisted decisions
   under turbulence?
@@ -58,7 +58,7 @@ cleaner economic-turbulence hook.
 | Journal / SI | Applied Sciences · SCR resilience | Systems · digital AI under turbulence |
 | Object | the model/theory (4R, many-objective) | the **system** (reliability, trust, operability) |
 | Core | 4-objective, NSGA-III | **3-objective**, NSGA-II vs NRGA |
-| Headline | Robustness/Rapidity visibility gain; NSGA-III speed | graceful degradation under input turbulence; reproducibility/auditability |
+| Headline | Robustness/Rapidity visibility gain; NSGA-III speed | MOEA decision **fragility** under input turbulence; reproducibility/auditability as guardrails |
 | Experiments | Pareto/HV/elicitation-weight sensitivity | input-turbulence, reproducibility-across-env, operability |
 
 Shared: the tool + a minimal model recap (cross-cited to Paper A, not reproduced). Different
