@@ -22,6 +22,7 @@ from experiments.run_h1_h2_h4 import BASE_SEED, SEED_STEP
 from presidio_vol_assign.allocation.baselines import crisp_greedy_pairs
 from presidio_vol_assign.allocation.decisions import (
     canonical_decision,
+    canonical_decision_fixed,
     decision_stability,
     pairs_of,
 )
@@ -39,6 +40,11 @@ from presidio_vol_assign.allocation.turbulence import (
 from presidio_vol_assign.allocation.validation import load_allocation_problem
 
 OBJECTIVES = 3  # Paper B: the 3-objective relief core
+
+_DECISION_RULES = {
+    "equal-weight": canonical_decision,
+    "fixed-nearest": canonical_decision_fixed,
+}
 
 _FIELDS = (
     "objective_drift",
@@ -70,8 +76,10 @@ def main() -> None:
     parser.add_argument("--pop-size", type=int, default=100)
     parser.add_argument("--generations", type=int, default=200)
     parser.add_argument("--out", type=Path, default=Path("experiments/results/turbulence"))
+    parser.add_argument("--decision-rule", default="equal-weight", choices=sorted(_DECISION_RULES))
     args = parser.parse_args()
 
+    decide = _DECISION_RULES[args.decision_rule]
     levels = [float(x) for x in args.levels.split(",")]
     spec_size = SIZES[args.size]
     base = Path("experiments/instances") / args.size
@@ -87,9 +95,7 @@ def main() -> None:
     clean_fuzzy: dict[int, list[tuple[int, int]]] = {}
     for rep in range(args.reps):
         cfg = _config(args.pop_size, args.generations, seed=BASE_SEED + rep * SEED_STEP)
-        clean_fuzzy[rep] = pairs_of(
-            canonical_decision(solve(problem, cfg, cache=clean_cache)), problem
-        )
+        clean_fuzzy[rep] = pairs_of(decide(solve(problem, cfg, cache=clean_cache)), problem)
     clean_crisp = crisp_greedy_pairs(problem, base_cfg)
 
     args.out.mkdir(parents=True, exist_ok=True)
@@ -122,7 +128,7 @@ def main() -> None:
                 for rep in range(args.reps):
                     cfg = _config(args.pop_size, args.generations, seed=BASE_SEED + rep * SEED_STEP)
                     fuzzy_pert = pairs_of(
-                        canonical_decision(solve(perturbed, cfg, cache=pert_cache)), perturbed
+                        decide(solve(perturbed, cfg, cache=pert_cache)), perturbed
                     )
                     m = decision_stability(
                         clean_fuzzy[rep], fuzzy_pert, clean_cache, OBJECTIVES, n_centers

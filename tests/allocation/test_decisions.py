@@ -8,6 +8,7 @@ import pytest
 
 from presidio_vol_assign.allocation.decisions import (
     canonical_decision,
+    canonical_decision_fixed,
     decision_stability,
     pairs_of,
 )
@@ -46,6 +47,17 @@ def test_canonical_decision_picks_min_normalised_sum() -> None:
 def test_canonical_decision_empty_front_fails_closed() -> None:
     with pytest.raises(ValueError, match="empty front"):
         canonical_decision(_front([]))
+
+
+def test_canonical_decision_fixed_picks_min_norm() -> None:
+    near = _sol(0.1, 0.1, 0.1, 0.1)
+    front = _front([_sol(0.9, 0.9, 0.9, 0.9), near, _sol(0.4, 0.4, 0.4, 0.4)])
+    assert canonical_decision_fixed(front) is near
+
+
+def test_canonical_decision_fixed_empty_fails_closed() -> None:
+    with pytest.raises(ValueError, match="empty front"):
+        canonical_decision_fixed(_front([]))
 
 
 def test_pairs_of_maps_ids_to_indices(problem) -> None:

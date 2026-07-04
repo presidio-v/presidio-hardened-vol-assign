@@ -39,6 +39,24 @@ def canonical_decision(front: AllocationParetoFront) -> AllocationSolution:
     return solutions[int(np.argmin(scores))]
 
 
+def canonical_decision_fixed(front: AllocationParetoFront) -> AllocationSolution:
+    """Commit to the solution nearest the ideal point (origin) in raw objective space.
+
+    All objectives are minimised, so the ideal is the origin; this picks the
+    minimum-L2-norm solution. Unlike ``canonical_decision`` it never normalises
+    by the front's own extent, so its choice cannot shift merely because the
+    front's composition changed. It exists to separate genuine input
+    sensitivity from per-front-normalisation instability in the churn metric.
+
+    Fail closed on an empty front; ties resolve to the lowest index.
+    """
+    solutions = front.solutions
+    if not solutions:
+        raise ValueError("cannot extract a decision from an empty front")
+    norms = [float(np.dot(s.fitness, s.fitness)) for s in solutions]
+    return solutions[int(np.argmin(norms))]
+
+
 def pairs_of(
     solution: AllocationSolution,
     problem: AllocationProblem,
