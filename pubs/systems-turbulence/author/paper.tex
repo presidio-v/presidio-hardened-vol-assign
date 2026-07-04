@@ -100,8 +100,8 @@ the crisp greedy baseline on each of twelve independent degradations, and score 
 decision on the \emph{clean} ground truth. For each realisation we regress a stability
 metric on the turbulence level to obtain a degradation \emph{slope}; Table~\ref{tab:rq1}
 reports the median fuzzy and crisp slopes and a paired Wilcoxon test of the two.
-(Results are on the small instance; a large-instance subset run is in progress to confirm
-the effect holds at scale.)
+We report the full eight-cell matrix on the small instance and a four-cell subset on the
+large instance (10 centres, 300 people) to test scale-dependence.
 
 \begin{table}[H]
 \centering
@@ -127,19 +127,24 @@ Poss.\ hazard / flip   & 1.26 & 0.72 & 0.0005 &  5.4 & 4.3 & 0.151\\
 \end{tabular}
 \end{table}
 
-\textbf{Decision churn is universally higher for the fuzzy-MOEA.} Across all eight
-field/mode cells the fuzzy system's allocation-churn slope exceeds the crisp baseline's,
-significantly in every case ($p \le 0.0034$; Figure~\ref{fig:churn}). Modest input
-degradation re-routes a large fraction of the directed people --- the MOEA does not
-commit to a stable allocation when its inputs are perturbed, regardless of which input is
-perturbed or how.
+\textbf{Decision churn is far higher for the fuzzy-MOEA on the objective-coupled inputs.}
+On the small instance the fuzzy churn slope exceeds the crisp baseline's in every one of
+the eight cells ($p \le 0.0034$; Figure~\ref{fig:churn}). At scale
+(Table~\ref{tab:rq1-large}) the gap stays sharp for the person-priority inputs the model's
+objectives depend on --- infrastructure-damage-level noise and missingness give fuzzy churn
+slopes $\approx 1.4$ against crisp $0.16$--$0.37$ ($p = 0.008$) --- but for centre-occupancy
+noise the crisp baseline becomes just as churny (fuzzy $1.45$ vs.\ crisp $1.44$; $p = 0.95$).
+The fragility is thus \emph{concentrated} where turbulence perturbs the inputs the optimiser
+is chasing, rather than being a universal property of the solver.
 
-\textbf{Realised-objective quality degrades more selectively.} The churn only translates
-into worse realised objectives for perturbations of the inputs that feed the
-person-priority and travel objectives (IDL, resource-time, travel-duration: fuzzy drift
-slope $2$--$3\times$ the crisp baseline, all $p \le 0.0005$; Figure~\ref{fig:degradation-idl}).
-For centre-occupancy noise and road-condition flips the crisp baseline degrades at least
-as much, so the objective-quality gap closes even as the churn gap remains.
+\textbf{Realised-objective quality degrades for the same objective-coupled inputs.} The
+churn translates into worse realised objectives chiefly for perturbations of the
+person-priority and travel inputs (small: IDL, resource-time, travel-duration give a fuzzy
+drift slope $2$--$3\times$ the crisp baseline, $p \le 0.0005$, Figure~\ref{fig:degradation-idl};
+large IDL noise: fuzzy $7.5$ vs.\ crisp $2.4$, $p = 0.008$). For centre-occupancy noise the
+crisp baseline is in fact the \emph{more} fragile on realised quality, markedly so at scale
+(fuzzy $8.5$ vs.\ crisp $23.4$; $p = 0.016$) --- so both the churn and the quality advantages
+of the crisp baseline are specific to inputs the MOEA objectives do not directly consume.
 
 \begin{figure}[H]
 \centering
@@ -157,12 +162,34 @@ for infrastructure-damage-level noise; fuzzy-MOEA vs.\ crisp, mean $\pm 1$ s.d.\
 identity check is exact for both.\label{fig:degradation-idl}}
 \end{figure}
 
-The finding inverts our starting hypothesis: fuzzy expert encoding does not buy graceful
-degradation --- the MOEA decision is markedly \emph{input-fragile}, most sharply in the
-decision itself (churn) and, for objective-feeding inputs, in realised quality too. Even
-where quality holds, a system that re-commits to a very different allocation under
-imperceptible input noise cannot be trusted from a single run; that is precisely what makes
-the reproducibility and auditability guarantees of Section~\ref{sec:rq2} load-bearing.
+\begin{table}[H]
+\centering
+\caption{RQ1 large-instance subset (10 centres, 300 people; 8 realisations). The fragility
+persists for the objective-coupled person inputs but attenuates for centre-occupancy
+(road-condition flip pending).\label{tab:rq1-large}}
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+& \multicolumn{3}{c}{Allocation churn} & \multicolumn{3}{c}{Realised-objective drift}\\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Field / mode & fuzzy & crisp & $p$ & fuzzy & crisp & $p$\\
+\midrule
+IDL / noise            & 1.44 & 0.37 & 0.008 & 7.5 &  2.4 & 0.008\\
+IDL / missingness      & 1.42 & 0.16 & 0.008 & 5.4 &  4.8 & 0.55\\
+Centre occ.\ / noise   & 1.45 & 1.44 & 0.95  & 8.5 & 23.4 & 0.016\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The finding refines our starting hypothesis: fuzzy expert encoding does not buy graceful
+degradation. The MOEA decision is markedly \emph{input-fragile}, but the fragility is
+\emph{localised} to the inputs its objectives consume (person priority, travel), where both
+the allocation and its realised quality degrade far more than a crisp baseline --- at both
+problem scales. Where turbulence perturbs inputs the objectives do not directly use, the
+crisp baseline's advantage narrows or reverses at scale. Either way, a system that
+re-commits to a very different allocation under imperceptible input noise cannot be trusted
+from a single run; that is precisely what makes the reproducibility and auditability
+guarantees of Section~\ref{sec:rq2} load-bearing.
 
 \subsection{RQ2 --- Reproducibility and auditability}\label{sec:rq2}
 \emph{[DRAFT]} Bit-for-bit reproducibility across environments; the audit trail.

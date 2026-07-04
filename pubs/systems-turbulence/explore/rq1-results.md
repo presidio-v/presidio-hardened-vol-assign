@@ -29,10 +29,27 @@ Fuzzy drift significantly worse in 5/8; comparable in 2; crisp significantly wor
 (road-condition flip). So the MOEA's *decision* churns everywhere, but that only becomes
 worse *realised objectives* for person-attribute and travel-time perturbations.
 
+## Large-instance subset (scale test, 10 centres / 300 people, n=8)
+
+| field / mode | churn fuzzy | churn crisp | p | drift fuzzy | drift crisp | p |
+|---|---|---|---|---|---|---|
+| IDL / noise | 1.44 | 0.37 | 0.008 | 7.5 | 2.4 | 0.008 |
+| IDL / missingness | 1.42 | 0.16 | 0.008 | 5.4 | 4.8 | 0.55 |
+| centre-occ. / noise | 1.45 | **1.44** | **0.95** | 8.5 | **23.4** | 0.016 |
+| road-condition / flip | *pending* | | | | | |
+
+**Scale changes the picture:** the small-instance "8/8 universal" churn gap does **not**
+hold at scale. For the person-priority inputs (IDL) the fuzzy fragility stays sharp
+(churn ~1.4 vs 0.16–0.37, p=0.008; drift 2–3×). For **centre-occupancy noise the gap
+vanishes** — crisp churn rose from 0.73 (small) to 1.44 (large), matching fuzzy — and the
+crisp baseline's realised drift is far *worse* (23.4 vs 8.5). The fragility is **localised
+to the inputs the MOEA objectives directly consume**, not universal.
+
 ## Interpretation
 
-- The system is **input-fragile in its decisions universally** (churn), and **fragile in
-  realised quality for the inputs that feed the person/transport objectives**.
+- The system is **input-fragile localised to the objective-coupled person inputs** (IDL,
+  resource-time, travel) — sharp at both scales in churn and realised quality; for
+  centre/transport inputs the effect attenuates or reverses at scale.
 - Even where objective quality holds (centre-occupancy noise, road-condition flip), the
   allocation still churns ~1.25×/level — a trust failure in itself: noisy inputs make the
   system commit to very different allocations of equivalent stated quality.

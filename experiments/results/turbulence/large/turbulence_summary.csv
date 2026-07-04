@@ -1,0 +1,7 @@
+field,mode,metric,fuzzy_slope_median,crisp_slope_median,fuzzy_gt_crisp,wilcoxon_p,n_realizations
+center_occupancy_rate,noise,objective_drift,8.51168,23.37355,False,0.01562,8
+center_occupancy_rate,noise,allocation_churn,1.45375,1.44,True,0.94531,8
+infrastructure_damage_level,missingness,objective_drift,5.43826,4.84846,True,0.54688,8
+infrastructure_damage_level,missingness,allocation_churn,1.42208,0.1575,True,0.00781,8
+infrastructure_damage_level,noise,objective_drift,7.46012,2.37826,True,0.00781,8
+infrastructure_damage_level,noise,allocation_churn,1.435,0.3725,True,0.00781,8
