@@ -93,8 +93,76 @@ measurements.
 \section{Results}\label{sec:results}
 
 \subsection{RQ1 --- Decision fragility under input turbulence}\label{sec:rq1}
-\emph{[DRAFT — full matrix pending.]} Fuzzy-MOEA vs crisp degradation curves and the
-allocation-churn gap.
+
+We perturb one raw input field at a time (noise, missingness, or categorical
+flip) across five turbulence levels, re-decide with both the fuzzy-MOEA system and
+the crisp greedy baseline on each of twelve independent degradations, and score every
+decision on the \emph{clean} ground truth. For each realisation we regress a stability
+metric on the turbulence level to obtain a degradation \emph{slope}; Table~\ref{tab:rq1}
+reports the median fuzzy and crisp slopes and a paired Wilcoxon test of the two.
+(Results are on the small instance; a large-instance subset run is in progress to confirm
+the effect holds at scale.)
+
+\begin{table}[H]
+\centering
+\caption{RQ1 degradation slopes (stability metric vs.\ turbulence level), fuzzy-MOEA vs.\
+crisp baseline, small instance, twelve realisations per cell. $p$ is a paired Wilcoxon
+test of the per-realisation slopes.\label{tab:rq1}}
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+& \multicolumn{3}{c}{Allocation churn} & \multicolumn{3}{c}{Realised-objective drift}\\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Field / mode & fuzzy & crisp & $p$ & fuzzy & crisp & $p$\\
+\midrule
+IDL / noise            & 1.28 & 0.49 & 0.0005 & 10.0 & 4.3 & 0.0005\\
+IDL / missingness      & 1.27 & 0.16 & 0.0005 &  7.2 & 3.2 & 0.0005\\
+Resource time / noise  & 1.28 & 0.42 & 0.0005 & 12.2 & 2.3 & 0.0005\\
+Travel dur.\ / noise   & 1.30 & 0.62 & 0.0005 & 10.5 & 5.0 & 0.0005\\
+Centre occ.\ / noise   & 1.25 & 0.73 & 0.0034 &  6.4 & 9.0 & 0.064\\
+Centre occ.\ / missing & 2.06 & 0.00 & 0.0005 & 10.8 & 0.0 & 0.0005\\
+Road cond.\ / flip     & 1.24 & 0.78 & 0.0005 &  4.8 & 7.8 & 0.009\\
+Poss.\ hazard / flip   & 1.26 & 0.72 & 0.0005 &  5.4 & 4.3 & 0.151\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Decision churn is universally higher for the fuzzy-MOEA.} Across all eight
+field/mode cells the fuzzy system's allocation-churn slope exceeds the crisp baseline's,
+significantly in every case ($p \le 0.0034$; Figure~\ref{fig:churn}). Modest input
+degradation re-routes a large fraction of the directed people --- the MOEA does not
+commit to a stable allocation when its inputs are perturbed, regardless of which input is
+perturbed or how.
+
+\textbf{Realised-objective quality degrades more selectively.} The churn only translates
+into worse realised objectives for perturbations of the inputs that feed the
+person-priority and travel objectives (IDL, resource-time, travel-duration: fuzzy drift
+slope $2$--$3\times$ the crisp baseline, all $p \le 0.0005$; Figure~\ref{fig:degradation-idl}).
+For centre-occupancy noise and road-condition flips the crisp baseline degrades at least
+as much, so the objective-quality gap closes even as the churn gap remains.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{fig_churn_summary.pdf}
+\caption{Allocation churn at turbulence level $0.2$, fuzzy-MOEA vs.\ crisp baseline, per
+field/mode cell. The MOEA re-routes markedly more of the allocation under every turbulence
+type.\label{fig:churn}}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{fig_degradation_infrastructure_damage_level_noise.pdf}
+\caption{Realised-objective drift (left) and allocation churn (right) vs.\ turbulence level
+for infrastructure-damage-level noise; fuzzy-MOEA vs.\ crisp, mean $\pm 1$ s.d.\ The level-0
+identity check is exact for both.\label{fig:degradation-idl}}
+\end{figure}
+
+The finding inverts our starting hypothesis: fuzzy expert encoding does not buy graceful
+degradation --- the MOEA decision is markedly \emph{input-fragile}, most sharply in the
+decision itself (churn) and, for objective-feeding inputs, in realised quality too. Even
+where quality holds, a system that re-commits to a very different allocation under
+imperceptible input noise cannot be trusted from a single run; that is precisely what makes
+the reproducibility and auditability guarantees of Section~\ref{sec:rq2} load-bearing.
 
 \subsection{RQ2 --- Reproducibility and auditability}\label{sec:rq2}
 \emph{[DRAFT]} Bit-for-bit reproducibility across environments; the audit trail.
