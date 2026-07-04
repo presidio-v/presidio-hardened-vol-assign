@@ -185,19 +185,24 @@ def decode_chromosome(
     return pairs
 
 
-def evaluate_chromosome(
-    individual: list,
+def evaluate_pairs(
+    pairs: list[tuple[int, int]],
     cache: FISCache,
-    n_dir: int,
-    n_centers: int,
     objectives: int,
 ) -> tuple[float, ...]:
-    """Compute the objective tuple for a chromosome.
+    """Objective tuple for a decoded (person_idx, center_idx) allocation.
+
+    The single evaluation point shared by the evolutionary loop, the crisp
+    baseline, and the turbulence harness: every objective value in the
+    codebase is produced here against one FIS cache. That lets a decision
+    made on one instance be scored against another instance's cache (decide
+    on perturbed inputs, score on the clean ground truth) without a second,
+    divergent evaluation path that could disagree.
 
     Returns (Mn_ULPP, Mn_TRD, Mn_RPD, Mn_CAIL) for 4-obj or
             (Mn_ULPP, Mn_TIL, Mn_CAIL) for 3-obj.
     """
-    pairs = decode_chromosome(individual, n_dir, n_centers)
+    n_dir = len(pairs)
     persons = np.fromiter((p for p, _ in pairs), dtype=int, count=n_dir)
     centers = np.fromiter((c for _, c in pairs), dtype=int, count=n_dir)
 
@@ -211,6 +216,22 @@ def evaluate_chromosome(
 
     mn_til = float(cache.til[persons, centers].mean())
     return (mn_ulpp, mn_til, mn_cail)
+
+
+def evaluate_chromosome(
+    individual: list,
+    cache: FISCache,
+    n_dir: int,
+    n_centers: int,
+    objectives: int,
+) -> tuple[float, ...]:
+    """Compute the objective tuple for a chromosome.
+
+    Decodes to (person_idx, center_idx) pairs and defers to `evaluate_pairs`
+    so the evolutionary loop shares the one evaluation point.
+    """
+    pairs = decode_chromosome(individual, n_dir, n_centers)
+    return evaluate_pairs(pairs, cache, objectives)
 
 
 # ---------------------------------------------------------------------------
