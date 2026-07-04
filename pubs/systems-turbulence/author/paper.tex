@@ -193,10 +193,47 @@ from a single run; that is precisely what makes the reproducibility and auditabi
 guarantees of Section~\ref{sec:rq2} load-bearing.
 
 \subsection{RQ2 --- Reproducibility and auditability}\label{sec:rq2}
-\emph{[DRAFT]} Bit-for-bit reproducibility across environments; the audit trail.
+
+RQ1 shows a single run's allocation is input-fragile; the minimum trust requirement is then
+that the run itself be reproducible and auditable. For each (size, seed) we solve twice
+in-process and hash the resulting allocation front (a canonical, order-invariant SHA-256
+over the objective vectors and person-to-centre assignments). All twenty runs reproduce
+bit-for-bit (within-environment REP $= 1.0$), and each distinct seed yields a distinct
+signature --- the hash is sensitive to the run, not a constant. Every run records an
+environment fingerprint (platform, Python, and library versions) alongside its signature;
+cross-environment reproducibility is then established by executing the same driver on each
+target OS / Python and comparing the signature column, which the project's continuous-
+integration matrix automates. Together with the run manifest, the dependency audit, and the
+published security policy, the signature is an audit trail: a stakeholder can verify
+\emph{which} run produced \emph{which} allocation after the fact. This reproducibility floor
+does not remove the input fragility of RQ1 --- it makes the fragile decision accountable,
+which is the precondition for trusting such a system under turbulence at all.
 
 \subsection{RQ3 --- Operability envelope}\label{sec:rq3}
-\emph{[DRAFT]} Latency, memory, throughput; deployability under pressure.
+
+We profile the wall-clock latency and peak memory of one \texttt{solve()} call per
+(size, algorithm) over ten seeds on commodity hardware (Table~\ref{tab:rq3}). The system
+returns a full Pareto set in $4$--$9$ seconds using a few megabytes of working memory, at
+both problem sizes; NRGA is consistently faster than NSGA-II. At $\sim$$400$--$830$
+decisions per hour with a $\le 3$~MB footprint, the decision system is field-deployable on
+a laptop without specialised infrastructure --- H-B3 is supported.
+
+\begin{table}[H]
+\centering
+\caption{RQ3 operability envelope: median over ten seeds, 3-objective relief model, pop 100
+/ gen 200.\label{tab:rq3}}
+\small
+\begin{tabular}{llrrr}
+\toprule
+Size & Algorithm & Latency (s) & Throughput (dec./h) & Peak memory (MB)\\
+\midrule
+Small & NSGA-II & 6.20 & 580 & 1.4\\
+Small & NRGA    & 4.34 & 829 & 1.4\\
+Large & NSGA-II & 8.99 & 400 & 2.6\\
+Large & NRGA    & 6.78 & 531 & 2.6\\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Discussion}\label{sec:discussion}
 \emph{[DRAFT]} Implications for AI-assisted decision-making under turbulence; why
