@@ -1,0 +1,17 @@
+field,mode,metric,fuzzy_slope_median,crisp_slope_median,fuzzy_gt_crisp,wilcoxon_p,n_realizations
+center_occupancy_rate,missingness,objective_drift,10.81668,0.0,True,0.00049,12
+center_occupancy_rate,missingness,allocation_churn,2.05875,0.0,True,0.00049,12
+center_occupancy_rate,noise,objective_drift,6.37007,9.04117,False,0.06396,12
+center_occupancy_rate,noise,allocation_churn,1.25,0.725,True,0.00342,12
+infrastructure_damage_level,missingness,objective_drift,7.21641,3.2063,True,0.00049,12
+infrastructure_damage_level,missingness,allocation_churn,1.27,0.155,True,0.00049,12
+infrastructure_damage_level,noise,objective_drift,10.03615,4.27243,True,0.00049,12
+infrastructure_damage_level,noise,allocation_churn,1.27937,0.485,True,0.00049,12
+possible_hazard,flip,objective_drift,5.35968,4.30768,True,0.15137,12
+possible_hazard,flip,allocation_churn,1.2575,0.72,True,0.00049,12
+resource_time_remaining,noise,objective_drift,12.1522,2.25065,True,0.00049,12
+resource_time_remaining,noise,allocation_churn,1.28187,0.415,True,0.00049,12
+road_condition,flip,objective_drift,4.84911,7.84285,False,0.00928,12
+road_condition,flip,allocation_churn,1.23687,0.78,True,0.00049,12
+travel_duration,noise,objective_drift,10.45958,5.01227,True,0.00049,12
+travel_duration,noise,allocation_churn,1.29687,0.615,True,0.00049,12
