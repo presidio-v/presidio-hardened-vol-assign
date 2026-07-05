@@ -55,8 +55,9 @@ NSGA-II/NRGA) as a digital decision system under input turbulence, on the acute
 resource-allocation shock of post-disaster relief. Perturbing the raw input fields and scoring
 every decision on the clean ground truth, we find the system is markedly \emph{input-fragile}:
 modest degradation of the inputs its objectives are computed from re-routes most of the
-allocation --- far more than a crisp baseline --- onto worse decisions, at two problem scales,
-whereas turbulence in other inputs attenuates the effect. We argue this localised fragility
+allocation --- far more than a crisp baseline --- onto worse decisions, at two problem scales;
+where turbulence hits other inputs the gap narrows, and on realised quality the crisp baseline
+can be the more fragile of the two. We argue this localised fragility
 makes bit-for-bit reproducibility and auditability load-bearing trust guarantees rather than
 niceties, and show the system is reproducible (within-environment REP $=1$, with an audit
 trail) and operable (a full Pareto set in seconds using a few megabytes on commodity
@@ -81,7 +82,9 @@ We study this question on a fuzzy multi-objective allocation system: a Mamdani
 fuzzy-inference front-end feeding NSGA-II/NRGA, which allocates scarce capacity across demand
 points. Post-disaster relief allocation --- directing affected people to relief centres when
 capacity is short and the situational data is disrupted --- is the acute instance we use: a
-resource-allocation decision under an information-degrading shock. The system builds on the
+resource-allocation decision under an information-degrading shock. We engage this venue's
+economic-turbulence setting by analogy, mapping a relief demand shock to an economic one,
+rather than with market data (Section~\ref{sec:discussion}). The system builds on the
 authors' prior FIS-MOEA work for disaster operations~\cite{rabiei2021,rabiei2023}; a companion
 study treats its resilience-theoretic formulation~\cite{paperA2026}, whereas here the object of
 study is the \emph{system} --- its trustworthiness and deployability under input turbulence ---
@@ -107,24 +110,24 @@ We take a systems view of an AI decision aid: not only the algorithm that comput
 allocation, but the running artefact that ingests disrupted data, commits to a decision, and
 must be trusted and operated under pressure. Three strands meet in that view.
 
-\emph{Fuzzy inference under uncertainty.} Mamdani fuzzy inference systems encode expert
-judgement as linguistic if--then rules over graded membership functions, and are attractive
-precisely when inputs are imprecise or partially known --- as situational data is during a
-shock. Combined with multi-objective evolutionary optimisation, they have been applied to
+\emph{Fuzzy inference under uncertainty.} Mamdani fuzzy inference
+systems~\cite{zadeh1965,mamdani1975} encode expert judgement as linguistic if--then rules over
+graded membership functions, and are attractive precisely when inputs are imprecise or
+partially known --- as situational data is during a shock. Combined with multi-objective evolutionary optimisation, they have been applied to
 post-disaster operations, including vehicle routing and relief distribution~\cite{rabiei2021}
 and volunteer-to-vacancy assignment~\cite{rabiei2023}.
 
-\emph{Multi-objective evolutionary optimisation.} Algorithms such as NSGA-II and NRGA return a
-Pareto front of non-dominated trade-offs rather than a single optimum, leaving the final
-commitment to a decision-maker. This is a strength for transparency but, as we show, a source
+\emph{Multi-objective evolutionary optimisation.} Algorithms such as NSGA-II~\cite{deb2002}
+and NRGA~\cite{aljadaan2008} return a Pareto front of non-dominated trade-offs rather than a
+single optimum, leaving the final commitment to a decision-maker. This is a strength for transparency but, as we show, a source
 of instability under input turbulence: the front, and the point committed from it, both move
 when the objective landscape moves.
 
-\emph{Decision stability, reproducibility, and operability.} Robustness of multi-objective
-methods is usually studied against algorithmic stochasticity or against perturbation of
-elicited preferences; the companion study~\cite{paperA2026} takes the latter route. Far less
-attention is paid to stability of the committed decision under degradation of the \emph{input
-data} itself, or to whether the running system is bit-for-bit reproducible and auditable ---
+\emph{Decision stability, reproducibility, and operability.} In our reading, robustness of
+multi-objective methods is more often examined against algorithmic stochasticity or against
+perturbation of elicited preferences --- the route the companion study~\cite{paperA2026}
+takes --- than against degradation of the \emph{input data} itself. Far less
+attention is paid to stability of the committed decision under such degradation, or to whether the running system is bit-for-bit reproducible and auditable ---
 the properties that let a stakeholder trust a fragile decision at all. This paper addresses
 that gap for a concrete digital allocation system.
 
@@ -187,8 +190,9 @@ compare it to the clean-input canonical decision. We report three stability metr
 realisation: \emph{objective drift} (Euclidean distance between the two decisions' realised
 objective vectors), \emph{allocation churn} (fraction of directed people re-routed), and
 centre-load rank stability. For each realisation we regress a metric on the turbulence level
-to obtain a degradation \emph{slope}, and test the fuzzy-vs-crisp slopes with a paired
-Wilcoxon test. The crisp baseline (Section~\ref{sec:system}) decides by a deterministic
+to obtain a per-realisation \emph{sensitivity slope}, and test the fuzzy-vs-crisp slopes with a
+paired Wilcoxon test; because allocation churn saturates at the first turbulence level
+(Section~\ref{sec:rq1}), its slope is a summary statistic, not a dose-response gradient. The crisp baseline (Section~\ref{sec:system}) decides by a deterministic
 weighted-sum greedy rule on the same inputs and is scored through the identical evaluator, so
 only the decision rule differs. We confirmed the fragility finding is not an artifact of the
 canonical-decision rule by repeating it with a fixed-reference (nearest-ideal) rule
@@ -200,7 +204,8 @@ rounded objective vectors and person-to-centre assignments. Within-environment
 reproducibility solves each (size, seed) twice and checks the signatures match; the signature
 is recorded with an environment fingerprint (platform, Python, and library versions).
 Cross-environment reproducibility compares the signature for matching (size, seed) across
-target OS/Python builds, automated by the continuous-integration matrix.
+target OS/Python builds, run by a continuous-integration matrix over \{Ubuntu, macOS\}
+$\times$ \{Python 3.11, 3.12\}.
 
 \subsection{Operability measurements (RQ3)}\label{sec:method-operability}
 We time one \texttt{solve()} call with a monotonic clock and capture its peak Python memory
@@ -215,16 +220,18 @@ We perturb one raw input field at a time (noise, missingness, or categorical
 flip) across five turbulence levels, re-decide with both the fuzzy-MOEA system and
 the crisp greedy baseline on each of twelve independent degradations, and score every
 decision on the \emph{clean} ground truth. For each realisation we regress a stability
-metric on the turbulence level to obtain a degradation \emph{slope}; Table~\ref{tab:rq1}
+metric on the turbulence level to obtain a per-realisation \emph{sensitivity slope};
+Table~\ref{tab:rq1}
 reports the median fuzzy and crisp slopes and a paired Wilcoxon test of the two.
 We report the full eight-cell matrix on the small instance and a four-cell subset on the
 large instance (10 centres, 300 people) to test scale-dependence.
 
 \begin{table}[H]
 \centering
-\caption{RQ1 degradation slopes (stability metric vs.\ turbulence level), fuzzy-MOEA vs.\
-crisp baseline, small instance, twelve realisations per cell. $p$ is a paired Wilcoxon
-test of the per-realisation slopes.\label{tab:rq1}}
+\caption{RQ1 per-realisation sensitivity slopes (stability metric regressed on turbulence
+level), fuzzy-MOEA vs.\ crisp baseline, small instance, twelve realisations per cell.
+Allocation churn saturates at the first level, so its slope summarises a step rather than a
+gradient (see text). $p$ is a paired Wilcoxon test of the slopes.\label{tab:rq1}}
 \small
 \begin{tabular}{lrrrrrr}
 \toprule
@@ -244,15 +251,19 @@ Poss.\ hazard / flip   & 1.26 & 0.72 & 0.0005 &  5.4 & 4.3 & 0.151\\
 \end{tabular}
 \end{table}
 
-\textbf{Decision churn is far higher for the fuzzy-MOEA on the objective-coupled inputs.}
-On the small instance the fuzzy churn slope exceeds the crisp baseline's in every one of
-the eight cells ($p \le 0.0034$; Figure~\ref{fig:churn}). At scale
-(Table~\ref{tab:rq1-large}) the gap stays sharp for the person-priority inputs the model's
-objectives depend on --- infrastructure-damage-level noise and missingness give fuzzy churn
-slopes $\approx 1.4$ against crisp $0.16$--$0.37$ ($p = 0.008$) --- but for centre-occupancy
-noise the crisp baseline becomes just as churny (fuzzy $1.45$ vs.\ crisp $1.44$; $p = 0.95$).
-The fragility is thus \emph{concentrated} where turbulence perturbs the inputs the optimiser
-is chasing, rather than being a universal property of the solver.
+\textbf{The decision collapses at the first perturbation.} Allocation churn is not a gradient
+but a step: at the smallest turbulence we apply (level $0.05$) the fuzzy-MOEA already re-routes
+$\approx 83\%$ of the directed people, and the magnitude is flat through the highest level
+(Figure~\ref{fig:degradation-idl}, right). On the small instance this near-total churn occurs
+in \emph{all eight} cells --- the churn fragility is close to universal there --- while the
+crisp baseline re-routes far less (churn plateau $\approx 0.16$--$0.78$). The per-realisation
+``slopes'' in Table~\ref{tab:rq1} therefore summarise a saturating step, not a dose response;
+we use them for the paired test but read the effect as an immediate collapse, which is arguably
+worse for trust than a gradual one. At scale the churn gap \emph{localises}: for the
+person-priority inputs the model's objectives depend on it stays sharp
+(Table~\ref{tab:rq1-large}: IDL noise and missingness, fuzzy $\approx 1.4$ vs.\ crisp
+$0.16$--$0.37$, $p = 0.008$), but for centre-occupancy noise the crisp baseline saturates too
+and the gap vanishes (fuzzy $1.45$ vs.\ crisp $1.44$; $p = 0.95$).
 
 \textbf{Realised-objective quality degrades for the same objective-coupled inputs.} The
 churn translates into worse realised objectives chiefly for perturbations of the
@@ -260,15 +271,18 @@ person-priority and travel inputs (small: IDL, resource-time, travel-duration gi
 drift slope $2$--$3\times$ the crisp baseline, $p \le 0.0005$, Figure~\ref{fig:degradation-idl};
 large IDL noise: fuzzy $7.5$ vs.\ crisp $2.4$, $p = 0.008$). For centre-occupancy noise the
 crisp baseline is in fact the \emph{more} fragile on realised quality, markedly so at scale
-(fuzzy $8.5$ vs.\ crisp $23.4$; $p = 0.016$) --- so both the churn and the quality advantages
-of the crisp baseline are specific to inputs the MOEA objectives do not directly consume.
+(fuzzy $8.5$ vs.\ crisp $23.4$; $p = 0.016$; road-condition flip is similar). Unlike the
+near-universal churn collapse, then, the realised-quality harm is specific to the inputs the
+MOEA objectives consume, and for the remaining centre/transport inputs the crisp baseline is
+the more fragile of the two.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.72\textwidth]{fig_churn_summary.pdf}
 \caption{Allocation churn at turbulence level $0.2$, fuzzy-MOEA vs.\ crisp baseline, per
-field/mode cell. The MOEA re-routes markedly more of the allocation under every turbulence
-type.\label{fig:churn}}
+field/mode cell (small instance). The fuzzy-MOEA re-routes $\approx 80\%$ of the allocation in
+every cell; the crisp baseline re-routes far less. At scale this gap narrows for the
+centre/transport inputs (Table~\ref{tab:rq1-large}).\label{fig:churn}}
 \end{figure}
 
 \begin{figure}[H]
@@ -300,14 +314,14 @@ Road cond.\ / flip     & 1.42 & 1.16 & 0.008 & 5.4 &  9.2 & 0.008\\
 \end{table}
 
 The finding refines our starting hypothesis: fuzzy expert encoding does not buy graceful
-degradation. The MOEA decision is markedly \emph{input-fragile}, but the fragility is
-\emph{localised} to the inputs its objectives consume (person priority, travel), where both
-the allocation and its realised quality degrade far more than a crisp baseline --- at both
-problem scales. Where turbulence perturbs inputs the objectives do not directly use, the
-crisp baseline's advantage narrows or reverses at scale. Either way, a system that
-re-commits to a very different allocation under imperceptible input noise cannot be trusted
-from a single run; that is precisely what makes the reproducibility and auditability
-guarantees of Section~\ref{sec:rq2} load-bearing.
+degradation. The committed allocation \emph{collapses} --- most of it is re-routed --- at the
+first whiff of input turbulence, near-universally on the small instance. What is
+\emph{localised} is the harm: realised-objective quality degrades far more than a crisp
+baseline only for the inputs the objectives consume (person priority, travel), and only at
+scale does even the churn gap narrow to those inputs, the crisp baseline saturating on the
+rest. Either way, a system that re-commits to a very different allocation under imperceptible
+input noise cannot be trusted from a single run; that is precisely what makes the
+reproducibility and auditability guarantees of Section~\ref{sec:rq2} load-bearing.
 
 \subsection{RQ2 --- Reproducibility and auditability}\label{sec:rq2}
 
@@ -318,9 +332,12 @@ over the objective vectors and person-to-centre assignments). All twenty runs re
 bit-for-bit (within-environment REP $= 1.0$), and each distinct seed yields a distinct
 signature --- the hash is sensitive to the run, not a constant. Every run records an
 environment fingerprint (platform, Python, and library versions) alongside its signature;
-cross-environment reproducibility is then established by executing the same driver on each
-target OS / Python and comparing the signature column, which the project's continuous-
-integration matrix automates. Together with the run manifest, the dependency audit, and the
+cross-environment reproducibility is then established by running the driver on each target OS /
+Python in a continuous-integration matrix over \{Ubuntu, macOS\} $\times$ \{Python 3.11, 3.12\}
+and diffing the signature column. Across those four environments every (size, seed) produced
+the identical signature (cross-environment REP $= 1.0$ over five seeds): the decision is
+bit-for-bit reproducible across platforms and Python versions, not merely within one. Together
+with the run manifest, the dependency audit, and the
 published security policy, the signature is an audit trail: a stakeholder can verify
 \emph{which} run produced \emph{which} allocation after the fact. This reproducibility floor
 does not remove the input fragility of RQ1 --- it makes the fragile decision accountable,
@@ -333,7 +350,7 @@ We profile the wall-clock latency and peak memory of one \texttt{solve()} call p
 returns a full Pareto set in $4$--$9$ seconds using a few megabytes of working memory, at
 both problem sizes; NRGA is consistently faster than NSGA-II. At $\sim$$400$--$830$
 decisions per hour with a $\le 3$~MB footprint, the decision system is field-deployable on
-a laptop without specialised infrastructure --- H-B3 is supported.
+a laptop without specialised infrastructure.
 
 \begin{table}[H]
 \centering
@@ -381,8 +398,9 @@ this accountability comes at no practical cost: the system decides in seconds on
 relief, framed as an acute resource-allocation shock) and one solver family; the
 economic-turbulence setting is engaged by analogy rather than with market data. The
 input-fragility result is established at two problem sizes but on a four-cell large-instance
-subset. Cross-environment reproducibility is defined and instrumented but is completed by the
-continuous-integration matrix rather than reported here. These bound the claims to
+subset. Cross-environment reproducibility is demonstrated across four environments on the small
+instance and reduced solver budget; a sweep over more platforms and the larger instance remains
+future work. These bound the claims to
 allocation-style decision systems under input turbulence; whether the objective-coupling
 mechanism generalises to other multi-objective decision systems is the natural next question.
 

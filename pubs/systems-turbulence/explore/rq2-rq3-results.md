@@ -14,6 +14,10 @@ Sources: `experiments/results/repro/repro_manifest.csv` (RQ2),
 - **Audit trail:** each run records an environment fingerprint (platform, Python, numpy /
   scipy / deap / pymoo versions) with its signature. Cross-environment REP = diff the
   `signature` column across OS/Python runs (CI matrix automates this).
+- **Cross-environment REP = 1.0** (CI, `.github/workflows/repro-crossenv.yml`): across
+  {Ubuntu, macOS} × {py3.11, 3.12} every (size, seed) produced the *identical* signature
+  (5 seeds × 4 envs, distinct=1) — bit-for-bit reproducible across platforms + Python versions,
+  not merely within one (small instance, reduced budget).
 - Ties RQ1 → RQ2: the fragile decision is at least *accountable* — a stakeholder can verify
   which run produced which allocation.
 

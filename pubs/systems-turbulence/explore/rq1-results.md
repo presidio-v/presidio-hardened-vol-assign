@@ -5,7 +5,12 @@ Source: `experiments/results/turbulence/small/turbulence_summary.csv` (8 field×
 `experiments/analyze_turbulence.py` — per-realisation degradation slope (metric vs level),
 paired Wilcoxon fuzzy-vs-crisp. Figures: `pubs/systems-turbulence/figures/`.
 
-## Headline: allocation churn — universal fuzzy fragility
+> **Churn is a step function, not a gradient (verified in the raw manifests).** Fuzzy churn is
+> 0 at level 0, jumps to ~0.83 at level 0.05, and stays flat (~0.83) through 0.4 in every cell
+> — an immediate collapse. The reported "slope" is a linear summary of that step, used only for
+> the paired Wilcoxon; the honest magnitude is ~83% re-routed at any nonzero turbulence.
+
+## Headline: allocation churn — near-universal fuzzy collapse (small instance)
 
 Fuzzy-MOEA slope > crisp in **all 8 cells**, Wilcoxon **p ≈ 0.00049** (7 cells) / 0.00342
 (centre-occupancy noise). Median churn slope ≈ **1.25–1.28** (fuzzy) vs ≈ **0.15–0.78**
