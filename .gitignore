@@ -33,3 +33,6 @@ results/
 
 # Paper PDF (copyright — do not redistribute publicly)
 *.pdf
+
+# Grant-proposal drafts (personal / not for the public repo)
+proposals/

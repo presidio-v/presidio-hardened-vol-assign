@@ -11,6 +11,13 @@ from rich.table import Table
 from presidio_vol_assign import __version__
 from presidio_vol_assign.domains import HumanitarianDomain, get_domain
 from presidio_vol_assign.engine import run as run_solvers
+from presidio_vol_assign.evidence import (
+    EvidenceError,
+    SigningKeyError,
+    load_trust_store,
+    verify_record,
+)
+from presidio_vol_assign.evidence_cli import emit_evidence, resolve_signing_key
 from presidio_vol_assign.metrics import compute_metrics
 from presidio_vol_assign.models import RunConfig
 from presidio_vol_assign.security import (
@@ -96,6 +103,7 @@ def _execute_assignment(
     generations: int,
     output: Path,
     model_label: str,
+    emit_evidence_flag: bool = False,
 ) -> None:
     """Shared body for ``assign`` / ``allocate-people``: validate, solve, write."""
     try:
@@ -106,6 +114,16 @@ def _execute_assignment(
 
     out_dir.mkdir(parents=True, exist_ok=True)
     logger, _audit = _run_security_preamble(out_dir)
+
+    # Fail-closed key resolution BEFORE any solving, so we never do the work and
+    # then discover we cannot sign. Default OFF: byte-identical behaviour when unset.
+    evidence_key: tuple[str, str, bytes] | None = None
+    if emit_evidence_flag:
+        try:
+            evidence_key = resolve_signing_key()
+        except SigningKeyError as exc:
+            err_console.print(f"[red]Evidence:[/red] {exc}")
+            raise typer.Exit(code=1)
 
     primary_name, secondary_name = domain.required_inputs
     if primary is None or secondary is None:
@@ -161,6 +179,32 @@ def _execute_assignment(
         console.print(f"  Assignments → [cyan]{assign_path}[/cyan]")
         console.print(f"  Metrics     → [cyan]{metrics_path}[/cyan]")
 
+        if evidence_key is not None:
+            signer, alg, key = evidence_key
+            evidence_path = emit_evidence(
+                front=front,
+                metrics=m,
+                model=model_label,
+                solver=front.solver.value,
+                seed=seed,
+                pop_size=pop_size,
+                generations=generations,
+                input_csv_paths=[primary, secondary],
+                objective_labels=domain.objective_names,
+                assignments_csv_path=assign_path,
+                output_dir=out_dir,
+                signer=signer,
+                alg=alg,
+                key=key,
+            )
+            logger.info(
+                "evidence emitted",
+                solver=front.solver.value,
+                alg=alg,
+                signer=signer,
+            )
+            console.print(f"  Evidence    → [cyan]{evidence_path}[/cyan]")
+
 
 @app.command()
 def assign(
@@ -203,6 +247,16 @@ def assign(
     output: Path = typer.Option(
         Path("./results"), "--output", show_default=True, help="Output directory."
     ),
+    emit_evidence_flag: bool = typer.Option(
+        False,
+        "--emit-evidence",
+        help=(
+            "Emit a signed, content-addressed evidence record per solver run "
+            "(evidence_<solver>_<ts>.json). Requires a signing key in the "
+            "environment (PVA_EVIDENCE_KEY or PVA_EVIDENCE_ED25519_KEY); "
+            "fail-closed when absent. Default off; behaviour unchanged when unset."
+        ),
+    ),
 ) -> None:
     """Run assignment optimisation and write Pareto front + metrics."""
     try:
@@ -227,6 +281,7 @@ def assign(
         generations=generations,
         output=output,
         model_label=model_label,
+        emit_evidence_flag=emit_evidence_flag,
     )
 
 
@@ -255,6 +310,15 @@ def allocate_people(
     output: Path = typer.Option(
         Path("./results"), "--output", show_default=True, help="Output directory."
     ),
+    emit_evidence_flag: bool = typer.Option(
+        False,
+        "--emit-evidence",
+        help=(
+            "Emit a signed evidence record per solver run (see `pva assign "
+            "--help`). Requires PVA_EVIDENCE_KEY or PVA_EVIDENCE_ED25519_KEY; "
+            "fail-closed when absent. Default off."
+        ),
+    ),
 ) -> None:
     """Allocate affected people to relief centres (humanitarian model).
 
@@ -278,6 +342,7 @@ def allocate_people(
         generations=generations,
         output=output,
         model_label=model_label,
+        emit_evidence_flag=emit_evidence_flag,
     )
 
 
@@ -302,6 +367,59 @@ def metrics(
     m = compute_metrics(front)
     logger.info("metrics computed", solver=front.solver.value, nns=m.nns)
     _print_run_summary(front.solver.value.upper(), m)
+
+
+# ---------------------------------------------------------------------------
+# pva verify-evidence
+# ---------------------------------------------------------------------------
+
+
+@app.command(name="verify-evidence")
+def verify_evidence(
+    evidence: Path = typer.Option(..., "--evidence", help="Path to an evidence JSON record."),
+    trust: Path = typer.Option(
+        ..., "--trust", help="Path to a trust store JSON: {signer: {alg, public_key|secret}}."
+    ),
+) -> None:
+    """Verify a signed evidence record offline (fail-closed). Exits 0 on success, 1 otherwise.
+
+    Distinct failure reasons: schema mismatch, float leak, hash mismatch, unknown
+    signer, bad signature. No network, no state — the record and the trust store
+    are sufficient.
+    """
+    try:
+        raw = evidence.read_text(encoding="utf-8")
+    except OSError as exc:
+        err_console.print(f"[red]Verify:[/red] cannot read evidence file: {exc}")
+        raise typer.Exit(code=1)
+
+    import json as _json
+
+    try:
+        record = _json.loads(raw)
+    except _json.JSONDecodeError as exc:
+        err_console.print(f"[red]Verify:[/red] evidence file is not valid JSON: {exc}")
+        raise typer.Exit(code=1)
+
+    try:
+        trust_store = load_trust_store(trust)
+    except (FileNotFoundError, EvidenceError) as exc:
+        err_console.print(f"[red]Verify:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    try:
+        verify_record(record, trust_store)
+    except EvidenceError as exc:
+        reason = type(exc).__name__
+        err_console.print(f"[red]Verify FAILED[/red] ({reason}): {exc}")
+        raise typer.Exit(code=1)
+
+    signer = record.get("signer")
+    console.print(
+        f"[green]Verify OK[/green] — signer={signer!r} alg={record.get('alg')!r} "
+        f"content_hash={record.get('content_hash')}"
+    )
+    raise typer.Exit(code=0)
 
 
 # ---------------------------------------------------------------------------
