@@ -190,10 +190,15 @@ pva assign   [--model  ed-staffing|humanitarian]   (default: ed-staffing)
              [--max-distance <km>]          (cap distance for low-mobility people)
              [--mobility-threshold <0-10>]  (default: 3.0)
              [--output  <dir>]              (default: ./results)
+             [--emit-evidence]              (signed evidence record; default off)
 
 pva allocate-people  --people <csv> --centers <csv>   [solver/seed/... as above]
              # convenience alias for `assign --model humanitarian`
              # also accepts --hard-capacity / --max-distance / --mobility-threshold
+             # inherits --emit-evidence
+
+pva verify-evidence  --evidence <json> --trust <json>
+             # offline, fail-closed verification of an evidence record; exit 0/1
 
 pva metrics  --pareto <csv>     (auto-detects 2- or 3-objective fronts)
 
@@ -431,6 +436,68 @@ pva assign --model humanitarian \
 - **CodeQL analysis** — automated on every push and weekly schedule
 
 To report a vulnerability, see [SECURITY.md](SECURITY.md).
+
+---
+
+## Evidence-carrying allocation
+
+Any `pva assign` (or `allocate-people`) run can emit a **signed,
+content-addressed evidence record** — one JSON file per solver — that binds the
+run's inputs, configuration, seed, Pareto front, and assignments into a single
+document that a third party can verify **offline**, with nothing but the record
+and the signer's key. This is the humanitarian instantiation of
+evidence-carrying decisions (computational jurisprudence; Stantchev 2026, arXiv,
+ID pending).
+
+```bash
+# HMAC-SHA256 (stdlib-only; no extra dependency)
+export PVA_EVIDENCE_KEY=$(python -c "import secrets;print(secrets.token_hex(32))")
+pva assign --model humanitarian --people people.csv --centers centers.csv \
+  --solver nsga2 --seed 42 --output results/ --emit-evidence
+#   Evidence → results/evidence_nsga2_<timestamp>.json
+
+# Verify offline (fail-closed, exit 0/1)
+cat > trust.json <<EOF
+{"pva-local": {"alg": "hmac-sha256", "secret": "$PVA_EVIDENCE_KEY"}}
+EOF
+pva verify-evidence --evidence results/evidence_nsga2_*.json --trust trust.json
+```
+
+The flag is **off by default**; behaviour is byte-identical when it is not set.
+When it *is* set but no key is present, emission **fails closed** — no unsigned
+record is ever written. Ed25519 signing is available via the optional `crypto`
+extra (`pip install 'presidio-hardened-vol-assign[crypto]'`, key in
+`PVA_EVIDENCE_ED25519_KEY`); HMAC needs no extra dependency.
+
+**Record schema** `presidio-hardened/allocation-evidence@1`. The hashed
+`content` carries: the model and tool version; the solver, seed, `pop_size`, and
+`generations`; a PII-free snapshot of each input CSV (`{filename, sha256,
+row_count}` — **hashes only, never row contents**); the objective labels; the
+Pareto front (objective values as decimal strings); a **digest** of the
+assignments CSV (person→centre mappings are not inlined — the hashed content
+carries only its SHA-256, and the envelope names the file); and the metrics
+(NNS/MID/SM/HV as decimal strings). Per family
+convention (`presidio-evidence` / `evidence-ref@1`), canonical JSON has sorted
+keys and compact separators, and **bare floats are rejected** — every number is
+encoded as its shortest round-trip decimal *string* (the arch-translucency
+ADR-0010 precedent), so the record is deterministic across runs and platforms.
+
+**Content / envelope split (determinism).** The volatile `generated_at`
+timestamp and the emitter identity live in the *envelope*, outside the hashed
+`content`. So under a fixed `--seed` and fixed inputs the `content_hash` is
+**reproducible byte-for-byte** — the same guarantee the [reproducibility (REP)
+metric](#benchmarking--reproducibility) makes for the fronts themselves. The
+detached signature is taken over `{content_hash, signer}`.
+
+**What the record proves:** that *this* rule-base/solver configuration, on
+*these* inputs (identified by hash), with *this* seed, produced *this* Pareto
+front and *this* assignments digest — and that the signer attests to it.
+
+**What it does *not* prove:** it does **not** prove the model is *right* (the FIS
+rule bases and objectives are a modelling choice, not a fact); and it does
+**not** prove the execution was *uncompromised* (a tampered host could sign a
+faithful record of a corrupted run). It is an integrity-and-provenance seal over
+a computation, not a correctness or trusted-execution proof.
 
 ---
 

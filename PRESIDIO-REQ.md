@@ -173,6 +173,52 @@ in [docs/v0.2.0-plan.md](docs/v0.2.0-plan.md).
 > v0.2.0 (below) has been renumbered to **v0.3.0**; data connectors follow in
 > v0.3.0+.
 
+#### Evidence-carrying allocation (WP4 preparatory increment)
+
+Adds an optional, signed, content-addressed **evidence record** per allocation
+run — a local Layer-0/1 mirror of the `presidio-evidence` family
+(`evidence-ref@1`) under the schema
+`presidio-hardened/allocation-evidence@1`. This is the humanitarian
+instantiation of evidence-carrying decisions (computational jurisprudence;
+Stantchev 2026, arXiv, ID pending): it converts the fellowship proposal's WP4
+centrepiece from "planned" to "demonstrated in the preparatory software".
+
+**Scope decisions:**
+
+- New module `evidence.py`: `canonical_bytes` (sorted keys, compact separators,
+  UTF-8, `ensure_ascii=False`, **bare floats rejected**), SHA-256 content
+  addressing, `sign`/`verify_record`, trust-store loading, and the record
+  builder. Solver objectives are floats, so every number entering the content is
+  encoded as its shortest round-trip decimal **string** (`repr`), following the
+  arch-translucency ADR-0010 precedent; the rule is documented in the module and
+  the README.
+- **PII-freedom by construction.** The record carries only `{filename, sha256,
+  row_count}` per input CSV and a *digest* of the assignments file — never row
+  contents. `people.csv` vulnerability data and person→centre mappings never
+  leave the process except as hashes. Enforced by a test that seals a synthetic
+  PII-bearing corpus and asserts no identifier or attribute value appears in the
+  record bytes.
+- **Content / envelope split for determinism.** Volatile fields (`generated_at`,
+  emitter) live in the envelope, outside the hashed `content`; under a fixed
+  `--seed` and fixed inputs the `content_hash` is reproducible byte-for-byte,
+  reusing the repo's existing bit-for-bit REP guarantee.
+- **CLI.** `--emit-evidence` on `assign` (inherited by `allocate-people`),
+  default **off**, behaviour byte-identical when unset. Key material from env
+  vars (`PVA_EVIDENCE_KEY` hex for HMAC-SHA256, stdlib-only; or
+  `PVA_EVIDENCE_ED25519_KEY` for Ed25519 via the optional `crypto` extra).
+  **Fail-closed**: set-but-no-key aborts before solving; no unsigned emission.
+  New `pva verify-evidence --evidence --trust`: offline, fail-closed, distinct
+  reasons (schema mismatch, float leak, hash mismatch, unknown signer, bad
+  signature), exit 0/1.
+
+**What the record proves / does not prove.** It proves this configuration
+produced this front from these inputs, and that the signer attests to it. It
+does **not** prove the model is correct, nor that execution was uncompromised.
+
+**Constraints honoured:** additive only; no new *hard* dependency (Ed25519 is an
+optional extra; HMAC is stdlib); default behaviour unchanged; full existing
+suite green.
+
 ### v0.3.0 — Sensitivity Analysis + Pareto Explorer (renumbered from v0.2.0)
 
 **Sensitivity analysis (`pva sensitivity`):**

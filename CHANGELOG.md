@@ -61,6 +61,20 @@ Stantchev). The ED-staffing model is unchanged and remains the default.
   repair decoder guarantees no centre exceeds capacity and keeps low-mobility
   people within a maximum distance, complementing the default soft-capacity
   objective (ATRES reviewer R2.5). The soft model remains the default.
+- **Evidence-carrying allocation** (`--emit-evidence` on `assign` /
+  `allocate-people`; new `pva verify-evidence`): each run can emit a signed,
+  content-addressed record (schema `presidio-hardened/allocation-evidence@1`)
+  binding input snapshots (hashes + row counts, **no row contents**), the
+  solver/seed/config, the Pareto front, an assignments digest, and the metrics —
+  offline-verifiable, fail-closed. Canonical JSON with **bare-float rejection**
+  (numbers as shortest round-trip decimal strings); SHA-256 content addressing;
+  detached Ed25519 (optional `crypto` extra) or HMAC-SHA256 (stdlib) signature;
+  trust-store verification. The volatile timestamp/emitter sit in the envelope so
+  the `content_hash` is reproducible under a fixed seed (dovetails with the REP
+  metric). Default **off**; behaviour byte-identical when unset. The humanitarian
+  instantiation of evidence-carrying decisions (computational jurisprudence;
+  Stantchev 2026, arXiv, ID pending). New module `evidence.py`; optional `crypto`
+  extra.
 
 ### Changed
 - **HV is now the primary reported metric**; MID is shown last and flagged

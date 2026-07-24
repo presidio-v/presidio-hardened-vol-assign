@@ -27,12 +27,18 @@ pva = "presidio_vol_assign.cli:app"
 viz = [
     "matplotlib>=3.7",
 ]
+crypto = [
+    # Optional: enables Ed25519-signed evidence records. HMAC-SHA256 signing and
+    # verification work stdlib-only without this extra.
+    "cryptography>=42",
+]
 dev = [
     "pytest>=9.0.3",
     "pytest-cov",
     "ruff>=0.4",
     "pip-audit",
     "matplotlib>=3.7",
+    "cryptography>=42",
 ]
 
 [tool.hatch.build.targets.wheel]
