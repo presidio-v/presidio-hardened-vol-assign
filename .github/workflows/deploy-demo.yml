@@ -7,8 +7,13 @@ name: Deploy demo to STRATO
 # CI, so the hosted page needs no Python runtime. Solving the compact grid takes
 # roughly ten minutes on a GitHub runner.
 #
-# Requires the repository secret STRATO_SFTP_PASS (same value as the one used by
-# the presidio-web / stantchev-web repositories).
+# Requires three repository secrets: STRATO_SFTP_HOST, STRATO_SFTP_USER and
+# STRATO_SFTP_PASS.
+#
+# The host and username are secrets rather than literals because this repository
+# is public, unlike presidio-web / stantchev-web where the same deploy pattern
+# keeps them inline. Publishing an SFTP endpoint plus its username hands out half
+# a credential pair for a webspace that serves several sites.
 
 on:
   workflow_dispatch:
@@ -72,10 +77,25 @@ jobs:
       - name: Install lftp
         run: sudo apt-get update && sudo apt-get install -y lftp
 
+      - name: Check deploy credentials are configured
+        env:
+          SFTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}
+          SFTP_USER: ${{ secrets.STRATO_SFTP_USER }}
+          SFTP_PASS: ${{ secrets.STRATO_SFTP_PASS }}
+        run: |
+          missing=""
+          [ -n "$SFTP_HOST" ] || missing="$missing STRATO_SFTP_HOST"
+          [ -n "$SFTP_USER" ] || missing="$missing STRATO_SFTP_USER"
+          [ -n "$SFTP_PASS" ] || missing="$missing STRATO_SFTP_PASS"
+          if [ -n "$missing" ]; then
+            echo "Missing repository secret(s):$missing"
+            exit 1
+          fi
+
       - name: Deploy dist-demo/ to /prod-pva via SFTP
         env:
-          SFTP_HOST: 5258188.ssh.w1.strato.hosting
-          SFTP_USER: stu138646248
+          SFTP_HOST: ${{ secrets.STRATO_SFTP_HOST }}
+          SFTP_USER: ${{ secrets.STRATO_SFTP_USER }}
           SFTP_PASS: ${{ secrets.STRATO_SFTP_PASS }}
         run: |
           lftp -u "$SFTP_USER,$SFTP_PASS" "sftp://$SFTP_HOST" <<'EOF'
