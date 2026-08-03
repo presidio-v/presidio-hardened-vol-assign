@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "presidio-hardened-vol-assign"
-version = "0.2.0"
+version = "0.3.0"
 description = "Multi-objective post-disaster assignment: ED volunteer staffing (Rabiei et al., ESWA 2023) and humanitarian people-to-centre allocation"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -16,6 +16,10 @@ dependencies = [
     "scipy>=1.10",
     "networkx>=3.0",
     "deap>=1.4",
+    # deap 1.4 wheels ship without the compiled deap.tools._hypervolume module,
+    # so metrics.py falls back to pymoo's hypervolume. That fallback is on the
+    # import path of every CLI command and must always be installable.
+    "pymoo>=0.6",
     "numpy>=1.24",
     "pandas>=2.0",
 ]
@@ -32,6 +36,13 @@ crypto = [
     # verification work stdlib-only without this extra.
     "cryptography>=42",
 ]
+web = [
+    # Optional: the `pva serve` demo GUI. presidio-hardened-fastapi pulls in
+    # fastapi + uvicorn and applies the family security defaults (locked CORS,
+    # security headers, per-IP rate limiting) on construction.
+    "presidio-hardened-fastapi>=0.2",
+    "pydantic>=2.0",
+]
 dev = [
     "pytest>=9.0.3",
     "pytest-cov",
@@ -39,6 +50,9 @@ dev = [
     "pip-audit",
     "matplotlib>=3.7",
     "cryptography>=42",
+    "presidio-hardened-fastapi>=0.2",
+    "pydantic>=2.0",
+    "httpx>=0.28",
 ]
 
 [tool.hatch.build.targets.wheel]
