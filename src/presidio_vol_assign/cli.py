@@ -784,6 +784,66 @@ def ablation(
 
 
 @app.command()
+def serve(
+    host: str = typer.Option("127.0.0.1", help="Bind address. Use 0.0.0.0 in a container."),
+    port: int = typer.Option(8000, help="Port to listen on."),
+    cors_origin: list[str] = typer.Option(
+        [],
+        "--cors-origin",
+        help="Extra origin allowed to call the API (repeatable). Not needed for the bundled UI.",
+    ),
+    reload: bool = typer.Option(False, "--reload", help="Auto-reload on code changes (dev only)."),
+) -> None:
+    """Serve the interactive demo GUI at http://<host>:<port>/.
+
+    Every run is generated from (scenario, sliders, seed) — no data is uploaded
+    or stored. Requires the ``web`` extra:
+
+        pip install "presidio-hardened-vol-assign[web]"
+    """
+    try:
+        import uvicorn
+
+        from presidio_vol_assign.web.app import create_app
+    except ImportError as exc:
+        err_console.print(
+            f"[red]Missing dependency:[/red] {exc.name or exc}. The demo server needs the "
+            "'web' extra:\n\n    pip install 'presidio-hardened-vol-assign[web]'\n"
+        )
+        raise typer.Exit(code=1) from exc
+
+    logger = get_logger()
+    audit = run_audit()
+    log_startup(logger, audit=audit)
+    if audit.status != AuditStatus.OK:
+        err_console.print(f"[yellow]Dependency audit:[/yellow] {audit.summary()}")
+
+    if host not in ("127.0.0.1", "localhost", "::1"):
+        console.print(
+            f"[yellow]Binding to {host}[/yellow] — the demo has no authentication. "
+            "Put it behind a reverse proxy with TLS before exposing it publicly."
+        )
+
+    console.print(f"Demo GUI on [cyan]http://{host}:{port}/[/cyan]  (Ctrl-C to stop)")
+
+    if reload:
+        # The reloader needs an import string rather than an app instance.
+        import os
+
+        os.environ["PVA_WEB_CORS_ORIGINS"] = ",".join(cors_origin)
+        uvicorn.run(
+            "presidio_vol_assign.web.app:app_from_env",
+            host=host,
+            port=port,
+            reload=True,
+            factory=True,
+        )
+        return
+
+    uvicorn.run(create_app(cors_allow_origins=tuple(cors_origin)), host=host, port=port)
+
+
+@app.command()
 def version() -> None:
     """Print version and dependency check status."""
     console.print(f"presidio-hardened-vol-assign {__version__}")
