@@ -233,6 +233,11 @@ pva serve     [--host <addr>]              (default: 127.0.0.1)
               [--reload]                   (dev only)
               # interactive demo GUI; requires the 'web' extra
 
+pva build-demo [--output <dir>]            (default: ./dist-demo)
+              [--grid compact|full]        (default: compact)
+              [--workers <int>]            (default: one per core)
+              # pre-solve the GUI into a static site for hosting without Python
+
 pva version
 ```
 
@@ -562,6 +567,35 @@ A container image is provided:
 docker build -t pva-demo .
 docker run --rm -p 8080:8080 pva-demo
 ```
+
+### Hosting it as a static site (`pva build-demo`)
+
+The GUI needs Python only for the solve itself — the trade-off slider, map,
+objective bars, load table and CSV export all run in the browser on a payload it
+already holds. So the demo can be pre-solved and hosted on plain static hosting,
+with no server-side runtime at all:
+
+```bash
+pva build-demo --output ./dist-demo          # compact grid: 648 runs, ~10 min
+pva build-demo --output ./dist-demo --grid full
+```
+
+The result is a self-contained directory (`index.html`, `app.js`, `style.css`,
+`config.json`, `runs/**.json`, `.htaccess`) that deploys like any static site.
+`build-demo` flips a `<meta name="pva-mode">` marker in the page, and the
+frontend then fetches a prebaked payload instead of posting to `/api/run`.
+
+**What changes for the visitor:** sliders step through the pre-solved positions
+rather than moving freely, and the seed picker offers a fixed set of synthetic
+affected areas. Everything after the solve behaves identically.
+
+Grid points are addressed by the **index** of each slider position, never by the
+value, so the Python builder and the JavaScript frontend cannot disagree about
+how to format a number. A test asserts that key format on both sides.
+
+Sizes for the compact grid: 648 runs, ~46 MB on disk, largest single payload
+~156 kB — but the bundled `.htaccess` enables `mod_deflate`, and these payloads
+compress about 15x, so a visitor downloads roughly 10 kB per run.
 
 ### Evidence records over HTTP
 

@@ -843,6 +843,63 @@ def serve(
     uvicorn.run(create_app(cors_allow_origins=tuple(cors_origin)), host=host, port=port)
 
 
+@app.command(name="build-demo")
+def build_demo(
+    output: Path = typer.Option(
+        Path("./dist-demo"), "--output", show_default=True, help="Target directory."
+    ),
+    grid: str = typer.Option(
+        "compact", "--grid", help="Grid density: 'compact' (default) or 'full'."
+    ),
+    workers: int = typer.Option(
+        None, "--workers", help="Solver processes (default: one per core)."
+    ),
+) -> None:
+    """Build the demo GUI as a static site, pre-solving a grid of settings.
+
+    The result is a directory of static files — no server required — suitable
+    for plain static hosting. Visitors step through the pre-solved settings
+    instead of choosing arbitrary values; everything downstream of the solve
+    (trade-off slider, map, CSV export) still runs live in the browser.
+    """
+    if grid not in ("compact", "full"):
+        err_console.print(f"[red]Error:[/red] --grid must be 'compact' or 'full', got {grid!r}")
+        raise typer.Exit(code=1)
+
+    try:
+        out_dir = guard_output_path(output)
+    except ValueError as exc:
+        err_console.print(f"[red]Security:[/red] {exc}")
+        raise typer.Exit(code=1)
+
+    try:
+        from presidio_vol_assign.web.static_build import build, plan
+    except ImportError as exc:  # pragma: no cover - defensive; no web deps needed here
+        err_console.print(f"[red]Error:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+
+    logger, _audit = _run_security_preamble(out_dir.parent)
+    points, _values = plan(grid)
+    console.print(
+        f"Pre-solving [bold]{len(points)}[/bold] runs ({grid} grid) → [cyan]{out_dir}[/cyan]"
+    )
+
+    with typer.progressbar(length=len(points), label="Solving") as bar:
+        seen = {"n": 0}
+
+        def advance(done: int, _total: int) -> None:
+            bar.update(done - seen["n"])
+            seen["n"] = done
+
+        summary = build(out_dir, grid_name=grid, workers=workers, progress=advance)
+
+    logger.info("static demo built", runs=summary["runs"], output=summary["output"])
+    console.print(
+        f"  {summary['runs']} runs · {summary['bytes'] / 1_048_576:.1f} MiB → "
+        f"[cyan]{summary['output']}[/cyan]"
+    )
+
+
 @app.command()
 def version() -> None:
     """Print version and dependency check status."""

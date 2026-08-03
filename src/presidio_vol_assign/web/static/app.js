@@ -10,10 +10,21 @@
 const AREA_KM = 70;
 const SITE_COLOR_COUNT = 8;
 
+/* "live"   — talks to the FastAPI server (`pva serve`), solving on demand.
+ * "static" — reads prebaked payloads written by `pva build-demo`, so the page
+ *            can be hosted on plain static hosting. Sliders then snap to the
+ *            pre-solved grid positions.
+ */
+const MODE = document.querySelector('meta[name="pva-mode"]')?.content === "static"
+  ? "static"
+  : "live";
+
 const state = {
   config: null,
   scenario: null,
   knobs: {},
+  knobIndices: {},
+  seedIndex: 0,
   result: null,
   solutions: [],
   index: 0,
@@ -61,8 +72,9 @@ function clear(node) {
 
 async function init() {
   const status = document.getElementById("run-status");
+  const source = MODE === "static" ? "./config.json" : "/api/scenarios";
   try {
-    const res = await fetch("/api/scenarios");
+    const res = await fetch(source);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     state.config = await res.json();
   } catch (err) {
@@ -71,10 +83,15 @@ async function init() {
   }
 
   document.getElementById("version-note").textContent =
-    `presidio-hardened-vol-assign ${state.config.version} · ` +
-    `runs are capped at ${state.config.limits.maxUnits} units and ` +
-    `${state.config.limits.maxGenerations} generations.`;
+    MODE === "static"
+      ? `presidio-hardened-vol-assign ${state.config.version} · ` +
+        "every combination below was solved in advance, so the settings step " +
+        "through fixed options rather than sliding freely."
+      : `presidio-hardened-vol-assign ${state.config.version} · ` +
+        `runs are capped at ${state.config.limits.maxUnits} units and ` +
+        `${state.config.limits.maxGenerations} generations.`;
 
+  configureAdvancedPanel();
   renderScenarioCards();
   selectScenario(state.config.scenarios[0].id);
 
@@ -85,9 +102,41 @@ async function init() {
   });
   document.getElementById("download-btn").addEventListener("click", downloadCsv);
 
-  bindOutput("generations", "generations-out");
-  bindOutput("seed", "seed-out");
   status.textContent = "";
+}
+
+/* In static mode the solver and generation count are fixed at build time, so
+   only the seed (which affected area to look at) remains a real choice. */
+function configureAdvancedPanel() {
+  const seedInput = document.getElementById("seed");
+  const seedOutput = document.getElementById("seed-out");
+
+  if (MODE === "live") {
+    bindOutput("generations", "generations-out");
+    bindOutput("seed", "seed-out");
+    return;
+  }
+
+  const seeds = state.config.seeds || [42];
+  document.getElementById("solver").closest(".knob").hidden = true;
+  document.getElementById("generations").closest(".knob").hidden = true;
+
+  seedInput.min = "0";
+  seedInput.max = String(seeds.length - 1);
+  seedInput.step = "1";
+  seedInput.value = "0";
+  const sync = () => {
+    state.seedIndex = Number(seedInput.value);
+    seedOutput.textContent = `area ${state.seedIndex + 1} of ${seeds.length}`;
+  };
+  seedInput.addEventListener("input", sync);
+  sync();
+
+  const help = seedInput.parentElement.querySelector(".knob-help");
+  if (help) {
+    help.textContent =
+      "Each option is a different synthetic affected area, solved in advance.";
+  }
 }
 
 function bindOutput(inputId, outputId) {
@@ -133,31 +182,59 @@ function renderKnobs() {
   const holder = document.getElementById("knobs");
   clear(holder);
   state.knobs = {};
+  state.knobIndices = {};
 
   for (const knob of state.scenario.knobs) {
-    state.knobs[knob.key] = knob.default;
-    const output = el("output", { text: String(knob.default) });
+    // A knob carrying `values` was pre-solved at those positions only, so the
+    // slider indexes into that list instead of moving continuously.
+    const gridded = Array.isArray(knob.values) && knob.values.length > 0;
+    const startIndex = gridded ? defaultIndex(knob) : 0;
+    const startValue = gridded ? knob.values[startIndex] : knob.default;
+
+    state.knobs[knob.key] = startValue;
+    state.knobIndices[knob.key] = startIndex;
+
+    const output = el("output", { text: String(startValue) });
     const input = el("input", {
       type: "range",
-      min: knob.min,
-      max: knob.max,
-      step: knob.step,
-      value: knob.default,
+      min: gridded ? 0 : knob.min,
+      max: gridded ? knob.values.length - 1 : knob.max,
+      step: gridded ? 1 : knob.step,
+      value: gridded ? startIndex : knob.default,
     });
     input.addEventListener("input", () => {
-      const value = Number(input.value);
+      const raw = Number(input.value);
+      const value = gridded ? knob.values[raw] : raw;
       state.knobs[knob.key] = value;
+      state.knobIndices[knob.key] = gridded ? raw : 0;
       output.textContent = String(value);
     });
+
+    const help = gridded && knob.values.length === 1
+      ? `${knob.help} Fixed at ${knob.values[0]} in this build.`
+      : knob.help;
+    if (gridded && knob.values.length === 1) input.disabled = true;
+
     holder.appendChild(el("label", { class: "knob" }, [
       el("span", { class: "knob-label" }, [
         el("span", { text: knob.label }),
         output,
       ]),
       input,
-      el("span", { class: "knob-help", text: knob.help }),
+      el("span", { class: "knob-help", text: help }),
     ]));
   }
+}
+
+/* Start at the pre-solved value closest to the knob's natural default. */
+function defaultIndex(knob) {
+  let best = 0;
+  let bestGap = Infinity;
+  knob.values.forEach((value, i) => {
+    const gap = Math.abs(value - knob.default);
+    if (gap < bestGap) { bestGap = gap; best = i; }
+  });
+  return best;
 }
 
 /* -------------------------------------------------------------------- run */
@@ -169,26 +246,12 @@ async function runScenario() {
   button.disabled = true;
   status.textContent = "Generating the situation and searching for trade-offs…";
 
-  const body = {
-    scenario: state.scenario.id,
-    knobs: state.knobs,
-    solver: document.getElementById("solver").value,
-    seed: Number(document.getElementById("seed").value),
-    generations: Number(document.getElementById("generations").value),
-  };
-
   const started = performance.now();
   try {
-    const res = await fetch("/api/run", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const payload = await res.json();
-    if (!res.ok) throw new Error(payload.detail || `HTTP ${res.status}`);
-    state.result = payload;
+    state.result = MODE === "static" ? await fetchPrebuiltRun() : await postRun();
     const elapsed = (performance.now() - started) / 1000;
-    status.textContent = `Done in ${elapsed.toFixed(1)}s.`;
+    status.textContent =
+      MODE === "static" ? "Loaded." : `Done in ${elapsed.toFixed(1)}s.`;
     renderResults();
   } catch (err) {
     status.textContent = "";
@@ -196,6 +259,41 @@ async function runScenario() {
   } finally {
     button.disabled = false;
   }
+}
+
+async function postRun() {
+  const res = await fetch("/api/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      scenario: state.scenario.id,
+      knobs: state.knobs,
+      solver: document.getElementById("solver").value,
+      seed: Number(document.getElementById("seed").value),
+      generations: Number(document.getElementById("generations").value),
+    }),
+  });
+  const payload = await res.json();
+  if (!res.ok) throw new Error(payload.detail || `HTTP ${res.status}`);
+  return payload;
+}
+
+/* Grid points are addressed by slider *position*, never by value, so the
+   builder and this code cannot disagree about how to format a number. */
+async function fetchPrebuiltRun() {
+  const indices = state.scenario.knobs.map((k) => state.knobIndices[k.key] ?? 0);
+  const key = `${indices.join("-")}__s${state.seedIndex}`;
+  const url = `./runs/${state.scenario.id}/${key}.json`;
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(
+      "That combination was not pre-solved for this build. " +
+      "Try a neighbouring setting, or run the tool locally with `pva serve` " +
+      "for arbitrary values."
+    );
+  }
+  return res.json();
 }
 
 function showError(message) {
