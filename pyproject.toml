@@ -75,6 +75,10 @@ show_missing = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# Dump every thread's traceback if a single test stalls for this long. Without
+# it, a hung test on a CI runner surfaces only as a cancelled job with no clue
+# which test was responsible.
+faulthandler_timeout = 180
 markers = [
     # Tests that run the full-size FIS precompute / benchmark instances.
     # Skip locally with: pytest -m "not slow"
