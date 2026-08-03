@@ -324,6 +324,129 @@ def test_instance_cache_reuses_the_precompute_across_solver_settings() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Static build (`pva build-demo`)
+# ---------------------------------------------------------------------------
+
+
+def test_grid_covers_every_scenario_and_seed() -> None:
+    from presidio_vol_assign.web import static_build as sb
+
+    points, values = sb.plan("compact")
+    covered = {p.scenario_id for p in points}
+    assert covered == set(SCENARIOS_BY_ID)
+    for scenario in SCENARIOS:
+        assert len(values[scenario.id]) == len(scenario.knobs)
+    seeds = {p.seed for p in points}
+    assert seeds == set(sb.SEEDS)
+
+
+def test_grid_keys_are_unique() -> None:
+    from presidio_vol_assign.web import static_build as sb
+
+    points, _ = sb.plan("compact")
+    keys = [(p.scenario_id, p.key) for p in points]
+    assert len(keys) == len(set(keys))
+
+
+def test_grid_key_format_matches_the_frontend_contract() -> None:
+    """app.js builds `indices.join("-") + "__s" + seedIndex`; keep them in step.
+
+    The key is addressed by slider *position* precisely so that no float
+    formatting has to agree between Python and JavaScript.
+    """
+    from presidio_vol_assign.web.static_build import GridPoint
+
+    point = GridPoint(
+        scenario_id="relief-centres",
+        knob_indices=(0, 2, 1, 3),
+        seed_index=1,
+        knobs={},
+        seed=7,
+    )
+    assert point.key == "0-2-1-3__s1"
+    assert point.rel_path == "runs/relief-centres/0-2-1-3__s1.json"
+
+
+def test_grid_values_are_all_accepted_by_their_knob() -> None:
+    """A grid value the knob would clamp would produce an unreachable file."""
+    from presidio_vol_assign.web.static_build import plan
+
+    _points, values = plan("full")
+    for scenario in SCENARIOS:
+        for knob, options in zip(scenario.knobs, values[scenario.id]):
+            for value in options:
+                assert knob.clamp(value) == value, (scenario.id, knob.key, value)
+
+
+def test_every_planned_point_has_knobs_for_every_knob() -> None:
+    from presidio_vol_assign.web.static_build import plan
+
+    points, _ = plan("compact")
+    for point in points[:200]:
+        scenario = get_scenario(point.scenario_id)
+        assert set(point.knobs) == {k.key for k in scenario.knobs}
+        assert len(point.knob_indices) == len(scenario.knobs)
+
+
+def test_htaccess_caches_runs_but_not_the_grid_definition() -> None:
+    """A cached config.json would leave visitors on a stale grid after a rebuild."""
+    from presidio_vol_assign.web.static_build import _HTACCESS
+
+    assert 'Header set Cache-Control "public, max-age=86400"' in _HTACCESS
+    config_block = _HTACCESS.split('<Files "config.json">')[1]
+    assert "no-cache" in config_block.split("</Files>")[0]
+    assert "DEFLATE" in _HTACCESS and "application/json" in _HTACCESS
+
+
+@pytest.mark.slow
+def test_static_build_produces_a_servable_tree(tmp_path, monkeypatch) -> None:
+    """One grid point per scenario, end to end, checking what the browser needs."""
+    import json
+
+    from presidio_vol_assign.web import static_build as sb
+
+    tiny = {key: [values[0]] for key, values in sb._COMPACT_GRID.items()}
+    monkeypatch.setattr(sb, "_COMPACT_GRID", tiny)
+    monkeypatch.setattr(sb, "SEEDS", [42])
+
+    summary = sb.build(tmp_path / "site", workers=2)
+    site = tmp_path / "site"
+
+    assert summary["runs"] == len(SCENARIOS)
+    for name in ("index.html", "config.json", "app.js", "style.css", ".htaccess"):
+        assert (site / name).is_file(), name
+
+    # The marker must be flipped, or the hosted page would call a missing API.
+    assert 'content="static"' in (site / "index.html").read_text()
+
+    config = json.loads((site / "config.json").read_text())
+    assert config["mode"] == "static"
+
+    for scenario in config["scenarios"]:
+        for knob in scenario["knobs"]:
+            assert knob["values"], knob["key"]
+        # The key the browser builds for the all-zero position.
+        key = "-".join("0" for _ in scenario["knobs"]) + "__s0"
+        payload_path = site / "runs" / scenario["id"] / f"{key}.json"
+        assert payload_path.is_file(), payload_path
+
+        payload = json.loads(payload_path.read_text())
+        assert payload["gridKey"] == key
+        assert [r["solver"] for r in payload["results"]] == ["nsga2", "nrga"]
+        solution = payload["results"][0]["solutions"][0]
+        assert len(solution["alloc"]) == len(payload["units"])
+        assert len(solution["objectives"]) == len(payload["objectives"])
+
+
+def test_live_index_html_carries_the_mode_marker() -> None:
+    """`build` flips this marker; without it the static build would be silently live."""
+    from presidio_vol_assign.web.static_build import STATIC_SRC
+
+    index = (STATIC_SRC / "index.html").read_text(encoding="utf-8")
+    assert 'name="pva-mode" content="live"' in index
+
+
+# ---------------------------------------------------------------------------
 # HTTP surface
 # ---------------------------------------------------------------------------
 

@@ -4,6 +4,22 @@ All notable changes to `presidio-hardened-vol-assign` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and the
 project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **`pva build-demo`**: pre-solves a grid of slider positions and emits the demo
+  GUI as a self-contained static site, so it can be hosted without any
+  server-side Python. Everything downstream of the solve (trade-off slider, map,
+  load table, CSV export) already ran in the browser, so only the run itself
+  needed replacing — the page fetches a prebaked payload instead of posting to
+  `/api/run`. Grid points are addressed by slider *index* rather than value, so
+  the Python builder and the JavaScript frontend cannot disagree on number
+  formatting. The compact grid is 648 runs (~46 MB on disk; ~10 kB per run over
+  the wire, thanks to the generated `.htaccess` enabling `mod_deflate`).
+- **`.github/workflows/deploy-demo.yml`**: manual-dispatch build-and-deploy of
+  the static demo to STRATO webspace over SFTP, mirroring the pattern used by
+  the Astro sites. Requires the `STRATO_SFTP_PASS` repository secret.
+
 ## [0.3.0] — 2026-08-03
 
 Completes the v0.3.0 milestone: **sensitivity analysis** (delivered in 0.2.0)
