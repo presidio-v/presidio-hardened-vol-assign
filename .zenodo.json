@@ -2,7 +2,7 @@
   "title": "presidio-hardened-vol-assign",
   "description": "Multi-objective post-disaster assignment tool: emergency-department volunteer staffing (Rabiei et al., ESWA 2023) and humanitarian people-to-centre allocation, combining fuzzy inference systems with the NSGA-II and NRGA evolutionary algorithms.",
   "upload_type": "software",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "MIT",
   "creators": [
     { "name": "Rabiei, Peyman", "affiliation": "University of Granada" },

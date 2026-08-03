@@ -42,7 +42,7 @@ pva metrics --pareto results/pareto_nsga2_20240101T120000.csv
 - **Linting/formatting:** ruff (`ruff format` + `ruff check --fix`)
 - **Documentation:** README.md with side-by-side CSV input → Pareto output example
 - **License:** MIT
-- **Version:** 0.2.0
+- **Version:** 0.3.0
 
 ---
 
@@ -134,8 +134,9 @@ Both implemented via DEAP:
 | Version | Status | Description |
 |---------|--------|-------------|
 | v0.1.0 | Released | MVP: FIS (scikit-fuzzy) + NSGA-II + NRGA (DEAP), CSV I/O, Pareto metrics (ED-staffing model) |
-| v0.2.0 | In progress | Humanitarian allocation model (3 new FIS, 3 objectives) side by side with the ED model; N-D metrics + reproducibility metric; `pva benchmark` + `pva sensitivity` + `pva show` figure export |
-| v0.3.0 | Planned | Interactive Pareto explorer + real-world data connectors (`pva import`) |
+| v0.2.0 | Released | Humanitarian allocation model (3 new FIS, 3 objectives) side by side with the ED model; N-D metrics + reproducibility metric; `pva benchmark` + `pva sensitivity` + `pva show` figure export |
+| v0.3.0 | Released | Evidence-carrying allocation (`--emit-evidence` / `pva verify-evidence`); interactive Pareto explorer as a browser GUI (`pva serve`) |
+| v0.3.1 | Planned | Real-world data connectors (`pva import`); bring-your-own-CSV in the demo GUI |
 
 See **Version Deliberations** below for full rationale, and
 [docs/v0.2.0-plan.md](docs/v0.2.0-plan.md) for the detailed v0.2.0 implementation plan.
@@ -159,7 +160,7 @@ See **Version Deliberations** below for full rationale, and
 - No visualization — deferred to v0.2.0
 - No paper benchmark instance regeneration — deferred to v0.3.0
 
-### v0.2.0 — Humanitarian Allocation Model (current)
+### v0.2.0 — Humanitarian Allocation Model (released 2026-06-30)
 
 Adds a second optimisation model — humanitarian allocation of affected people to
 relief centres — **side by side** with the ED-staffing model above, supporting
@@ -171,7 +172,7 @@ in [docs/v0.2.0-plan.md](docs/v0.2.0-plan.md).
 
 > The sensitivity-analysis and Pareto-explorer work originally planned for
 > v0.2.0 (below) has been renumbered to **v0.3.0**; data connectors follow in
-> v0.3.0+.
+> v0.3.1.
 
 #### Evidence-carrying allocation (WP4 preparatory increment)
 
@@ -219,21 +220,37 @@ does **not** prove the model is correct, nor that execution was uncompromised.
 optional extra; HMAC is stdlib); default behaviour unchanged; full existing
 suite green.
 
-### v0.3.0 — Sensitivity Analysis + Pareto Explorer (renumbered from v0.2.0)
+### v0.3.0 — Sensitivity Analysis + Pareto Explorer (released 2026-08-03)
 
-**Sensitivity analysis (`pva sensitivity`):**
+**Sensitivity analysis (`pva sensitivity`):** delivered early, in v0.2.0.
 - Vary FIS rule output weights ±10% and ±20% in a grid sweep
 - Report how Z1/Z2 distributions on the Pareto front shift
 - Output: CSV with (perturbation_factor, NNS, MID, SM, HV) for each sweep step
 - Rationale: researchers need to understand model robustness to FIS rule specification uncertainty
 
-**Interactive Pareto explorer (`pva show`):**
-- Scatter plot of Z1 vs. Z2 Pareto front (matplotlib with `%matplotlib widget` or plotly)
-- Click a point to display the full assignment table in the terminal (rich Table)
-- `--solver both` shows overlaid NSGA-II and NRGA fronts with distinct colors
-- Rationale: practitioners need to navigate the trade-off and select a preferred solution; researchers need to compare solvers visually
+**Interactive Pareto explorer — delivered as a browser GUI (`pva serve`).**
 
-### v0.3.0+ — Benchmark Reproducibility + Data Connectors (renumbered from v0.3.0)
+The original sketch was a matplotlib/plotly widget driven from `pva show`. That
+was superseded: the audience for trade-off navigation is practitioners and
+non-specialists, who will not install a Python package to look at a front. The
+GUI serves the same purpose over HTTP, and `pva show` remains for
+publication-quality static figures.
+
+- Three presets over the two models: volunteers → EDs; people → relief centres
+  (soft capacity); last mile under hard capacity limits
+- A trade-off slider walks the front, updating a map, per-objective bars and a
+  per-site load table live; preset buttons jump to each objective's optimum and
+  to a balanced compromise
+- `--solver both` compares NSGA-II and NRGA in the run-quality table
+- Instances are synthetic and reproducible from `(preset, sliders, seed)`;
+  nothing is uploaded or stored
+- Rationale: practitioners need to navigate the trade-off and select a preferred
+  solution; researchers need to compare solvers visually
+
+**Evidence-carrying allocation.** Landed after the v0.2.0 tag and releases here;
+scope and rationale are documented under v0.2.0 above.
+
+### v0.3.1 — Benchmark Reproducibility + Data Connectors
 
 **Benchmark reproducibility (`pva benchmark`):**
 - Regenerate all 30 small-size and 30 large-size problem instances using the paper's documented random seed procedure
