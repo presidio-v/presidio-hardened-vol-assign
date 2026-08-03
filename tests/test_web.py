@@ -297,17 +297,90 @@ def test_evidence_leaves_no_temporary_files_behind(monkeypatch) -> None:
     assert set(tmp_root.glob("pva-web-evidence-*")) == before
 
 
-def test_a_run_that_overruns_its_timeout_is_killed(monkeypatch) -> None:
-    """The wall-clock backstop must terminate the worker, not just give up on it."""
-    from dataclasses import replace
+class _StubProcess:
+    """Stands in for a worker process so the kill path can be asserted."""
 
-    pool = runner.SolverPool(replace(runner.LIMITS, timeout_sec=0.01))
-    request = build_request({"scenario": "relief-centres", "generations": 200})
+    def __init__(self) -> None:
+        self.killed = False
+
+    def kill(self) -> None:
+        self.killed = True
+
+
+class _StubExecutor:
+    """Executor whose futures always time out.
+
+    Racing a real solver against a short deadline is nondeterministic and, on a
+    two-core CI runner, expensive enough to stall the suite. The behaviour worth
+    pinning is ours — raise RunTimeout, kill the workers, drop the executor —
+    not concurrent.futures' internals.
+    """
+
+    def __init__(self) -> None:
+        self.processes = {1: _StubProcess(), 2: _StubProcess()}
+        self._processes = self.processes
+        self.shutdown_calls: list[bool] = []
+
+    def submit(self, *_args, **_kwargs):
+        from concurrent.futures import TimeoutError as FutureTimeoutError
+
+        class _Future:
+            def result(self, timeout=None):
+                raise FutureTimeoutError()
+
+        return _Future()
+
+    def shutdown(self, wait=True, **_kwargs):
+        self.shutdown_calls.append(wait)
+
+
+def test_a_run_that_overruns_its_timeout_kills_its_workers(monkeypatch) -> None:
+    """The wall-clock backstop must terminate the workers, not just stop waiting."""
+    pool = runner.SolverPool()
+    stub = _StubExecutor()
+    # Install the stub exactly as _ensure_executor would, so _kill() finds it.
+    pool._executor = stub
+
+    request = build_request({"scenario": "relief-centres", "generations": 10})
+    with pytest.raises(runner.RunTimeout):
+        pool.run(request)
+
+    assert all(proc.killed for proc in stub.processes.values()), "workers were not killed"
+    assert stub.shutdown_calls == [False], "timed-out pool should not be waited on"
+    # The executor is dropped so the next request rebuilds a clean pool.
+    assert pool._executor is None
+
+
+def test_a_kill_that_raises_still_drops_the_pool(monkeypatch) -> None:
+    """Recovery must not depend on the workers dying cleanly."""
+    pool = runner.SolverPool()
+    stub = _StubExecutor()
+    for proc in stub.processes.values():
+        proc.kill = lambda: (_ for _ in ()).throw(OSError("no such process"))
+    # Install the stub exactly as _ensure_executor would, so _kill() finds it.
+    pool._executor = stub
+
+    with pytest.raises(runner.RunTimeout):
+        pool.run(build_request({"scenario": "relief-centres", "generations": 10}))
+    assert pool._executor is None
+
+
+@pytest.mark.slow
+def test_a_normal_run_goes_through_the_worker_pool() -> None:
+    """The real pool path, exercised once at the smallest size the demo allows."""
+    pool = runner.SolverPool()
     try:
-        with pytest.raises(runner.RunTimeout):
-            pool.run(request)
-        # The pool discards its executor on timeout so the next call starts clean.
-        assert pool._executor is None
+        payload = pool.run(
+            build_request(
+                {
+                    "scenario": "relief-centres",
+                    "generations": 5,
+                    "seed": 3,
+                    "knobs": {"n_people": 10, "n_centers": 2},
+                }
+            )
+        )
+        assert payload["results"][0]["metrics"]["nns"] >= 1
     finally:
         pool.shutdown()
 
@@ -408,8 +481,10 @@ def test_static_build_produces_a_servable_tree(tmp_path, monkeypatch) -> None:
     tiny = {key: [values[0]] for key, values in sb._COMPACT_GRID.items()}
     monkeypatch.setattr(sb, "_COMPACT_GRID", tiny)
     monkeypatch.setattr(sb, "SEEDS", [42])
+    # Keep the solve trivial: this test is about the emitted tree, not front quality.
+    monkeypatch.setattr(sb, "STATIC_GENERATIONS", 5)
 
-    summary = sb.build(tmp_path / "site", workers=2)
+    summary = sb.build(tmp_path / "site", workers=1)
     site = tmp_path / "site"
 
     assert summary["runs"] == len(SCENARIOS)

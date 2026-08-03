@@ -184,13 +184,18 @@ def plan(grid_name: str = "compact") -> tuple[list[GridPoint], dict[str, list[li
 
 
 def _solve_point(payload: dict[str, Any]) -> dict[str, Any]:
-    """Solve one grid point in a worker process."""
+    """Solve one grid point in a worker process.
+
+    The solver and generation count travel in *payload* rather than being read
+    from module globals: under the ``spawn`` start method a worker re-imports
+    this module fresh, so it would not see values overridden in the parent.
+    """
     request = RunRequest(
         scenario_id=payload["scenario_id"],
         knobs=payload["knobs"],
-        solver=STATIC_SOLVER,
+        solver=payload["solver"],
         seed=payload["seed"],
-        generations=STATIC_GENERATIONS,
+        generations=payload["generations"],
     )
     return _solve(request.as_dict())
 
@@ -269,7 +274,13 @@ def build(
         futures = {
             pool.submit(
                 _solve_point,
-                {"scenario_id": p.scenario_id, "knobs": p.knobs, "seed": p.seed},
+                {
+                    "scenario_id": p.scenario_id,
+                    "knobs": p.knobs,
+                    "seed": p.seed,
+                    "solver": STATIC_SOLVER,
+                    "generations": STATIC_GENERATIONS,
+                },
             ): p
             for p in points
         }
