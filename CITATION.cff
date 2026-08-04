@@ -7,8 +7,8 @@ abstract: >-
   allocation, combining fuzzy inference systems with the NSGA-II and NRGA
   evolutionary algorithms.
 type: software
-version: 0.2.0
-date-released: 2026-06-05
+version: 0.3.0
+date-released: 2026-08-03
 license: MIT
 repository-code: "https://github.com/presidio-v/presidio-hardened-vol-assign"
 keywords:

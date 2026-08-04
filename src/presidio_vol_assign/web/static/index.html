@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Flipped to "static" by `pva build-demo`, which pre-solves a grid of
+       slider positions so the page can run on plain static hosting. -->
+  <meta name="pva-mode" content="live">
+  <title>Post-disaster assignment — interactive demo</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <h1>Who goes where, after a disaster?</h1>
+    <p class="lede">
+      Relief planning rarely has one right answer. Helping the most vulnerable people,
+      keeping journeys short, and not overwhelming any single centre pull against each
+      other. This tool finds the set of allocations where you cannot improve one goal
+      without giving up another — then lets you walk along that set and see the
+      trade-off for yourself.
+    </p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="step" id="step-scenario">
+    <h2><span class="step-num">1</span> Pick a situation</h2>
+    <div class="cards" id="scenario-cards"></div>
+    <p class="scenario-detail" id="scenario-detail"></p>
+  </section>
+
+  <section class="step" id="step-setup">
+    <h2><span class="step-num">2</span> Describe the situation</h2>
+    <div class="knobs" id="knobs"></div>
+
+    <details class="advanced">
+      <summary>Solver settings</summary>
+      <div class="knobs">
+        <label class="knob">
+          <span class="knob-label">Algorithm</span>
+          <select id="solver">
+            <option value="nsga2">NSGA-II</option>
+            <option value="nrga">NRGA</option>
+            <option value="both">Both (compare)</option>
+          </select>
+          <span class="knob-help">Two multi-objective genetic algorithms from the paper.</span>
+        </label>
+        <label class="knob">
+          <span class="knob-label">Generations <output id="generations-out"></output></span>
+          <input type="range" id="generations" min="5" max="200" step="5" value="120">
+          <span class="knob-help">More generations means a better-explored trade-off set, and a slower run.</span>
+        </label>
+        <label class="knob">
+          <span class="knob-label">Random seed <output id="seed-out"></output></span>
+          <input type="range" id="seed" min="1" max="200" step="1" value="42">
+          <span class="knob-help">Same seed and same settings always give exactly the same result.</span>
+        </label>
+      </div>
+    </details>
+
+    <div class="run-row">
+      <button type="button" id="run-btn" class="primary">Run the allocation</button>
+      <span class="run-status" id="run-status"></span>
+    </div>
+    <p class="error" id="error" hidden></p>
+  </section>
+
+  <section class="step results" id="step-results" hidden>
+    <h2><span class="step-num">3</span> Explore the trade-off</h2>
+
+    <div class="preset-row" id="preset-row"></div>
+
+    <div class="slider-row">
+      <label class="slider-label" for="tradeoff">
+        Walk through the trade-off set
+        <output id="tradeoff-out"></output>
+      </label>
+      <input type="range" id="tradeoff" min="0" max="0" step="1" value="0">
+    </div>
+
+    <div class="panels">
+      <div class="panel panel-map">
+        <h3>Where everyone is sent</h3>
+        <div class="map-holder" id="map"></div>
+        <div class="map-legend" id="map-legend"></div>
+      </div>
+
+      <div class="panel panel-side">
+        <h3>What this choice costs</h3>
+        <div class="objectives" id="objectives"></div>
+
+        <h3>The trade-off set</h3>
+        <div class="chart-holder" id="front-chart"></div>
+        <p class="chart-caption" id="front-caption"></p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Load at each destination</h3>
+      <div class="table-holder">
+        <table class="loads" id="loads-table"></table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Run quality</h3>
+      <div class="table-holder">
+        <table class="metrics" id="metrics-table"></table>
+      </div>
+      <p class="note" id="metrics-note"></p>
+    </div>
+
+    <div class="panel">
+      <h3>Take it away</h3>
+      <div class="actions">
+        <button type="button" id="download-btn">Download this allocation (CSV)</button>
+      </div>
+      <p class="note">
+        This page is a front-end for the <code>pva</code> command-line tool — same solver,
+        same code path. The equivalent command for this run:
+      </p>
+      <pre class="cli" id="cli-hint"></pre>
+    </div>
+  </section>
+
+  <section class="step" id="step-about">
+    <h2>What the numbers mean</h2>
+    <div class="about-grid">
+      <div>
+        <h3>The trade-off set</h3>
+        <p>
+          Every point in the set is an allocation that no other allocation beats on
+          every goal at once. Moving along the set means deliberately choosing what to
+          give up. That choice belongs to a human planner, not to the algorithm.
+        </p>
+      </div>
+      <div>
+        <h3>Fuzzy scoring</h3>
+        <p>
+          Words like "very vulnerable" or "poor road access" are not sharp thresholds.
+          Fuzzy inference systems turn those judgements into scores, so the model can
+          weigh them without pretending they are exact.
+        </p>
+      </div>
+      <div>
+        <h3>Synthetic data only</h3>
+        <p>
+          Every instance here is generated from the settings and the seed. Nothing is
+          uploaded and nothing is stored. Change the seed to see a different affected
+          area with the same character.
+        </p>
+      </div>
+    </div>
+    <p class="note" id="version-note"></p>
+  </section>
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

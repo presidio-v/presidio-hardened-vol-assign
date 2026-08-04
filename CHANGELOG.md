@@ -4,7 +4,68 @@ All notable changes to `presidio-hardened-vol-assign` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and the
 project adheres to [Semantic Versioning](https://semver.org/).
 
-## [0.2.0] — unreleased
+## [Unreleased]
+
+### Added
+- **`pva build-demo`**: pre-solves a grid of slider positions and emits the demo
+  GUI as a self-contained static site, so it can be hosted without any
+  server-side Python. Everything downstream of the solve (trade-off slider, map,
+  load table, CSV export) already ran in the browser, so only the run itself
+  needed replacing — the page fetches a prebaked payload instead of posting to
+  `/api/run`. Grid points are addressed by slider *index* rather than value, so
+  the Python builder and the JavaScript frontend cannot disagree on number
+  formatting. The compact grid is 648 runs (~46 MB on disk; ~10 kB per run over
+  the wire, thanks to the generated `.htaccess` enabling `mod_deflate`).
+- **`.github/workflows/deploy-demo.yml`**: manual-dispatch build-and-deploy of
+  the static demo to STRATO webspace over SFTP, mirroring the pattern used by
+  the Astro sites. Requires the `STRATO_SFTP_PASS` repository secret.
+
+## [0.3.0] — 2026-08-03
+
+Completes the v0.3.0 milestone: **sensitivity analysis** (delivered in 0.2.0)
+plus the **interactive Pareto explorer**, which ships as a browser GUI rather
+than the originally sketched matplotlib widget. Also releases the
+evidence-carrying allocation work that landed after the 0.2.0 tag.
+
+### Added
+- **Evidence-carrying allocation** (`--emit-evidence` on `assign` /
+  `allocate-people`; new `pva verify-evidence`): each run can emit a signed,
+  content-addressed record (schema `presidio-hardened/allocation-evidence@1`)
+  binding input snapshots (hashes + row counts, **no row contents**), the
+  solver/seed/config, the Pareto front, an assignments digest, and the metrics —
+  offline-verifiable, fail-closed. Canonical JSON with **bare-float rejection**
+  (numbers as shortest round-trip decimal strings); SHA-256 content addressing;
+  detached Ed25519 (optional `crypto` extra) or HMAC-SHA256 (stdlib) signature;
+  trust-store verification. The volatile timestamp/emitter sit in the envelope so
+  the `content_hash` is reproducible under a fixed seed (dovetails with the REP
+  metric). Default **off**; behaviour byte-identical when unset. The humanitarian
+  instantiation of evidence-carrying decisions (computational jurisprudence;
+  Stantchev 2026, arXiv, ID pending). New module `evidence.py`; optional `crypto`
+  extra. (Merged after the v0.2.0 tag, so it releases here rather than in 0.2.0.)
+- **Interactive demo GUI** (`pva serve`, `web` extra): a browser front-end over
+  the existing solver with three presets — volunteers → EDs, people → relief
+  centres (soft capacity), and last-mile allocation under hard capacity limits.
+  Instances are synthetic and generated from `(preset, sliders, seed)`; nothing
+  is uploaded or stored. A trade-off slider walks the Pareto front with a live
+  map, objective bars and per-site load table, and the chosen allocation
+  downloads as CSV.
+- **Demo API** on `presidio-hardened-fastapi`: `GET /api/scenarios`,
+  `POST /api/run`, `GET /api/health`. Runs execute in a worker process under a
+  wall-clock timeout, are capped at 300 units / 20 sites / 200 generations, and
+  `/api/run` is rate-limited to 12 requests per minute per IP. Setting
+  `PVA_EVIDENCE_KEY` enables signed evidence records through the same code path
+  as `--emit-evidence`.
+- **Dockerfile** for the demo server: multi-stage build, unprivileged user,
+  healthcheck.
+
+### Fixed
+- **`pymoo` was used but never declared as a dependency.** `metrics.py` falls
+  back to pymoo's hypervolume when the deap wheel omits
+  `deap.tools._hypervolume` — which every deap 1.4 wheel does — so a fresh
+  install failed at import on every CLI path. The fallback only appeared to work
+  in environments where pymoo happened to be installed for other reasons.
+
+## [0.2.0] — 2026-06-30
 
 Adds a second optimisation model — humanitarian allocation of affected people to
 relief centres — **side by side** with the original ED-staffing model, supporting
@@ -61,20 +122,6 @@ Stantchev). The ED-staffing model is unchanged and remains the default.
   repair decoder guarantees no centre exceeds capacity and keeps low-mobility
   people within a maximum distance, complementing the default soft-capacity
   objective (ATRES reviewer R2.5). The soft model remains the default.
-- **Evidence-carrying allocation** (`--emit-evidence` on `assign` /
-  `allocate-people`; new `pva verify-evidence`): each run can emit a signed,
-  content-addressed record (schema `presidio-hardened/allocation-evidence@1`)
-  binding input snapshots (hashes + row counts, **no row contents**), the
-  solver/seed/config, the Pareto front, an assignments digest, and the metrics —
-  offline-verifiable, fail-closed. Canonical JSON with **bare-float rejection**
-  (numbers as shortest round-trip decimal strings); SHA-256 content addressing;
-  detached Ed25519 (optional `crypto` extra) or HMAC-SHA256 (stdlib) signature;
-  trust-store verification. The volatile timestamp/emitter sit in the envelope so
-  the `content_hash` is reproducible under a fixed seed (dovetails with the REP
-  metric). Default **off**; behaviour byte-identical when unset. The humanitarian
-  instantiation of evidence-carrying decisions (computational jurisprudence;
-  Stantchev 2026, arXiv, ID pending). New module `evidence.py`; optional `crypto`
-  extra.
 
 ### Changed
 - **HV is now the primary reported metric**; MID is shown last and flagged

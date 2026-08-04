@@ -227,6 +227,17 @@ pva ablation  [--model humanitarian|ed-staffing]
               [--solver ...] [--seed <int>] [--pop-size <int>] [--generations <int>]
               [--output <dir>]
 
+pva serve     [--host <addr>]              (default: 127.0.0.1)
+              [--port <int>]               (default: 8000)
+              [--cors-origin <origin>]     (repeatable; not needed for the bundled UI)
+              [--reload]                   (dev only)
+              # interactive demo GUI; requires the 'web' extra
+
+pva build-demo [--output <dir>]            (default: ./dist-demo)
+              [--grid compact|full]        (default: compact)
+              [--workers <int>]            (default: one per core)
+              # pre-solve the GUI into a static site for hosting without Python
+
 pva version
 ```
 
@@ -501,6 +512,103 @@ a computation, not a correctness or trusted-execution proof.
 
 ---
 
+## Interactive demo GUI (`pva serve`)
+
+A small browser front-end that lets a non-specialist explore the models without
+writing a CSV. It is a front-end for the same solver code — no reimplementation.
+
+```bash
+pip install "presidio-hardened-vol-assign[web]"
+pva serve                 # http://127.0.0.1:8000/
+pva serve --host 0.0.0.0 --port 8080     # e.g. inside a container
+```
+
+Three presets, mapping onto the two models:
+
+| Preset | Model | Mode |
+|---|---|---|
+| Volunteers → Emergency Departments | `ed-staffing` | 2 objectives |
+| People in need → relief centres | `humanitarian` | soft capacity |
+| Last mile under hard capacity limits | `humanitarian` | `--hard-capacity` + max distance |
+
+Pick a preset, set the situation with sliders, and the page returns the full
+trade-off set. A slider walks along that set — the map, the objective bars and
+the per-centre load table update live — so the point that *there is no single
+right answer* is visible rather than asserted. Preset buttons jump to the best
+solution for each objective and to a balanced compromise. The chosen allocation
+downloads as CSV, and the equivalent `pva` command for the run is shown on the
+page.
+
+**Instances are synthetic.** People, centres, volunteers and EDs are generated
+from `(preset, slider values, seed)` on a 70 km × 70 km grid. Nothing is
+uploaded and nothing is stored, so a public instance holds no personal data, and
+any run can be reproduced exactly from the settings shown on screen.
+
+### Running it in public
+
+The server is built on
+[`presidio-hardened-fastapi`](https://github.com/presidio-v/presidio-hardened-fastapi),
+so locked-down CORS, the security header set (`default-src 'self'` CSP included)
+and per-IP rate limiting apply on construction. On top of that, the demo:
+
+- caps every run at 300 units, 20 sites, 200 generations and 200 population;
+- rate-limits `/api/run` to 12 requests per minute per IP;
+- runs each solve in a worker process under a 45 s wall-clock timeout, killing
+  the worker if it overruns;
+- memoises the fuzzy precompute per instance, so changing only the algorithm or
+  the generation count re-solves in well under a second.
+
+It has **no authentication**. Put it behind a reverse proxy with TLS before
+exposing it, and treat it as a demo rather than an operational planning tool.
+
+A container image is provided:
+
+```bash
+docker build -t pva-demo .
+docker run --rm -p 8080:8080 pva-demo
+```
+
+### Hosting it as a static site (`pva build-demo`)
+
+The GUI needs Python only for the solve itself — the trade-off slider, map,
+objective bars, load table and CSV export all run in the browser on a payload it
+already holds. So the demo can be pre-solved and hosted on plain static hosting,
+with no server-side runtime at all:
+
+```bash
+pva build-demo --output ./dist-demo          # compact grid: 648 runs, ~10 min
+pva build-demo --output ./dist-demo --grid full
+```
+
+The result is a self-contained directory (`index.html`, `app.js`, `style.css`,
+`config.json`, `runs/**.json`, `.htaccess`) that deploys like any static site.
+`build-demo` flips a `<meta name="pva-mode">` marker in the page, and the
+frontend then fetches a prebaked payload instead of posting to `/api/run`.
+
+**What changes for the visitor:** sliders step through the pre-solved positions
+rather than moving freely, and the seed picker offers a fixed set of synthetic
+affected areas. Everything after the solve behaves identically.
+
+Grid points are addressed by the **index** of each slider position, never by the
+value, so the Python builder and the JavaScript frontend cannot disagree about
+how to format a number. A test asserts that key format on both sides.
+
+Sizes for the compact grid: 648 runs, ~46 MB on disk, largest single payload
+~156 kB — but the bundled `.htaccess` enables `mod_deflate`, and these payloads
+compress about 15x, so a visitor downloads roughly 10 kB per run.
+
+### Evidence records over HTTP
+
+Setting `PVA_EVIDENCE_KEY` (or `PVA_EVIDENCE_ED25519_KEY`) in the server
+environment enables `"evidence": true` on `POST /api/run`, which returns a signed
+evidence record for the run through the same code path as `--emit-evidence`. The
+generated instance is materialised to a temporary directory so the record hashes
+real input CSVs, and the directory is removed before the response is sent.
+Without a key the field is reported as unavailable rather than returning an
+unsigned record.
+
+---
+
 ## Roadmap
 
 See [PRESIDIO-REQ.md](PRESIDIO-REQ.md) for full version deliberations.
@@ -508,8 +616,9 @@ See [PRESIDIO-REQ.md](PRESIDIO-REQ.md) for full version deliberations.
 | Version | Status | Description |
 |---------|--------|-------------|
 | v0.1.0 | Released | MVP: FIS + NSGA-II + NRGA, CSV I/O, Pareto metrics (ED-staffing model) |
-| v0.2.0 | In progress | Humanitarian allocation model (3 new FIS, 3 objectives) **side by side** with the ED model; N-D metrics + reproducibility metric; `benchmark` + `sensitivity` + figure export. See [docs/v0.2.0-plan.md](docs/v0.2.0-plan.md) |
-| v0.3.0 | Planned | Interactive Pareto explorer + real-world data connectors |
+| v0.2.0 | Released | Humanitarian allocation model (3 new FIS, 3 objectives) **side by side** with the ED model; N-D metrics + reproducibility metric; `benchmark` + `sensitivity` + figure export. See [docs/v0.2.0-plan.md](docs/v0.2.0-plan.md) |
+| v0.3.0 | Released | Evidence-carrying allocation (`--emit-evidence` / `verify-evidence`); interactive Pareto explorer as a browser GUI (`pva serve`) |
+| v0.3.1 | Planned | Real-world data connectors (`pva import`: Excel roster, HTTPS REST vacancy feed); bring-your-own-CSV in the demo GUI |
 
 ---
 
