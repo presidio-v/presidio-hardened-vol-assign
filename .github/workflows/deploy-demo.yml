@@ -83,6 +83,9 @@ jobs:
           path: ./dist-demo
           retention-days: 1
           if-no-files-found: error
+          # Without this the generated .htaccess is silently dropped, and the
+          # site deploys with no compression and no cache headers.
+          include-hidden-files: true
 
   deploy:
     needs: build
