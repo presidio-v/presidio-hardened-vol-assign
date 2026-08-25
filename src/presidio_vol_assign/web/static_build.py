@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import shutil
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import dataclass
@@ -227,6 +228,33 @@ def _config(values: dict[str, list[list[float]]], points: list[GridPoint]) -> di
     }
 
 
+_ASSET_REF = re.compile(r'(?:href|src)="([^"]+)"')
+
+
+def _assert_referenced_assets_exist(output: Path, index_html: str) -> None:
+    """Fail the build if the page points at a stylesheet or script that is absent.
+
+    The first deployed build shipped a page still referencing ``/static/app.js``
+    from the served app, so no JavaScript loaded at all and the page rendered
+    unstyled and inert. Checking that files *exist* is not the same as checking
+    the page *references* them correctly.
+    """
+    missing = []
+    for ref in _ASSET_REF.findall(index_html):
+        if ref.startswith(("http://", "https://", "//", "#", "data:", "mailto:")):
+            continue
+        if not ref.endswith((".js", ".css")):
+            continue
+        candidate = output / ref.lstrip("./").lstrip("/")
+        if not candidate.is_file():
+            missing.append(ref)
+    if missing:
+        raise RuntimeError(
+            f"index.html references assets that are not in the build: {missing}. "
+            "The page would load without styling or behaviour."
+        )
+
+
 def shard_points(points: list[GridPoint], shard: tuple[int, int] | None) -> list[GridPoint]:
     """Return the slice of *points* belonging to ``(index, count)``.
 
@@ -294,7 +322,16 @@ def build(
     if 'name="pva-mode" content="live"' not in index:
         raise RuntimeError("index.html is missing the pva-mode meta tag")
     index = index.replace('name="pva-mode" content="live"', 'name="pva-mode" content="static"')
+
+    # The served app mounts its assets at /static/; the static build puts them
+    # beside the page. Rewriting to relative paths also lets the site work from
+    # a subdirectory rather than only from a domain root.
+    if "/static/" not in index:
+        raise RuntimeError("index.html no longer references /static/ assets — check the rewrite")
+    index = index.replace('href="/static/', 'href="./').replace('src="/static/', 'src="./')
     (output / "index.html").write_text(index, encoding="utf-8")
+
+    _assert_referenced_assets_exist(output, index)
 
     (output / "config.json").write_text(
         json.dumps(_config(values, all_points), separators=(",", ":")), encoding="utf-8"

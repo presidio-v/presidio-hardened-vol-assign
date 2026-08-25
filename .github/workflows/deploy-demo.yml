@@ -106,6 +106,23 @@ jobs:
           test -f ./dist-demo/.htaccess
           grep -q 'content="static"' ./dist-demo/index.html
 
+          # Every script/stylesheet the page references must be present, and no
+          # served-app /static/ path may survive. A page that loads neither its
+          # JS nor its CSS still passes every other check here.
+          if grep -qE '(href|src)="/static/' ./dist-demo/index.html; then
+            echo "index.html still references /static/ assets — the page would load inert"
+            exit 1
+          fi
+          for ref in $(grep -oE '(href|src)="[^"]+\.(js|css)"' ./dist-demo/index.html \
+                       | sed -E 's/.*="([^"]+)"/\1/'); do
+            path="./dist-demo/${ref#./}"
+            if [ ! -f "$path" ]; then
+              echo "index.html references $ref but it is not in the build"
+              exit 1
+            fi
+            echo "  asset ok: $ref"
+          done
+
           # Every slider position named in config.json must have a run file, or
           # visitors would hit a 404 on a combination the page offers.
           python3 - <<'PY'
