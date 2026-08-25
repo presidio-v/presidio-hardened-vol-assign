@@ -589,6 +589,48 @@ def test_a_shard_writes_its_slice_but_advertises_the_whole_grid(tmp_path, monkey
             assert knobs["n_people"] == [30, 80], "config must advertise the full grid"
 
 
+@pytest.mark.slow
+def test_built_page_references_only_assets_that_exist(tmp_path, monkeypatch) -> None:
+    """The page must point at assets the build actually contains.
+
+    The first deployed build kept the served app's ``/static/app.js`` path, so
+    the hosted page loaded no JavaScript and no stylesheet: it rendered unstyled
+    and the Run button did nothing. Asset files existing is not the same as the
+    page referencing them correctly.
+    """
+    import re
+
+    from presidio_vol_assign.web import static_build as sb
+
+    monkeypatch.setattr(sb, "_COMPACT_GRID", {k: v[:1] for k, v in sb._COMPACT_GRID.items()})
+    monkeypatch.setattr(sb, "SEEDS", [42])
+    monkeypatch.setattr(sb, "STATIC_GENERATIONS", 5)
+
+    sb.build(tmp_path / "site", workers=1)
+    site = tmp_path / "site"
+    index = (site / "index.html").read_text()
+
+    refs = [r for r in re.findall(r'(?:href|src)="([^"]+)"', index) if r.endswith((".js", ".css"))]
+    assert refs, "page should reference a script and a stylesheet"
+    assert not any(r.startswith("/static/") for r in refs), (
+        f"served-app asset paths leaked into the static build: {refs}"
+    )
+    for ref in refs:
+        assert (site / ref.lstrip("./")).is_file(), f"{ref} referenced but not built"
+
+
+def test_asset_check_rejects_a_page_pointing_at_a_missing_script(tmp_path) -> None:
+    from presidio_vol_assign.web.static_build import _assert_referenced_assets_exist
+
+    (tmp_path / "app.js").write_text("//")
+    ok = '<link rel="stylesheet" href="./style.css"><script src="./app.js"></script>'
+    with pytest.raises(RuntimeError, match="not in the build"):
+        _assert_referenced_assets_exist(tmp_path, ok)
+
+    (tmp_path / "style.css").write_text("/**/")
+    _assert_referenced_assets_exist(tmp_path, ok)  # now complete — must not raise
+
+
 def test_live_index_html_carries_the_mode_marker() -> None:
     """`build` flips this marker; without it the static build would be silently live."""
     from presidio_vol_assign.web.static_build import STATIC_SRC
