@@ -513,6 +513,82 @@ def test_static_build_produces_a_servable_tree(tmp_path, monkeypatch) -> None:
         assert len(solution["objectives"]) == len(payload["objectives"])
 
 
+@pytest.mark.parametrize("count", [1, 2, 4, 7])
+def test_shards_partition_the_grid_exactly(count: int) -> None:
+    """No gaps and no overlaps: a gap is a 404 for the visitor, an overlap is waste."""
+    from presidio_vol_assign.web.static_build import parse_shard, plan, shard_points
+
+    points, _ = plan("compact")
+    seen: list[tuple[str, str]] = []
+    for i in range(count):
+        piece = shard_points(points, parse_shard(f"{i + 1}/{count}"))
+        seen.extend((p.scenario_id, p.key) for p in piece)
+
+    assert len(seen) == len(points)
+    assert len(set(seen)) == len(points)
+    assert set(seen) == {(p.scenario_id, p.key) for p in points}
+
+
+def test_shards_are_evenly_sized() -> None:
+    """Round-robin assignment keeps shard runtimes comparable."""
+    from presidio_vol_assign.web.static_build import parse_shard, plan, shard_points
+
+    points, _ = plan("compact")
+    sizes = [len(shard_points(points, parse_shard(f"{i + 1}/4"))) for i in range(4)]
+    assert max(sizes) - min(sizes) <= 1, sizes
+
+
+@pytest.mark.parametrize("spec", ["0/4", "5/4", "4", "a/b", "-1/3", "1/0"])
+def test_bad_shard_specs_are_rejected(spec: str) -> None:
+    from presidio_vol_assign.web.static_build import parse_shard
+
+    with pytest.raises(ValueError):
+        parse_shard(spec)
+
+
+def test_no_shard_means_the_whole_grid() -> None:
+    from presidio_vol_assign.web.static_build import parse_shard, plan, shard_points
+
+    points, _ = plan("compact")
+    assert parse_shard(None) is None
+    assert shard_points(points, None) == points
+
+
+@pytest.mark.slow
+def test_a_shard_writes_its_slice_but_advertises_the_whole_grid(tmp_path, monkeypatch) -> None:
+    """config.json must describe every position, not just the ones this shard solved.
+
+    Otherwise the merged site would offer only the last shard's slider options.
+    """
+    import json
+
+    from presidio_vol_assign.web import static_build as sb
+
+    # One value per knob, except n_people which keeps two so there is something
+    # to split across shards.
+    grid = {key: values[:1] for key, values in sb._COMPACT_GRID.items()}
+    grid["n_people"] = [30, 80]
+    monkeypatch.setattr(sb, "_COMPACT_GRID", grid)
+    monkeypatch.setattr(sb, "SEEDS", [42])
+    monkeypatch.setattr(sb, "STATIC_GENERATIONS", 5)
+
+    summary = sb.build(tmp_path / "site", workers=1, shard=(0, 2))
+    site = tmp_path / "site"
+
+    all_points, _ = sb.plan("compact")
+    assert summary["runs"] < summary["total_runs"] == len(all_points)
+    assert summary["shard"] == "1/2"
+
+    written = list(site.rglob("runs/*/*.json"))
+    assert len(written) == summary["runs"]
+
+    config = json.loads((site / "config.json").read_text())
+    for scenario in config["scenarios"]:
+        knobs = {k["key"]: k["values"] for k in scenario["knobs"]}
+        if "n_people" in knobs:
+            assert knobs["n_people"] == [30, 80], "config must advertise the full grid"
+
+
 def test_live_index_html_carries_the_mode_marker() -> None:
     """`build` flips this marker; without it the static build would be silently live."""
     from presidio_vol_assign.web.static_build import STATIC_SRC

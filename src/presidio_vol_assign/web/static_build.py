@@ -227,12 +227,45 @@ def _config(values: dict[str, list[list[float]]], points: list[GridPoint]) -> di
     }
 
 
+def shard_points(points: list[GridPoint], shard: tuple[int, int] | None) -> list[GridPoint]:
+    """Return the slice of *points* belonging to ``(index, count)``.
+
+    Round-robin rather than contiguous, so every shard gets a comparable mix of
+    small and large instances and they finish at roughly the same time.
+    """
+    if shard is None:
+        return points
+    index, count = shard
+    if not 0 <= index < count:
+        raise ValueError(f"shard index {index} out of range for {count} shards")
+    return [p for i, p in enumerate(points) if i % count == index]
+
+
+def parse_shard(value: str | None) -> tuple[int, int] | None:
+    """Parse a ``"i/n"`` shard spec into a zero-based ``(index, count)``.
+
+    Accepts the one-based form used on the command line: ``1/4`` is the first of
+    four shards.
+    """
+    if not value:
+        return None
+    try:
+        raw_index, raw_count = value.split("/", 1)
+        index, count = int(raw_index), int(raw_count)
+    except ValueError as exc:
+        raise ValueError(f"shard must look like 'i/n', got {value!r}") from exc
+    if count < 1 or not 1 <= index <= count:
+        raise ValueError(f"shard {value!r} is out of range")
+    return index - 1, count
+
+
 def build(
     output: Path,
     *,
     grid_name: str = "compact",
     workers: int | None = None,
     progress: Any = None,
+    shard: tuple[int, int] | None = None,
 ) -> dict[str, Any]:
     """Build the static demo into *output*. Returns a short summary.
 
@@ -241,8 +274,15 @@ def build(
         grid_name: ``"compact"`` (default) or ``"full"``.
         workers: Solver processes to use. Defaults to the executor's default.
         progress: Optional callable ``(done, total)`` for progress reporting.
+        shard: Optional zero-based ``(index, count)``. Only that slice of the
+            grid is solved; the page, config and ``.htaccess`` are still written
+            in full, so overlaying every shard's output yields a complete site.
     """
     points, values = plan(grid_name)
+    # config.json must describe the whole grid even in a shard, or the browser
+    # would offer only the slider positions this shard happened to solve.
+    all_points = points
+    points = shard_points(points, shard)
     output.mkdir(parents=True, exist_ok=True)
 
     for name in ("app.js", "style.css"):
@@ -257,7 +297,7 @@ def build(
     (output / "index.html").write_text(index, encoding="utf-8")
 
     (output / "config.json").write_text(
-        json.dumps(_config(values, points), separators=(",", ":")), encoding="utf-8"
+        json.dumps(_config(values, all_points), separators=(",", ":")), encoding="utf-8"
     )
     (output / ".htaccess").write_text(_HTACCESS, encoding="utf-8")
 
@@ -299,7 +339,9 @@ def build(
 
     return {
         "runs": total,
+        "total_runs": len(all_points),
         "bytes": total_bytes,
         "output": str(output),
         "grid": grid_name,
+        "shard": None if shard is None else f"{shard[0] + 1}/{shard[1]}",
     }
