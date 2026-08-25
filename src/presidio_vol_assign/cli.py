@@ -854,6 +854,12 @@ def build_demo(
     workers: int = typer.Option(
         None, "--workers", help="Solver processes (default: one per core)."
     ),
+    shard: str = typer.Option(
+        None,
+        "--shard",
+        help="Solve only part of the grid, as 'i/n' (e.g. 2/4). Overlay every "
+        "shard's output to get a complete site.",
+    ),
 ) -> None:
     """Build the demo GUI as a static site, pre-solving a grid of settings.
 
@@ -873,15 +879,23 @@ def build_demo(
         raise typer.Exit(code=1)
 
     try:
-        from presidio_vol_assign.web.static_build import build, plan
+        from presidio_vol_assign.web.static_build import build, parse_shard, plan, shard_points
     except ImportError as exc:  # pragma: no cover - defensive; no web deps needed here
         err_console.print(f"[red]Error:[/red] {exc}")
         raise typer.Exit(code=1) from exc
 
+    try:
+        shard_spec = parse_shard(shard)
+    except ValueError as exc:
+        err_console.print(f"[red]Error:[/red] {exc}")
+        raise typer.Exit(code=1)
+
     logger, _audit = _run_security_preamble(out_dir.parent)
-    points, _values = plan(grid)
+    all_points, _values = plan(grid)
+    points = shard_points(all_points, shard_spec)
+    scope = f" (shard {shard} of {len(all_points)})" if shard_spec else ""
     console.print(
-        f"Pre-solving [bold]{len(points)}[/bold] runs ({grid} grid) → [cyan]{out_dir}[/cyan]"
+        f"Pre-solving [bold]{len(points)}[/bold] runs ({grid} grid){scope} → [cyan]{out_dir}[/cyan]"
     )
 
     with typer.progressbar(length=len(points), label="Solving") as bar:
@@ -891,7 +905,9 @@ def build_demo(
             bar.update(done - seen["n"])
             seen["n"] = done
 
-        summary = build(out_dir, grid_name=grid, workers=workers, progress=advance)
+        summary = build(
+            out_dir, grid_name=grid, workers=workers, progress=advance, shard=shard_spec
+        )
 
     logger.info("static demo built", runs=summary["runs"], output=summary["output"])
     console.print(
