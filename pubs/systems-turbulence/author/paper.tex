@@ -468,8 +468,11 @@ and at every budget we tested it returns allocations that a deterministic rule i
 in every objective at once.
 
 \subsection{RQ2 --- Identifiability}\label{sec:rq2}
-Reproducibility holds within an environment: the same seed reproduces the same front bit
-for bit, and a decision recomputed from a stored front matched the original run exactly. Identifiability does not.
+Reproducibility holds, and across platforms: the same seed reproduces the same front bit
+for bit within one environment, a decision recomputed from a stored front matched the
+original run exactly, and a continuous-integration matrix (macOS arm64 and Ubuntu x86-64,
+Python 3.11 and 3.12) produced identical front signatures for all ten (instance, seed)
+combinations at the operational budget (Appendix~\ref{app:crossenv}). Identifiability does not.
 Two runs on identical clean data with different seeds commit to allocations that differ for
 $83.4\%$ [$82.0$, $84.7$] of the directed people on the small instance and $93.9\%$ [$93.3$,
 $94.5$] on the large one (190 seed pairs each, cluster-bootstrap 95\% CI). The directed sets
@@ -760,12 +763,14 @@ to markets.
 
 \subsection{Implications for our published work}
 The equations and reported statistics of~\cite{rabiei2026resilient} are as stated, and its
-fixed-budget comparisons between algorithms are unaffected in kind. Its central hypothesis
-also survives on the exact front: re-tested on the exact supported four-objective front
-(weight lattice of 455 vectors), the Spearman correlation between the robustness and rapidity
-deficits stays below the published threshold of $|\rho| = 0.5$ at all three sizes ($-0.45$,
-$-0.21$, $-0.05$), and the projection-dominance fraction remains within its random-fusion
-null, as reported.
+fixed-budget comparisons between algorithms are unaffected in kind. Its central hypothesis,
+that the robustness and rapidity deficits carry independent information, also holds on the
+exact supported four-objective front: their Spearman correlation stays below the published
+threshold of $|\rho| = 0.5$ at all three sizes ($-0.45$, $-0.21$, $-0.05$ with 455 weight
+vectors; $-0.46$, $-0.21$, $-0.05$ with 1771), and the projection-dominance fraction remains
+within its random-fusion null. The negative association that study read as a trade-off
+between robust and fast routes, however, weakens with size and vanishes on the large exact
+front, where the two deficits are close to independent.
 Two points need correcting: the description of CAIL as penalising load concentration, which
 its equations do not implement, and the reading of its fronts as trade-off surfaces for
 practitioners, since the study did not compute the exact front and its fronts are far from
@@ -835,6 +840,37 @@ compared. Ten runs per ensemble lower the disagreement between ensembles from $0
 times the compute and still short of the exact $74.58$ and $85.18$. Consensus also commits
 to an allocation that no run produced, which weakens the audit trail it was meant to support. Disjoint ensembles of $k=3$ and $k=5$ runs fall in between
 ($0.73$ and $0.66$ small, $0.91$ and $0.88$ large).
+
+\section{Cross-environment reproducibility}\label{app:crossenv}
+Table~\ref{tab:crossenv} summarises the continuous-integration matrix (macOS arm64 and Ubuntu
+x86-64, each with Python 3.11 and 3.12; NumPy 2.4.6, SciPy 1.17.1, DEAP 1.4.4). Each
+environment solves both reference instances under five seeds at the operational budget
+(population 100, 150 generations) and records a SHA-256 signature of every front, together
+with signatures of the fuzzy score cache, the exact greedy decision and the hard-capacity MIP
+decision ($\kappa_f = 1.5$).
+
+\begin{table}[H]
+\centering
+\caption{Cross-environment reproducibility over four environments. Identical: number of
+distinct signatures equals one.\label{tab:crossenv}}
+\small
+\begin{tabular}{lll}
+\toprule
+Artefact & Small & Large\\
+\midrule
+NSGA-II fronts, 5 seeds & identical (5/5) & identical (5/5)\\
+Fuzzy score cache (rounded to $10^{-9}$) & identical & identical\\
+Exact greedy decision (published model) & identical & identical\\
+MIP decision, hard capacity & identical & two alternative optima\\
+MIP optimal value, hard capacity & identical ($110.945142$) & identical ($109.070123$)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On the large instance the MIP has several optimal allocations; HiGHS returns one on arm64 and
+another on x86-64, each proven optimal with the same objective value. An audit trail for an
+exact decider should therefore record the optimal value and a deterministic tie-breaking rule,
+not only the allocation.
 
 % =====================================================================
 \authorcontributions{Conceptualization, V.S.\ and D.A.-A.; methodology, V.S.; software, V.S.; validation, V.S.; formal analysis, V.S.; investigation, V.S.; resources, P.R.; data curation, V.S.; writing---original draft preparation, V.S.; writing---review and editing, V.S., P.R.\ and D.A.-A.; visualization, V.S.; supervision, V.S.; project administration, V.S. All authors have read and agreed to the published version of the manuscript.}
