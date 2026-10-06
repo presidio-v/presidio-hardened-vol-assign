@@ -5,10 +5,11 @@ abstract: >-
   Multi-objective post-disaster assignment tool: emergency-department volunteer
   staffing (Rabiei et al., ESWA 2023) and humanitarian people-to-centre
   allocation, combining fuzzy inference systems with the NSGA-II and NRGA
-  evolutionary algorithms.
+  evolutionary algorithms, with exact reference deciders for the published
+  relief-allocation model.
 type: software
-version: 0.3.0
-date-released: 2026-08-03
+version: 0.4.0
+date-released: 2026-10-06
 license: MIT
 repository-code: "https://github.com/presidio-v/presidio-hardened-vol-assign"
 keywords:

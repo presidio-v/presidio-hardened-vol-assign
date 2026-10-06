@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "presidio-hardened-vol-assign"
-version = "0.3.0"
+version = "0.4.0"
 description = "Multi-objective post-disaster assignment: ED volunteer staffing (Rabiei et al., ESWA 2023) and humanitarian people-to-centre allocation"
 readme = "README.md"
 license = { file = "LICENSE" }

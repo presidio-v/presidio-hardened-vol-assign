@@ -13,7 +13,6 @@ from __future__ import annotations
 import logging
 import os
 from contextlib import asynccontextmanager
-from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +22,7 @@ from fastapi.staticfiles import StaticFiles
 from presidio_fastapi import FastAPI
 from presidio_fastapi.rate_limit import limiter
 
+from presidio_vol_assign import __version__
 from presidio_vol_assign.web.runner import (
     LIMITS,
     RunRejected,
@@ -42,10 +42,14 @@ RUN_RATE_LIMIT = "12/minute"
 
 
 def _package_version() -> str:
-    try:
-        return version("presidio-hardened-vol-assign")
-    except PackageNotFoundError:  # pragma: no cover - source checkout without install
-        return "unknown"
+    """The version of the code actually running.
+
+    Read from the package itself rather than from installed distribution metadata:
+    a source checkout run against a shared environment (another worktree, an older
+    editable install) would otherwise advertise the installed version, not its own.
+    ``__version__`` is pinned to pyproject, CITATION.cff and the changelog by tests.
+    """
+    return __version__
 
 
 def create_app(*, cors_allow_origins: tuple[str, ...] = ()) -> FastAPI:

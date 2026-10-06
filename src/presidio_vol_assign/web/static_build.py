@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import re
 import shutil
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -29,6 +30,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from presidio_vol_assign.web.relief import EXACT_TO_OPTIMALITY_ENV
 from presidio_vol_assign.web.runner import RunRequest, _solve
 from presidio_vol_assign.web.scenarios import SCENARIOS, Scenario
 
@@ -62,6 +64,22 @@ _FULL_GRID: dict[str, list[float]] = {
     "n_centers": [3, 5, 8, 12],
     "capacity_slack": [1.0, 1.2, 1.5, 2.0],
     "max_distance": [20, 30, 50],
+}
+
+# Per-scenario overrides, applied on top of either grid. The relief-allocation
+# scenarios share knob keys with the humanitarian ones but have different valid
+# ranges, and each of their runs also carries an exact reference (a MIP sweep in
+# the repaired model), so they get a deliberately small grid: 12 + 36 runs.
+_SCENARIO_GRID: dict[str, dict[str, list[float]]] = {
+    "relief-published": {
+        "n_people": [60, 150, 300],
+        "n_centers": [5, 10],
+    },
+    "relief-repaired": {
+        "n_people": [60, 150, 300],
+        "n_centers": [5, 10],
+        "kappa_f": [1.2, 1.5, 2.0],
+    },
 }
 
 SEEDS = [42, 7]
@@ -131,6 +149,7 @@ class GridPoint:
 
 def _grid_values(scenario: Scenario, grid: dict[str, list[float]]) -> list[list[float]]:
     """Ordered value lists for each of *scenario*'s knobs."""
+    grid = {**grid, **_SCENARIO_GRID.get(scenario.id, {})}
     values = []
     for knob in scenario.knobs:
         options = grid.get(knob.key)
@@ -182,6 +201,15 @@ def plan(grid_name: str = "compact") -> tuple[list[GridPoint], dict[str, list[li
 # ---------------------------------------------------------------------------
 # Solving
 # ---------------------------------------------------------------------------
+
+
+def _init_static_worker() -> None:
+    """Worker initialiser: pre-built pages solve every exact MIP to proven optimality.
+
+    Set per worker, never on the parent, so a live server in the same process tree
+    keeps its wall-clock limits.
+    """
+    os.environ[EXACT_TO_OPTIMALITY_ENV] = "1"
 
 
 def _solve_point(payload: dict[str, Any]) -> dict[str, Any]:
@@ -347,7 +375,7 @@ def build(
     total = len(points)
     done = 0
     total_bytes = 0
-    with ProcessPoolExecutor(max_workers=workers) as pool:
+    with ProcessPoolExecutor(max_workers=workers, initializer=_init_static_worker) as pool:
         futures = {
             pool.submit(
                 _solve_point,
