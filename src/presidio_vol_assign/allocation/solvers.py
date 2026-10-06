@@ -100,7 +100,12 @@ class FISCache:
         til:  shape (m, n) — TIL_{j,i} (populated only when objectives==3).
         trd:  shape (m, n) — TRD_{j,i} (populated only when objectives==4).
         rpd:  shape (m, n) — RPD_{j,i} (populated only when objectives==4).
-        cail: shape (m, n) — CAIL_{j,i} (always populated).
+        cail: shape (m, n) — CAIL_{j,i} (always populated) at the centre's
+            *input* occupancy: the separable model as published.
+        cail_load: optional shape (m, n, n_dir + 1) — CAIL_{j,i} evaluated at the
+            post-allocation occupancy of centre i when it receives load l
+            (``allocation.load_coupling``). When set, CAIL becomes load-coupled and
+            ``evaluate_pairs`` reads it at each centre's realised load.
     """
 
     ulpp: np.ndarray
@@ -108,6 +113,7 @@ class FISCache:
     trd: np.ndarray
     rpd: np.ndarray
     cail: np.ndarray
+    cail_load: np.ndarray | None = None
 
 
 def precompute_fis_cache(problem: AllocationProblem, config: AllocationConfig) -> FISCache:
@@ -207,7 +213,7 @@ def evaluate_pairs(
     centers = np.fromiter((c for _, c in pairs), dtype=int, count=n_dir)
 
     mn_ulpp = float(cache.ulpp[persons].mean())
-    mn_cail = float(cache.cail[persons, centers].mean())
+    mn_cail = float(_cail_terms(cache, persons, centers).mean())
 
     if objectives == 4:
         mn_trd = float(cache.trd[persons, centers].mean())
@@ -216,6 +222,14 @@ def evaluate_pairs(
 
     mn_til = float(cache.til[persons, centers].mean())
     return (mn_ulpp, mn_til, mn_cail)
+
+
+def _cail_terms(cache: FISCache, persons: np.ndarray, centers: np.ndarray) -> np.ndarray:
+    """Per-allocation CAIL: static, or read at each centre's realised load."""
+    if cache.cail_load is None:
+        return cache.cail[persons, centers]
+    loads = np.bincount(centers, minlength=cache.cail_load.shape[1])
+    return cache.cail_load[persons, centers, loads[centers]]
 
 
 def evaluate_chromosome(
@@ -427,15 +441,20 @@ def _individual_to_solution(
     n_centers = problem.n_centers
     pairs = decode_chromosome(individual, n_dir, n_centers)
     fitness = individual.fitness.values
+    cail_terms = _cail_terms(
+        cache,
+        np.fromiter((p for p, _ in pairs), dtype=int, count=n_dir),
+        np.fromiter((c for _, c in pairs), dtype=int, count=n_dir),
+    )
     allocations: list[Allocation] = []
-    for p_idx, c_idx in pairs:
+    for k, (p_idx, c_idx) in enumerate(pairs):
         person = problem.people[p_idx]
         center = problem.centers[c_idx]
         alloc = Allocation(
             person_id=person.person_id,
             center_id=center.center_id,
             ulpp=float(cache.ulpp[p_idx]),
-            cail_contrib=float(cache.cail[p_idx, c_idx]),
+            cail_contrib=float(cail_terms[k]),
         )
         if config.objectives == 4:
             alloc.trd = float(cache.trd[p_idx, c_idx])

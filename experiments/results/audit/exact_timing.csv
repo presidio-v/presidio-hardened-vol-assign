@@ -1,0 +1,3 @@
+size,skfuzzy_cache_s,compiled_cache_s,exact_greedy_ms,env_platform,env_python,env_numpy,env_scipy,env_deap,env_pymoo
+small,4.163757124915719,0.051378958160057664,0.011833151802420616,macOS-15.8-arm64-arm-64bit,3.12.13,2.4.4,1.17.1,1.4.3,0.6.2
+large,15.81245341594331,0.21633716602809727,0.02091703936457634,macOS-15.8-arm64-arm-64bit,3.12.13,2.4.4,1.17.1,1.4.3,0.6.2
