@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import logging
+import multiprocessing
 import os
 import re
 import shutil
@@ -375,7 +376,12 @@ def build(
     total = len(points)
     done = 0
     total_bytes = 0
-    with ProcessPoolExecutor(max_workers=workers, initializer=_init_static_worker) as pool:
+    # spawn on every platform: forked workers can deadlock on locks inherited from
+    # parent threads (HiGHS, BLAS), which hung the Linux CI before this was set.
+    spawn = multiprocessing.get_context("spawn")
+    with ProcessPoolExecutor(
+        max_workers=workers, initializer=_init_static_worker, mp_context=spawn
+    ) as pool:
         futures = {
             pool.submit(
                 _solve_point,

@@ -12,6 +12,7 @@ from __future__ import annotations
 import csv
 import json
 import logging
+import multiprocessing
 import os
 import shutil
 import tempfile
@@ -487,6 +488,9 @@ class SolverPool:
             self._executor = ProcessPoolExecutor(
                 max_workers=self._limits.max_workers,
                 initializer=_warm_worker,
+                # spawn, not the Linux default fork: a forked worker inherits locks
+                # held by threads in the parent (HiGHS, BLAS, the server) and can hang.
+                mp_context=multiprocessing.get_context("spawn"),
             )
         return self._executor
 
