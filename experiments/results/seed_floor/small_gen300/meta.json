@@ -1,0 +1,16 @@
+{
+  "size": "small",
+  "seeds": 5,
+  "pop_size": 100,
+  "generations": 300,
+  "objectives": 3,
+  "instance_sha256": "58e6007e66bcca89d03257997143d29c3e1b24a2bf2e4ba11eac672fd9f831d3",
+  "env": {
+    "platform": "macOS-15.8-arm64-arm-64bit",
+    "python": "3.12.13",
+    "numpy": "2.4.4",
+    "scipy": "1.17.1",
+    "deap": "1.4.3",
+    "pymoo": "0.6.2"
+  }
+}

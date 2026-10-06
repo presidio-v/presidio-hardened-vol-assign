@@ -29,6 +29,12 @@ project adheres to [Semantic Versioning](https://semver.org/).
 - **`allocation.fast_fis`**: a compiled Mamdani evaluator that reproduces the
   scikit-fuzzy inference to 1e-9 (pinned by tests) and builds the FIS cache
   roughly 20-80x faster.
+- **`experiments/`**: the drivers, instances and result manifests behind the
+  audit of the published allocation model (seed floor and budget curve, exact
+  dominance, input turbulence on the exact decider, repaired-model sweep,
+  deployment envelope, cross-environment reproducibility), with a README that
+  maps every table and figure to the command that regenerates it. The
+  `repro-crossenv` workflow runs the reproducibility matrix on main.
 - The static demo build solves every exact MIP to proven optimality, so
   pre-built pages do not depend on build-machine speed; the live server keeps
   its wall-clock limits.
