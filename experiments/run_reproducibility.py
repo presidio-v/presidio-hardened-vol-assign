@@ -100,6 +100,9 @@ def _deterministic_signatures(problem, cfg) -> dict[str, str]:  # noqa: ANN001
         "fis-cache": _digest(rounded),
         "exact-greedy": _digest(sorted(greedy)),
         "exact-mip-hard": _digest(sorted(mip.pairs)),
+        # The optimum value, not the allocation: alternative optima may be broken
+        # differently per platform, but the proven optimal value must agree.
+        "exact-mip-hard-objective": f"{mip.objective:.6f}",
     }
 
 
