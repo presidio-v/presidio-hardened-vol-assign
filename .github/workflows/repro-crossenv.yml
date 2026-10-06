@@ -32,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
       - name: Reproducibility signatures
-        run: uv run python -m experiments.run_reproducibility --sizes small --reps 5 --pop-size 60 --generations 60
+        run: uv run python -m experiments.run_reproducibility --sizes small,large --reps 5 --pop-size 100 --generations 150
       - name: Upload manifest
         uses: actions/upload-artifact@v4
         with:

@@ -17,12 +17,22 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import platform
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
+import numpy as np
+
 from experiments.generate_instances import SIZES
 from experiments.run_h1_h2_h4 import BASE_SEED, SEED_STEP
+from presidio_vol_assign.allocation.baselines import exact_weighted_sum_pairs
+from presidio_vol_assign.allocation.exact_mip import solve_weighted_mip
+from presidio_vol_assign.allocation.load_coupling import (
+    capacities_from_free_factor,
+    hard_load_limits,
+    precompute_load_coupled_cache,
+)
 from presidio_vol_assign.allocation.models import (
     AllocationConfig,
     AllocationSolverType,
@@ -61,6 +71,36 @@ def _config(size_pop: int, generations: int, seed: int) -> AllocationConfig:
         generations=generations,
         seed=seed,
     )
+
+
+def _digest(payload: object) -> str:
+    return hashlib.sha256(repr(payload).encode("utf-8")).hexdigest()
+
+
+def _deterministic_signatures(problem, cfg) -> dict[str, str]:  # noqa: ANN001
+    """Signatures of the FIS cache, the exact greedy and the hard-capacity MIP decision."""
+    cache = precompute_fis_cache(problem, cfg)
+    rounded = tuple(
+        tuple(np.round(getattr(cache, f), 9).ravel().tolist())
+        for f in ("ulpp", "til", "trd", "rpd", "cail")
+    )
+    greedy = exact_weighted_sum_pairs(cache, problem.n_dir, cfg.objectives)
+    cap = capacities_from_free_factor(problem, 1.5)
+    coupled = precompute_load_coupled_cache(problem, cfg, cap, static=cache)
+    mip = solve_weighted_mip(
+        coupled,
+        problem.n_dir,
+        cfg.objectives,
+        max_load=hard_load_limits(problem, cap),
+        time_limit=600,
+    )
+    if not mip.optimal:
+        raise RuntimeError("MIP not proven optimal; its signature would depend on machine speed")
+    return {
+        "fis-cache": _digest(rounded),
+        "exact-greedy": _digest(sorted(greedy)),
+        "exact-mip-hard": _digest(sorted(mip.pairs)),
+    }
 
 
 def main() -> None:
@@ -107,7 +147,20 @@ def main() -> None:
                         "in_process_rep": in_process,
                     }
                 )
-            print(f"  {size}: {args.reps} seeds done", flush=True)
+            # Deterministic deciders: one signature each, no seed. The FIS-cache hash
+            # (rounded like the front signature) shows whether any divergence starts
+            # in the fuzzy inference rather than in the search.
+            for label, signature in _deterministic_signatures(problem, cfg0).items():
+                writer.writerow(
+                    {
+                        **env,
+                        "size": size,
+                        "seed": label,
+                        "signature": signature,
+                        "in_process_rep": 1.0,
+                    }
+                )
+            print(f"  {size}: {args.reps} seeds + deterministic deciders done", flush=True)
 
     verdict = min(all_rep) if all_rep else 0.0  # fail closed: no runs -> not reproducible
     print(f"within-environment REP (min over seeds): {verdict}")
