@@ -1,0 +1,18 @@
+{
+  "solver": "nsga2",
+  "instances": "experiments/results/alt_instances/seed43/large",
+  "size": "large",
+  "seeds": 10,
+  "pop_size": 100,
+  "generations": 150,
+  "objectives": 3,
+  "instance_sha256": "ee1e48a9e029878f5bbc5447d0fc1df1d27e08c327a11796d5d1db64710b606d",
+  "env": {
+    "platform": "macOS-15.8-arm64-arm-64bit",
+    "python": "3.12.13",
+    "numpy": "2.4.4",
+    "scipy": "1.17.1",
+    "deap": "1.4.3",
+    "pymoo": "0.6.2"
+  }
+}
