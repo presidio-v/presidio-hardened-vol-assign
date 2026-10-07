@@ -28,7 +28,8 @@ repairs a semantic gap in the published model. All analyses, code and data are n
 earlier article is cited wherever its model or instances are used. \[PENDING: co-author
 decision on a correction to the earlier article — mention here if filed.\]
 
-The data, code and result manifests are openly available (\[PENDING: Zenodo DOI\]). The
+The data, code and result manifests are openly available (Zenodo,
+https://doi.org/10.5281/zenodo.23220061). The
 manuscript has not been published or submitted elsewhere, and all authors have approved the
 submission. As agreed with Ms. Zhao on 7 July 2026, we would be grateful if the full APC waiver
 offered for this Special Issue could be applied once the manuscript is sent for review.
