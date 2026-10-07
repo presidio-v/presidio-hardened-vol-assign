@@ -32,8 +32,17 @@ from presidio_vol_assign.web.app import create_app  # noqa: E402
 # ---------------------------------------------------------------------------
 
 
-def test_three_presets_are_exposed() -> None:
-    assert [s.id for s in SCENARIOS] == ["volunteers", "relief-centres", "last-mile"]
+PRESET_IDS = [
+    "volunteers",
+    "relief-centres",
+    "last-mile",
+    "relief-published",
+    "relief-repaired",
+]
+
+
+def test_presets_are_exposed() -> None:
+    assert [s.id for s in SCENARIOS] == PRESET_IDS
 
 
 def test_last_mile_is_hard_capacity_humanitarian() -> None:
@@ -45,7 +54,7 @@ def test_last_mile_is_hard_capacity_humanitarian() -> None:
 
 
 def test_every_scenario_names_one_objective_per_solver_objective() -> None:
-    expected = {"ed-staffing": 2, "humanitarian": 3}
+    expected = {"ed-staffing": 2, "humanitarian": 3, "allocation": 3}
     for scenario in SCENARIOS:
         assert len(scenario.objectives) == expected[scenario.model]
 
@@ -480,6 +489,11 @@ def test_static_build_produces_a_servable_tree(tmp_path, monkeypatch) -> None:
 
     tiny = {key: [values[0]] for key, values in sb._COMPACT_GRID.items()}
     monkeypatch.setattr(sb, "_COMPACT_GRID", tiny)
+    monkeypatch.setattr(
+        sb,
+        "_SCENARIO_GRID",
+        {sid: {k: v[:1] for k, v in g.items()} for sid, g in sb._SCENARIO_GRID.items()},
+    )
     monkeypatch.setattr(sb, "SEEDS", [42])
     # Keep the solve trivial: this test is about the emitted tree, not front quality.
     monkeypatch.setattr(sb, "STATIC_GENERATIONS", 5)
@@ -507,7 +521,10 @@ def test_static_build_produces_a_servable_tree(tmp_path, monkeypatch) -> None:
 
         payload = json.loads(payload_path.read_text())
         assert payload["gridKey"] == key
-        assert [r["solver"] for r in payload["results"]] == ["nsga2", "nrga"]
+        expected_solvers = ["nsga2", "nrga"]
+        if scenario["model"] == "allocation":
+            expected_solvers.append("exact")  # the audit's reference row, always last
+        assert [r["solver"] for r in payload["results"]] == expected_solvers
         solution = payload["results"][0]["solutions"][0]
         assert len(solution["alloc"]) == len(payload["units"])
         assert len(solution["objectives"]) == len(payload["objectives"])
@@ -569,6 +586,9 @@ def test_a_shard_writes_its_slice_but_advertises_the_whole_grid(tmp_path, monkey
     grid = {key: values[:1] for key, values in sb._COMPACT_GRID.items()}
     grid["n_people"] = [30, 80]
     monkeypatch.setattr(sb, "_COMPACT_GRID", grid)
+    # The relief scenarios override n_people; drop the overrides here so every
+    # scenario advertises the grid this test controls.
+    monkeypatch.setattr(sb, "_SCENARIO_GRID", {})
     monkeypatch.setattr(sb, "SEEDS", [42])
     monkeypatch.setattr(sb, "STATIC_GENERATIONS", 5)
 
@@ -603,6 +623,7 @@ def test_built_page_references_only_assets_that_exist(tmp_path, monkeypatch) -> 
     from presidio_vol_assign.web import static_build as sb
 
     monkeypatch.setattr(sb, "_COMPACT_GRID", {k: v[:1] for k, v in sb._COMPACT_GRID.items()})
+    monkeypatch.setattr(sb, "_SCENARIO_GRID", {})
     monkeypatch.setattr(sb, "SEEDS", [42])
     monkeypatch.setattr(sb, "STATIC_GENERATIONS", 5)
 
@@ -658,7 +679,7 @@ def test_health(client) -> None:
 
 def test_scenarios_endpoint_describes_the_presets(client) -> None:
     body = client.get("/api/scenarios").json()
-    assert [s["id"] for s in body["scenarios"]] == ["volunteers", "relief-centres", "last-mile"]
+    assert [s["id"] for s in body["scenarios"]] == PRESET_IDS
     assert body["limits"]["maxUnits"] == LIMITS.max_units
     for scenario in body["scenarios"]:
         assert scenario["knobs"] and scenario["objectives"]
@@ -712,3 +733,11 @@ def test_run_end_to_end_over_http(client) -> None:
     assert len(body["sites"]) == 3
     assert body["results"][0]["metrics"]["nns"] >= 1
     assert body["cliHint"].startswith("pva ")
+
+
+def test_demo_reports_the_running_code_version() -> None:
+    """The footer must show the checked-out code's version, not the installed one."""
+    from presidio_vol_assign import __version__
+    from presidio_vol_assign.web.app import _package_version
+
+    assert _package_version() == __version__

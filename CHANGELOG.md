@@ -6,7 +6,32 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-10-06
+
 ### Added
+- **Relief-allocation model in the demo**: the published three-objective
+  relief-allocation model (`presidio_vol_assign.allocation`, previously only on
+  the paper branch) is now part of the package and backs two new demo
+  scenarios. *Relief allocation — published model* shows the NSGA-II/NRGA
+  fronts next to the **exact** front: the model's objectives decompose per
+  person, so a deterministic weighted-sum rule computes every supported
+  trade-off exactly. *Relief allocation — repaired model* makes the centre
+  imbalance objective depend on the load the decision creates and enforces
+  hard capacity; its exact reference is a mixed-integer weighted-sum sweep
+  (HiGHS), and the evolutionary options report how many people they send
+  beyond free capacity. A "Show" control switches the map and trade-off slider
+  between result rows.
+- **Exact deciders**: `allocation.baselines.exact_weighted_sum_pairs` (exact
+  optimum of the separable published model), `allocation.load_coupling`
+  (load-coupled CAIL, capacities, overload diagnostic) and
+  `allocation.exact_mip.solve_weighted_mip` (exact MIP for the repaired
+  model, gap always reported), verified against brute-force enumeration.
+- **`allocation.fast_fis`**: a compiled Mamdani evaluator that reproduces the
+  scikit-fuzzy inference to 1e-9 (pinned by tests) and builds the FIS cache
+  roughly 20-80x faster.
+- The static demo build solves every exact MIP to proven optimality, so
+  pre-built pages do not depend on build-machine speed; the live server keeps
+  its wall-clock limits.
 - **`pva build-demo`**: pre-solves a grid of slider positions and emits the demo
   GUI as a self-contained static site, so it can be hosted without any
   server-side Python. Everything downstream of the solve (trade-off slider, map,

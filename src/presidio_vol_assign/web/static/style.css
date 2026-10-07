@@ -249,7 +249,8 @@ button[disabled] { opacity: 0.55; cursor: progress; }
   margin-bottom: 16px;
 }
 
-.preset-row button[aria-pressed="true"] {
+.preset-row button[aria-pressed="true"],
+.metrics button[aria-pressed="true"] {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent) inset;
 }
@@ -356,6 +357,10 @@ button[disabled] { opacity: 0.55; cursor: progress; }
 
 .obj-help { font-size: 0.8rem; color: var(--text-dim); }
 
+.obj-flag { margin: 0; font-size: 0.85rem; font-weight: 600; }
+.obj-flag.over { color: var(--danger); }
+.obj-flag.fits { color: var(--ok); }
+
 .chart-caption, .note {
   font-size: 0.82rem;
   color: var(--text-dim);
@@ -385,6 +390,7 @@ th { color: var(--text-dim); font-weight: 600; }
 tr.over td { color: var(--danger); font-weight: 600; }
 
 td.good { color: var(--ok); }
+td.warn { color: var(--danger); font-weight: 600; }
 
 .actions { display: flex; gap: 10px; flex-wrap: wrap; }
 

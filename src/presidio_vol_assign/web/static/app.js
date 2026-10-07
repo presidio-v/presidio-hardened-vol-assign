@@ -26,6 +26,7 @@ const state = {
   knobIndices: {},
   seedIndex: 0,
   result: null,
+  resultIndex: 0,
   solutions: [],
   index: 0,
   activePreset: null,
@@ -309,15 +310,24 @@ function hideError() {
 /* ---------------------------------------------------------------- results */
 
 function renderResults() {
-  const result = state.result;
-  // The map and trade-off slider always follow the first solver; when two were
-  // run, the comparison lives in the run-quality table below.
-  state.solutions = result.results[0].solutions
-    .slice()
-    .sort((a, b) => a.objectives[0] - b.objectives[0]);
-
+  // A new run starts from the first solver; the run-quality table can switch
+  // the map and trade-off slider to any other row (e.g. the exact reference).
+  state.resultIndex = 0;
   document.getElementById("step-results").hidden = false;
   document.getElementById("cli-hint").textContent = buildCliHint();
+  showResult(0);
+  document.getElementById("step-results").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function activeResult() {
+  return state.result.results[state.resultIndex] || state.result.results[0];
+}
+
+function showResult(index) {
+  state.resultIndex = index;
+  state.solutions = activeResult().solutions
+    .slice()
+    .sort((a, b) => a.objectives[0] - b.objectives[0]);
 
   const slider = document.getElementById("tradeoff");
   slider.max = String(Math.max(0, state.solutions.length - 1));
@@ -326,12 +336,22 @@ function renderResults() {
   renderPresets();
   renderMetrics();
   selectPreset("compromise");
-  document.getElementById("step-results").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* People-to-centre models (as opposed to volunteers-to-departments). */
+function isPeopleModel() {
+  return state.result.model !== "ed-staffing";
 }
 
 function buildCliHint() {
   const r = state.result;
-  return `${r.cliHint} \\\n  --solver ${r.solver} --seed ${r.seed} --generations ${r.generations}`;
+  const flags = `--solver ${r.solver} --seed ${r.seed} --generations ${r.generations}`;
+  if (!r.cliHint) {
+    return "# No pva command covers this scenario yet: it calls the\n" +
+      "# presidio_vol_assign.allocation library directly with\n" +
+      `# scenario=${r.scenario} ${flags}`;
+  }
+  return `${r.cliHint} \\\n  ${flags}`;
 }
 
 /* Presets jump to the extreme of each objective, plus a balanced compromise. */
@@ -454,6 +474,17 @@ function renderObjectives(solution) {
       el("div", { class: "obj-help", text: `${obj.help} — ${position}.` }),
     ]));
   });
+
+  // Repaired relief model: whether this option fits within the centres' free places.
+  if (solution.overload !== undefined) {
+    const over = solution.overload > 0;
+    holder.appendChild(el("p", {
+      class: over ? "obj-flag over" : "obj-flag fits",
+      text: over
+        ? `Over capacity: sends ${fmt(solution.overload, 1)} people beyond the free places.`
+        : "Fits within every centre's free places.",
+    }));
+  }
 }
 
 /* -------------------------------------------------------------------- map */
@@ -544,7 +575,11 @@ function renderMapLegend(solution) {
     swatch.style.background = siteColor(j);
     holder.appendChild(el("span", { class: "legend-item" }, [
       swatch,
-      el("span", { text: `${site.id} — ${counts[j]} of ${site.capacity}` }),
+      el("span", {
+        text: hasCapacity(site)
+          ? `${site.id} — ${counts[j]} of ${site.capacity}`
+          : `${site.id} — ${counts[j]}`,
+      }),
     ]));
   });
 
@@ -552,11 +587,17 @@ function renderMapLegend(solution) {
   if (unassigned > 0) {
     const swatch = el("span", { class: "legend-swatch" });
     swatch.style.border = "1px solid var(--text-dim)";
+    const word = state.result.model === "allocation" ? "not directed this round" : "not deployed";
     holder.appendChild(el("span", { class: "legend-item" }, [
       swatch,
-      el("span", { text: `${unassigned} not deployed` }),
+      el("span", { text: `${unassigned} ${word}` }),
     ]));
   }
+}
+
+/* The published relief model has no centre capacity at all (capacity: null). */
+function hasCapacity(site) {
+  return site.capacity !== null && site.capacity !== undefined;
 }
 
 function siteLoads(solution) {
@@ -578,8 +619,14 @@ function renderFrontChart(activeIndex) {
   const height = 260;
   const pad = { top: 14, right: 14, bottom: 40, left: 52 };
 
-  const xs = state.solutions.map((s) => s.objectives[0]);
-  const ys = state.solutions.map((s) => s.objectives[1]);
+  // Other solvers' options are drawn as hollow rings behind the selected set,
+  // so the chart compares fronts (e.g. an evolutionary one against the exact
+  // one) on shared axes.
+  const others = state.result.results
+    .filter((_, k) => k !== state.resultIndex)
+    .flatMap((r) => r.solutions);
+  const xs = state.solutions.concat(others).map((s) => s.objectives[0]);
+  const ys = state.solutions.concat(others).map((s) => s.objectives[1]);
   const xr = { min: Math.min(...xs), max: Math.max(...xs) };
   const yr = { min: Math.min(...ys), max: Math.max(...ys) };
   const sx = (v) => pad.left + normalise(v, xr) * (width - pad.left - pad.right);
@@ -621,6 +668,18 @@ function renderFrontChart(activeIndex) {
         max: Math.max(...state.solutions.map((s) => s.objectives[2])) }
     : null;
 
+  others.forEach((solution) => {
+    svg.appendChild(svgEl("circle", {
+      cx: sx(solution.objectives[0]),
+      cy: sy(solution.objectives[1]),
+      r: 3,
+      fill: "none",
+      stroke: "var(--text-dim)",
+      "stroke-opacity": 0.6,
+      "stroke-width": 1,
+    }));
+  });
+
   state.solutions.forEach((solution, i) => {
     const active = i === activeIndex;
     const r = zr ? 2.5 + normalise(solution.objectives[2], zr) * 4 : 3.4;
@@ -640,9 +699,15 @@ function renderFrontChart(activeIndex) {
 
   holder.appendChild(svg);
 
-  document.getElementById("front-caption").textContent = zr
+  const caption = zr
     ? `Each dot is one allocation you could choose. Larger dots mean more ${objectives[2].label.toLowerCase()}. The highlighted dot is the one shown on the map.`
     : "Each dot is one allocation you could choose. The highlighted dot is the one shown on the map.";
+  const otherNames = state.result.results
+    .filter((_, k) => k !== state.resultIndex)
+    .map((r) => r.solver.toUpperCase());
+  document.getElementById("front-caption").textContent = otherNames.length
+    ? `${caption} Hollow rings are the options from ${otherNames.join(" and ")}, for comparison.`
+    : caption;
 }
 
 /* ------------------------------------------------------------------ loads */
@@ -651,12 +716,14 @@ function renderLoads(solution) {
   const table = document.getElementById("loads-table");
   clear(table);
   const counts = siteLoads(solution);
-  const isHumanitarian = state.result.model === "humanitarian";
-  const unitWord = isHumanitarian ? "People allocated" : "Roles filled";
-  const capWord = isHumanitarian ? "Capacity" : "Roles open";
+  const isPeople = isPeopleModel();
+  const unitWord = isPeople ? "People allocated" : "Roles filled";
+  const capWord = state.result.model === "allocation"
+    ? "Free places"
+    : isPeople ? "Capacity" : "Roles open";
 
   const head = el("tr", {}, [
-    el("th", { text: state.result.model === "humanitarian" ? "Centre" : "Department" }),
+    el("th", { text: isPeople ? "Centre" : "Department" }),
     el("th", { text: unitWord }),
     el("th", { text: capWord }),
     el("th", { text: "Utilisation" }),
@@ -665,6 +732,16 @@ function renderLoads(solution) {
 
   const body = el("tbody", {});
   state.result.sites.forEach((site, j) => {
+    if (!hasCapacity(site)) {
+      // The published relief model has no capacity, so nothing can be "over".
+      body.appendChild(el("tr", {}, [
+        el("td", { text: site.id }),
+        el("td", { text: String(counts[j]) }),
+        el("td", { text: "not modelled" }),
+        el("td", { text: "—" }),
+      ]));
+      return;
+    }
     const capacity = site.capacity || 0;
     const ratio = capacity > 0 ? counts[j] / capacity : 0;
     const over = counts[j] > capacity;
@@ -684,6 +761,11 @@ function renderLoads(solution) {
 function renderMetrics() {
   const table = document.getElementById("metrics-table");
   clear(table);
+  const results = state.result.results;
+  const multiple = results.length > 1;
+  // Only the repaired relief model reports how many options overfill a centre.
+  const showOverload = results.some((r) => r.metrics.overloaded !== undefined);
+
   table.appendChild(el("thead", {}, [
     el("tr", {}, [
       el("th", { text: "Algorithm" }),
@@ -691,26 +773,46 @@ function renderMetrics() {
       el("th", { text: "Hypervolume" }),
       el("th", { text: "Spacing" }),
       el("th", { text: "Solver time" }),
+      showOverload ? el("th", { text: "Over capacity" }) : null,
+      multiple ? el("th", { text: "On the map" }) : null,
     ]),
   ]));
   const body = el("tbody", {});
-  for (const result of state.result.results) {
+  results.forEach((result, k) => {
+    let toggle = null;
+    if (multiple) {
+      const shown = k === state.resultIndex;
+      const button = el("button", {
+        type: "button",
+        text: shown ? "Shown" : "Show",
+        "aria-pressed": String(shown),
+      });
+      button.addEventListener("click", () => showResult(k));
+      toggle = el("td", {}, [button]);
+    }
     body.appendChild(el("tr", {}, [
       el("td", { text: result.solver.toUpperCase() }),
       el("td", { text: String(result.metrics.nns) }),
       el("td", { text: fmt(result.metrics.hv, 4) }),
       el("td", { text: fmt(result.metrics.sm, 4) }),
       el("td", { text: `${fmt(result.metrics.cpuTimeSec, 2)}s` }),
+      showOverload
+        ? el("td", {
+          class: result.metrics.overloaded > 0 ? "warn" : "good",
+          text: `${result.metrics.overloaded ?? 0} of ${result.metrics.nns}`,
+        })
+        : null,
+      toggle,
     ]));
-  }
+  });
   table.appendChild(body);
 
+  const notes = results.map((r) => r.note).filter(Boolean);
   document.getElementById("metrics-note").textContent =
     "Hypervolume measures how much of the trade-off space the set covers — higher is better. " +
     "Spacing measures how evenly the options are spread — lower is better. " +
-    (state.result.results.length > 1
-      ? "The map above shows the first algorithm's result."
-      : "");
+    (multiple ? "Use “Show” to put another algorithm's options on the map. " : "") +
+    notes.join(" ");
 }
 
 /* --------------------------------------------------------------- download */
@@ -719,8 +821,7 @@ function downloadCsv() {
   const solution = state.solutions[state.index];
   if (!solution) return;
 
-  const isHumanitarian = state.result.model === "humanitarian";
-  const header = isHumanitarian ? ["person_id", "center_id"] : ["volunteer_id", "ed_id"];
+  const header = isPeopleModel() ? ["person_id", "center_id"] : ["volunteer_id", "ed_id"];
   const rows = [header.join(",")];
 
   solution.alloc.forEach((siteIdx, i) => {
@@ -731,7 +832,7 @@ function downloadCsv() {
   const meta = [
     "",
     `# scenario,${state.result.scenario}`,
-    `# solver,${state.result.results[0].solver}`,
+    `# solver,${activeResult().solver}`,
     `# seed,${state.result.seed}`,
     `# generations,${state.result.generations}`,
     ...state.result.objectives.map(

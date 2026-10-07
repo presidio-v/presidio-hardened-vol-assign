@@ -110,20 +110,26 @@ class Scenario:
         title: Card heading.
         subtitle: One-line framing for a non-specialist.
         description: Short paragraph shown once the card is selected.
-        model: Which solver model backs it (``ed-staffing`` / ``humanitarian``).
-        hard_capacity: Humanitarian hard-constraint (repair) mode.
+        model: Which solver model backs it (``ed-staffing`` / ``humanitarian`` /
+            ``allocation``). ``allocation`` is the published relief-allocation
+            model (:mod:`presidio_vol_assign.allocation`) audited in Paper B.
+        hard_capacity: Humanitarian hard-constraint (repair) mode; for
+            ``allocation`` it selects the repaired model (load-coupled CAIL,
+            hard capacity in the exact reference).
         unit_label / site_label: Plural nouns for the two sides of the problem.
         objectives: Plain-language objective descriptors, in solver order.
         knobs: Sliders shown for this scenario.
         cli_hint: The equivalent `pva` invocation, shown so the GUI stays an
             honest front-end for the CLI rather than a separate implementation.
+            Empty when no CLI command exists (the allocation scenarios run the
+            library directly); the page then says so instead.
     """
 
     id: str
     title: str
     subtitle: str
     description: str
-    model: Literal["ed-staffing", "humanitarian"]
+    model: Literal["ed-staffing", "humanitarian", "allocation"]
     hard_capacity: bool
     unit_label: str
     site_label: str
@@ -219,6 +225,56 @@ _HUMANITARIAN_OBJECTIVES = (
         "Centre overcrowding",
         "How far centres are pushed past comfortable occupancy.",
     ),
+)
+
+_ALLOCATION_KNOBS = (
+    Knob(
+        key="n_people",
+        label="People in the affected area",
+        minimum=30,
+        maximum=300,
+        step=30,
+        default=150,
+        help="A third of them can be directed to a centre in this round.",
+    ),
+    Knob(
+        key="n_centers",
+        label="Relief centres open",
+        minimum=2,
+        maximum=10,
+        step=1,
+        default=5,
+        help="How many centres can receive people.",
+    ),
+)
+
+_ALLOCATION_OBJECTIVES = (
+    Objective(
+        "Mn_ULPP",
+        "Unfairness in who is helped first",
+        "How far the people directed now fall short of being the most urgent cases.",
+    ),
+    Objective(
+        "Mn_TIL",
+        "Transport infeasibility",
+        "How long and how unsafe the journeys to the assigned centres are.",
+    ),
+    Objective(
+        "Mn_CAIL",
+        "Centre imbalance",
+        "How strained the receiving centres are by occupancy and resource depletion.",
+    ),
+)
+
+KAPPA_F_KNOB = Knob(
+    key="kappa_f",
+    label="Free places per person to place",
+    minimum=1.1,
+    maximum=2.0,
+    step=0.1,
+    default=1.5,
+    help="Total free places across all centres as a multiple of the people being directed.",
+    integer=False,
 )
 
 SCENARIOS: tuple[Scenario, ...] = (
@@ -339,6 +395,42 @@ SCENARIOS: tuple[Scenario, ...] = (
             "--hard-capacity --max-distance 30"
         ),
     ),
+    Scenario(
+        id="relief-published",
+        title="Relief allocation: published model",
+        subtitle="The evolutionary search next to the exact answer.",
+        description=(
+            "This is the relief-allocation model exactly as published. Its objectives "
+            "decompose person by person, so a simple exact rule computes the best "
+            "trade-offs instantly; compare the evolutionary fronts with the exact one."
+        ),
+        model="allocation",
+        hard_capacity=False,
+        unit_label="people",
+        site_label="relief centres",
+        objectives=_ALLOCATION_OBJECTIVES,
+        knobs=_ALLOCATION_KNOBS,
+        cli_hint="",
+    ),
+    Scenario(
+        id="relief-repaired",
+        title="Relief allocation: repaired model (load-aware, hard capacity)",
+        subtitle="Centre strain now grows with the people sent there.",
+        description=(
+            "The repaired model lets centre imbalance rise with the load each "
+            "allocation creates, and caps every centre at its free places. The exact "
+            "reference is a mixed-integer program that respects those caps; the "
+            "evolutionary search has no capacity handling, so its options may "
+            "overfill a centre."
+        ),
+        model="allocation",
+        hard_capacity=True,
+        unit_label="people",
+        site_label="relief centres",
+        objectives=_ALLOCATION_OBJECTIVES,
+        knobs=_ALLOCATION_KNOBS + (KAPPA_F_KNOB,),
+        cli_hint="",
+    ),
 )
 
 SCENARIOS_BY_ID = {s.id: s for s in SCENARIOS}
@@ -367,12 +459,15 @@ class GeneratedInstance:
         unit_points: One ``{id, x, y, label, weight}`` per allocatable unit.
         site_points: One ``{id, x, y, label, capacity}`` per destination site.
         summary: Short human-readable facts about the instance.
+        extras: Solver-side data that is not part of the problem object, e.g.
+            the centre capacities of the repaired allocation model.
     """
 
     problem: Any
     unit_points: list[dict[str, Any]] = field(default_factory=list)
     site_points: list[dict[str, Any]] = field(default_factory=list)
     summary: dict[str, Any] = field(default_factory=dict)
+    extras: dict[str, Any] = field(default_factory=dict)
 
 
 def _euclidean(unit_xy: np.ndarray, site_xy: np.ndarray) -> np.ndarray:
@@ -564,8 +659,192 @@ def _generate_ed_staffing(knobs: dict[str, float], seed: int) -> GeneratedInstan
     )
 
 
+# Categorical distributions of the published experiment generator
+# (pva-paperB ``experiments/generate_instances.py``), mirrored so the demo
+# instances have the same demographic and route character as the paper's.
+_DISABILITY_P = (0.70, 0.20, 0.10)
+_INJURY_P = (0.40, 0.25, 0.20, 0.10, 0.05)
+_LIVING_P = (0.65, 0.35)
+_RCS_P = (0.45, 0.40, 0.15)
+_PHS_P = (0.30, 0.30, 0.25, 0.10, 0.05)
+
+ROAD_DETOUR = 1.3
+"""Road distance per straight-line km (a common circuity factor)."""
+
+ROAD_SPEED_KMH = 60.0
+"""Average road speed. The published generator also converts km at 60 km/h."""
+
+TRAVEL_MINUTES_RANGE = (2.0, 180.0)
+"""Valid TD range: the allocation validator accepts [0, 180] and the published
+generator clips into [2, 180]."""
+
+
+def _generate_allocation(
+    knobs: dict[str, float], seed: int, *, repaired: bool
+) -> GeneratedInstance:
+    """Build a relief-allocation instance (published model) on the area grid.
+
+    Person and centre attributes follow the published generator's
+    distributions; travel duration comes from the Euclidean distance on the
+    grid (with a detour factor) rather than an independent draw, so the map
+    and the objective values tell the same story. ``n_dir`` is a third of the
+    people, as in the published instance sizes (150/50, 225/75, 300/100).
+
+    For the repaired model the centres also get a capacity, sized so their
+    free places sum to ``kappa_f * n_dir``; whole free places per centre are
+    the hard limits the exact reference must respect.
+    """
+    from presidio_vol_assign.allocation.fis import compute_vs
+    from presidio_vol_assign.allocation.load_coupling import (
+        capacities_from_free_factor,
+        hard_load_limits,
+    )
+    from presidio_vol_assign.allocation.models import (
+        AllocationProblem,
+        DisabilityStatus,
+        HazardLevel,
+        InjuryLevel,
+        LivingStatus,
+        ReliefCenter,
+        RoadCondition,
+        TravelInfo,
+        Weights,
+    )
+    from presidio_vol_assign.allocation.models import Person as AllocPerson
+
+    rng = np.random.default_rng(seed)
+    n_people = int(knobs["n_people"])
+    n_centers = int(knobs["n_centers"])
+    n_dir = max(1, n_people // 3)
+
+    center_xy = rng.uniform(0, AREA_KM, size=(n_centers, 2))
+    people_xy = rng.uniform(0, AREA_KM, size=(n_people, 2))
+
+    age = np.round(rng.uniform(5, 90, size=n_people), 1)
+    disability = rng.choice(len(DisabilityStatus), size=n_people, p=_DISABILITY_P)
+    injury = rng.choice(len(InjuryLevel), size=n_people, p=_INJURY_P)
+    living = rng.choice(len(LivingStatus), size=n_people, p=_LIVING_P)
+    idl = np.round(rng.beta(2.5, 2.0, size=n_people) * 100, 2)
+    rtr = np.round(rng.uniform(1.0, 48.0, size=n_people), 2)
+
+    cor = np.round(rng.uniform(20, 90, size=n_centers), 2)
+    rdr = np.round(rng.uniform(10, 80, size=n_centers), 2)
+
+    deltas = people_xy[:, None, :] - center_xy[None, :, :]
+    km = np.sqrt((deltas**2).sum(axis=-1)) * ROAD_DETOUR
+    minutes = np.clip(km / ROAD_SPEED_KMH * 60.0, *TRAVEL_MINUTES_RANGE)
+    rcs = rng.choice(len(RoadCondition), size=(n_people, n_centers), p=_RCS_P)
+    phs = rng.choice(len(HazardLevel), size=(n_people, n_centers), p=_PHS_P)
+
+    disability_levels = list(DisabilityStatus)
+    injury_levels = list(InjuryLevel)
+    living_levels = list(LivingStatus)
+    road_levels = list(RoadCondition)
+    hazard_levels = list(HazardLevel)
+
+    people = [
+        AllocPerson(
+            person_id=f"P{i + 1}",
+            age=float(age[i]),
+            disability_status=disability_levels[int(disability[i])],
+            injury_level=injury_levels[int(injury[i])],
+            living_status=living_levels[int(living[i])],
+            infrastructure_damage_level=float(idl[i]),
+            resource_time_remaining=float(rtr[i]),
+        )
+        for i in range(n_people)
+    ]
+    centers = [
+        ReliefCenter(
+            center_id=f"C{j + 1}",
+            center_occupancy_rate=float(cor[j]),
+            resource_depletion_rate=float(rdr[j]),
+        )
+        for j in range(n_centers)
+    ]
+    travel = {
+        (people[i].person_id, centers[j].center_id): TravelInfo(
+            person_id=people[i].person_id,
+            center_id=centers[j].center_id,
+            travel_duration=round(float(minutes[i, j]), 2),
+            road_condition=road_levels[int(rcs[i, j])],
+            possible_hazard=hazard_levels[int(phs[i, j])],
+        )
+        for i in range(n_people)
+        for j in range(n_centers)
+    }
+    problem = AllocationProblem(people=people, centers=centers, travel=travel, n_dir=n_dir)
+
+    extras: dict[str, Any] = {}
+    free_places: list[int | None] = [None] * n_centers
+    summary: dict[str, Any] = {"units": n_people, "sites": n_centers, "directed": n_dir}
+    if repaired:
+        kappa_f = float(knobs["kappa_f"])
+        capacity = capacities_from_free_factor(problem, kappa_f)
+        limits = hard_load_limits(problem, capacity)
+        # Flooring each centre's free places can leave fewer than n_dir whole
+        # places in total; grow the factor until the hard limits are feasible
+        # so the exact reference never receives an infeasible instance.
+        effective = kappa_f
+        while int(limits.sum()) < n_dir:
+            effective *= 1.05
+            capacity = capacities_from_free_factor(problem, effective)
+            limits = hard_load_limits(problem, capacity)
+        extras = {"capacity": capacity, "limits": limits, "kappa_f": effective}
+        free_places = [int(v) for v in limits]
+        summary.update(
+            {
+                "kappaF": round(kappa_f, 3),
+                "kappaFEffective": round(effective, 3),
+                "freePlaces": int(limits.sum()),
+                "centreSize": round(float(capacity[0]), 2),
+            }
+        )
+
+    vs_weights = Weights()
+    unit_points = [
+        {
+            "id": people[i].person_id,
+            "x": round(float(people_xy[i, 0]), 2),
+            "y": round(float(people_xy[i, 1]), 2),
+            "label": (
+                f"{people[i].person_id} · age {people[i].age:g} · "
+                f"injury {people[i].injury_level.value.replace('_', ' ')}"
+            ),
+            "weight": 1,
+            "priority": round(compute_vs(people[i], vs_weights) * 10, 2),
+        }
+        for i in range(n_people)
+    ]
+    site_points = []
+    for j in range(n_centers):
+        label = f"{centers[j].center_id} · {centers[j].center_occupancy_rate:g}% occupied"
+        if free_places[j] is not None:
+            label += f" · {free_places[j]} free places"
+        site_points.append(
+            {
+                "id": centers[j].center_id,
+                "x": round(float(center_xy[j, 0]), 2),
+                "y": round(float(center_xy[j, 1]), 2),
+                "label": label,
+                # None tells the page the published model has no capacity at all.
+                "capacity": free_places[j],
+            }
+        )
+
+    return GeneratedInstance(
+        problem=problem,
+        unit_points=unit_points,
+        site_points=site_points,
+        summary=summary,
+        extras=extras,
+    )
+
+
 def generate_instance(scenario: Scenario, knobs: dict[str, float], seed: int) -> GeneratedInstance:
     """Build a synthetic instance for *scenario* from clamped *knobs* and *seed*."""
+    if scenario.model == "allocation":
+        return _generate_allocation(knobs, seed, repaired=scenario.hard_capacity)
     if scenario.model == "humanitarian":
         return _generate_humanitarian(knobs, seed)
     return _generate_ed_staffing(knobs, seed)

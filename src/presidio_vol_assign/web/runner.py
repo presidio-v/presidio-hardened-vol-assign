@@ -12,6 +12,7 @@ from __future__ import annotations
 import csv
 import json
 import logging
+import multiprocessing
 import os
 import shutil
 import tempfile
@@ -164,12 +165,17 @@ def _enforce_size_caps(scenario: Any, knobs: dict[str, float]) -> None:
 
 def _warm_worker() -> None:
     """Pre-import the heavy solver stack so the first real run is not cold."""
+    import presidio_vol_assign.allocation.exact_mip  # noqa: F401
+    import presidio_vol_assign.allocation.fast_fis  # noqa: F401
+    import presidio_vol_assign.allocation.solvers  # noqa: F401
     import presidio_vol_assign.domains.ed_staffing  # noqa: F401
     import presidio_vol_assign.domains.humanitarian  # noqa: F401
     import presidio_vol_assign.engine  # noqa: F401
 
 
 def _build_domain(scenario: Any, knobs: dict[str, float]) -> Any:
+    if scenario.model == "allocation":
+        return None  # the allocation scenarios bypass the engine/domain layer
     from presidio_vol_assign.domains.ed_staffing import EDStaffingDomain
     from presidio_vol_assign.domains.humanitarian import HumanitarianDomain
 
@@ -211,9 +217,14 @@ def _prepare(request: RunRequest) -> tuple[Any, Any, Any]:
     scenario = get_scenario(request.scenario_id)
     instance = generate_instance(scenario, request.knobs, request.seed)
     domain = _build_domain(scenario, request.knobs)
-    # precompute() also primes solver-side state on the domain, so the two are
-    # cached together and never recombined across different knob settings.
-    fis_cache = domain.precompute(instance.problem)
+    if scenario.model == "allocation":
+        from presidio_vol_assign.web.relief import prepare_allocation
+
+        fis_cache = prepare_allocation(scenario, instance)
+    else:
+        # precompute() also primes solver-side state on the domain, so the two are
+        # cached together and never recombined across different knob settings.
+        fis_cache = domain.precompute(instance.problem)
 
     if len(_INSTANCE_CACHE) >= _INSTANCE_CACHE_SIZE:
         _INSTANCE_CACHE.pop(next(iter(_INSTANCE_CACHE)))
@@ -231,6 +242,19 @@ def _solve(request_dict: dict[str, Any]) -> dict[str, Any]:
     request = RunRequest(**request_dict)
     scenario = get_scenario(request.scenario_id)
     instance, domain, fis_cache = _prepare(request)
+
+    if scenario.model == "allocation":
+        from presidio_vol_assign.web.relief import solve_allocation
+
+        payload = _payload_head(request, scenario, instance)
+        payload["results"] = solve_allocation(request, scenario, instance, fis_cache)
+        if request.want_evidence:
+            payload["evidence"] = {
+                "available": False,
+                "reason": "signed evidence records cover the CLI models only, "
+                "not the relief-allocation scenarios",
+            }
+        return payload
 
     config = RunConfig(
         solver=request.solver,
@@ -264,7 +288,18 @@ def _solve(request_dict: dict[str, Any]) -> dict[str, Any]:
             }
         )
 
-    payload: dict[str, Any] = {
+    payload = _payload_head(request, scenario, instance)
+    payload["results"] = results
+
+    if request.want_evidence:
+        payload["evidence"] = _maybe_emit_evidence(request, scenario, instance, fronts, domain)
+
+    return payload
+
+
+def _payload_head(request: RunRequest, scenario: Any, instance: Any) -> dict[str, Any]:
+    """Everything in a run payload except the per-solver results."""
+    return {
         "scenario": scenario.id,
         "model": scenario.model,
         "hardCapacity": scenario.hard_capacity,
@@ -277,14 +312,9 @@ def _solve(request_dict: dict[str, Any]) -> dict[str, Any]:
         "units": instance.unit_points,
         "sites": instance.site_points,
         "summary": instance.summary,
-        "results": results,
+        "results": [],
         "cliHint": scenario.cli_hint,
     }
-
-    if request.want_evidence:
-        payload["evidence"] = _maybe_emit_evidence(request, scenario, instance, fronts, domain)
-
-    return payload
 
 
 def _encode_solutions(
@@ -458,6 +488,9 @@ class SolverPool:
             self._executor = ProcessPoolExecutor(
                 max_workers=self._limits.max_workers,
                 initializer=_warm_worker,
+                # spawn, not the Linux default fork: a forked worker inherits locks
+                # held by threads in the parent (HiGHS, BLAS, the server) and can hang.
+                mp_context=multiprocessing.get_context("spawn"),
             )
         return self._executor
 
