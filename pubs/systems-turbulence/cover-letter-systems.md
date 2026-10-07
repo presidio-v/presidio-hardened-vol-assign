@@ -1,6 +1,6 @@
 Dear Ms. Zhao, dear Guest Editors Prof. Jong-min Kim and Prof. Rob Kim Marjerison,
 
-We submit the manuscript "Is the AI Needed? Auditing a Digital Decision System for Necessity,
+We submit the manuscript "Is the AI Needed? Auditing a Digital AI Decision System for Necessity,
 Identifiability and Input Fragility under Turbulence" for the Special Issue "Using Digital AI
 Systems as a Response to High Economic Turbulence and Uncertainty" of *Systems*.
 

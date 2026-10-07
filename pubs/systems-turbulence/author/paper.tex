@@ -131,7 +131,7 @@ concentrated in the inputs the objectives consume. A minimal repair that makes o
 objective depend on the load it creates restores the intended semantics, yet the repaired
 model is still solved exactly in seconds at the sizes the system targets. The contributions
 are the protocol, the four findings, the open artefact that makes each of them checkable,
-and a correction of our own prior work that we state in the open.
+and an open revision of how our own prior work should be read.
 
 Section~\ref{sec:background} positions the audit; Section~\ref{sec:case} describes the
 system and the turbulence mapping; Section~\ref{sec:protocol} defines the protocol;
@@ -655,7 +655,8 @@ model, re-scored in the repaired model.
 \caption{Deployment envelope on the repaired model (soft $\kappa=2$; hard $\kappa_f=1.5$).
 Quality: objective sum in the soft model, mean over instances. Solved / proven: instances
 with an incumbent / with proven optimality. NSGA-II receives the same wall-clock as the MIP
-limit.\label{tab:envelope}}
+limit. The 300\,s rows are single instances (seed 0), not the three-instance means of
+the 60\,s rows.\label{tab:envelope}}
 \small
 \begin{tabular}{lrrrrrrr}
 \toprule
@@ -871,7 +872,7 @@ exact decider should therefore record the optimal value and a deterministic tie-
 not only the allocation.
 
 % =====================================================================
-\authorcontributions{Conceptualization, V.S.\ and D.A.-A.; methodology, V.S.; software, V.S.; validation, V.S.; formal analysis, V.S.; investigation, V.S.; resources, P.R.; data curation, V.S.; writing---original draft preparation, V.S.; writing---review and editing, V.S., P.R.\ and D.A.-A.; visualization, V.S.; supervision, V.S.; project administration, V.S. All authors have read and agreed to the published version of the manuscript.}
+\authorcontributions{Conceptualization, V.S.\ and D.A.-A.; methodology, V.S.; software, V.S.; validation, V.S.; formal analysis, V.S.; investigation, V.S.; resources, P.R.; data curation, V.S.; writing---original draft preparation, V.S.; writing---review and editing, V.S., P.R.\ and D.A.-A.; visualization, V.S.; project administration, V.S. All authors have read and agreed to the published version of the manuscript.}
 
 \funding{This research received no external funding.}
 
