@@ -25,8 +25,8 @@ The *Applied Sciences* article proposes the model and compares evolutionary algo
 each other. The present manuscript tests whether those algorithms are needed at all, measures
 the identifiability of their output, re-measures input fragility on an exact decider, and
 repairs a semantic gap in the published model. All analyses, code and data are new; the
-earlier article is cited wherever its model or instances are used. \[PENDING: co-author
-decision on a correction to the earlier article — mention here if filed.\]
+earlier article is cited wherever its model or instances are used, and the points on which
+the present audit revises its reading are stated openly in the Discussion.
 
 The data, code and result manifests are openly available (Zenodo,
 https://doi.org/10.5281/zenodo.23220061). The
