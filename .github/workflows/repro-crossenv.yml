@@ -37,7 +37,7 @@ jobs:
       - name: Reproducibility signatures
         run: uv run python -m experiments.run_reproducibility --sizes small,large --reps 5 --pop-size 100 --generations 150
       - name: Upload manifest
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: repro-${{ matrix.os }}-${{ matrix.python-version }}
           path: experiments/results/repro/repro_manifest.csv
@@ -54,7 +54,7 @@ jobs:
       - name: Compare signatures across environments
         run: python3 experiments/compare_repro.py crossenv
       - name: Upload cross-env summary
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: cross-env-repro-summary
           path: crossenv/cross_env_repro.csv
