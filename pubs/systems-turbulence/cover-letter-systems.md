@@ -12,7 +12,9 @@ that dominates the evolutionary search, that the system's committed decision cha
 of the people it directs between two equally valid runs, and that its true input fragility only
 becomes visible once solver noise is removed. We turn these steps into a five-step audit
 protocol that any organisation can run before trusting an optimising AI system in turbulent
-conditions.
+conditions. The protocol rests on systems methodology: it draws the audit boundary around the
+whole decision chain, checks structure before behaviour, separates variety the system generates
+itself from its response to the environment, and runs as a learning cycle.
 
 Scope. The case is relief allocation after a disaster, an acute resource-allocation shock. We
 engage the Special Issue's economic-turbulence theme through an explicit mapping of shock
@@ -36,6 +38,6 @@ offered for this Special Issue could be applied once the manuscript is sent for 
 
 Sincerely,
 
-Vladimir Stantchev (corresponding author), on behalf of all authors
-Institute of Information Systems, SRH University Heidelberg, Germany
+Vladimir Stantchev (corresponding author), on behalf of all authors\
+Institute of Information Systems, SRH University Heidelberg, Germany\
 stantchev@computer.org

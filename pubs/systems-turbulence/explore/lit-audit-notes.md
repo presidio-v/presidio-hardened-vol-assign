@@ -130,6 +130,14 @@ Test build: `bibtex` with `Definitions/mdpi.bst` gives 81 `\bibitem`s and 0 warn
 | song2025aiadoption | (*Systems*) AI adoption changes organisational decision-making. Motivates auditing such systems. | https://doi.org/10.3390/systems13080683 |
 | aghsami2024humanitarian | (*Systems*) Humanitarian logistics strategies before and after disasters. Places the case inside the journal. | https://doi.org/10.3390/systems12060215 |
 
+## Added 2026-10-18 (systems methodology, after the AE's note on the new EiC's emphasis)
+
+| Key | Why | Verified |
+|---|---|---|
+| ulrich1987critical | Boundary judgement: why the audit covers the whole decision chain, not the solver alone. | https://doi.org/10.1016/0377-2217(87)90036-1 (Crossref) |
+| sterman2002allmodels | Structure produces behaviour: why S1 precedes S3/S4. | https://doi.org/10.1002/sdr.261 (Crossref) |
+| checkland2000ssm | Learning cycle: S5 feeds the repaired model back through the checks. | https://doi.org/10.1002/1099-1743(200011)17:1+<::AID-SRES374>3.0.CO;2-O (Crossref) |
+
 ## Dropped candidates and why
 
 - **Kroll et al. end page (705)**: could not be confirmed from an authoritative record, so the entry cites the first page only.

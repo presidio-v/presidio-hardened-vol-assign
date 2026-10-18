@@ -63,7 +63,7 @@ the system's target sizes, and to proven optimality with hard capacity on a 3000
 instance in five minutes. The protocol is domain-agnostic and checkable from the open
 artefact.}
 
-\keyword{digital AI systems; economic turbulence; uncertainty; algorithmic auditing; multi-objective optimization; exact optimization; decision identifiability; data quality; supply chain; humanitarian logistics}
+\keyword{digital AI systems; economic turbulence; uncertainty; systems methodology; algorithmic auditing; multi-objective optimization; exact optimization; decision identifiability; data quality; supply chain; humanitarian logistics}
 
 \begin{document}
 
@@ -273,6 +273,22 @@ Flipped categorical status & Stale or wrong status of a lane, supplier or regula
 
 Figure~\ref{fig:protocol} summarises the five steps. Each step answers one question,
 produces a number that can be checked, and decides whether the next step is needed.
+
+The protocol treats the decision system as a system in the methodological sense, and three
+ideas from systems practice shape it. The first is the boundary. The object of the audit is
+not the optimiser alone but the whole chain from data through fuzzy scores, objective model,
+search and selection rule to the committed allocation. Drawing the boundary there, rather
+than around the solver that earlier comparisons tested, is a boundary judgement in Ulrich's
+sense~\cite{ulrich1987critical}, and it decides which failures can be seen at all. The second
+is that structure produces behaviour~\cite{sterman2002allmodels}: the protocol inspects the
+structure of the model (S1) before it measures how the system behaves (S3, S4), because a
+behavioural symptom read without that check can be misattributed, as the
+Discussion in Section~\ref{sec:discussion} shows. The third concerns variety. A regulator needs as much variety
+as the disturbances it must absorb~\cite{ashby1956cybernetics}, but variety the system
+generates internally, such as a decision that changes with the random seed, absorbs nothing;
+S3 separates that internal variety from the system's response to its environment. The
+protocol is also meant to be run again: S5 feeds a repaired model back through the same
+checks, in the spirit of a learning cycle rather than a one-off verdict~\cite{checkland2000ssm}.
 
 \begin{figure}[H]
 \centering
