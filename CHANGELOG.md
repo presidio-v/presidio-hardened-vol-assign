@@ -10,6 +10,11 @@ project adheres to [Semantic Versioning](https://semver.org/).
 - **Minimum Python is now 3.11** (3.10 reaches end of life on 2026-10-31).
   Pillow 13.0.0, which fixes eight decoder CVEs, no longer supports 3.10, so
   keeping 3.10 would have pinned its installs to a vulnerable Pillow.
+- String enums (`SolverType`, `SkillType`, `AuditStatus`,
+  `AllocationSolverType`, the ATRes categorical enums and `TurbulenceMode`) are
+  now `enum.StrEnum`: `str()` and f-strings yield the member value (e.g.
+  `nsga2`) instead of `SolverType.NSGA2`. No package output changes; every
+  writer already serialises `.value`.
 
 ### Security
 - Lockfile: `certifi` 2026.10.19 (PYSEC-2026-4320) and `pillow` 13.0.0

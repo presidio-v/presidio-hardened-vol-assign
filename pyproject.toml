@@ -64,9 +64,6 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP"]
-# UP042 (str+Enum -> StrEnum) changes str()/format() of members, which feed CSV and
-# evidence output; migrate deliberately, not as a lint autofix.
-ignore = ["UP042"]
 
 [tool.coverage.run]
 source = ["src"]

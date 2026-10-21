@@ -18,7 +18,7 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 
 from presidio_vol_assign import __version__
@@ -31,7 +31,7 @@ _AUDIT_CACHE_TTL_SECONDS = 86_400  # 24 hours
 _DEFAULT_CACHE_DIR = Path.home() / ".pva"
 
 
-class AuditStatus(str, Enum):
+class AuditStatus(StrEnum):
     OK = "ok"
     VULNERABLE = "vulnerable"
     SKIPPED = "skipped"
