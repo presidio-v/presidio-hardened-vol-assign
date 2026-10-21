@@ -31,7 +31,7 @@ pva metrics --pareto results/pareto_nsga2_20240101T120000.csv
 
 ## Technical Requirements
 
-- **Language:** Python 3.10+
+- **Language:** Python 3.11+
 - **Build system:** `pyproject.toml` with `hatchling` backend; `uv` for dependency management
 - **Project layout:** `src/presidio_vol_assign/` (src-layout)
 - **CLI framework:** Typer + rich (terminal tables and progress bars)

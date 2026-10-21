@@ -6,6 +6,16 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- **Minimum Python is now 3.11** (3.10 reaches end of life on 2026-10-31).
+  Pillow 13.0.0, which fixes eight decoder CVEs, no longer supports 3.10, so
+  keeping 3.10 would have pinned its installs to a vulnerable Pillow.
+
+### Security
+- Lockfile: `certifi` 2026.10.19 (PYSEC-2026-4320) and `pillow` 13.0.0
+  (CVE-2026-112395, -112397, -112400, -112404, -112895, -112896, -112897,
+  -112899).
+
 ## [0.4.0] — 2026-10-06
 
 ### Added

@@ -18,7 +18,7 @@ If ``--emit-evidence`` is set and no key is present, emission fails
 from __future__ import annotations
 
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -98,7 +98,7 @@ def emit_evidence(
     The output filename mirrors the sibling result files:
     ``evidence_<solver>_<timestamp>.json``.
     """
-    ts = generated_at or datetime.now(timezone.utc)
+    ts = generated_at or datetime.now(UTC)
 
     metric_map: dict[str, float] = {
         "nns": float(metrics.nns),
@@ -124,7 +124,7 @@ def emit_evidence(
     )
     seal(record, signer=signer, alg=alg, key=key)
 
-    stamp = ts.astimezone(timezone.utc).strftime("%Y%m%dT%H%M%S")
+    stamp = ts.astimezone(UTC).strftime("%Y%m%dT%H%M%S")
     path = output_dir / f"evidence_{solver}_{stamp}.json"
     # Write the record with the same canonical bytes used for hashing, so the
     # on-disk file is itself canonical and re-verifiable byte-for-byte.
