@@ -17,7 +17,7 @@ import json
 import subprocess
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
 
@@ -42,12 +42,12 @@ class AuditStatus(str, Enum):
 class AuditResult:
     status: AuditStatus
     n_vulnerabilities: int = 0
-    checked_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    checked_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     detail: str = ""
 
     @property
     def is_fresh(self) -> bool:
-        age = (datetime.now(timezone.utc) - self.checked_at).total_seconds()
+        age = (datetime.now(UTC) - self.checked_at).total_seconds()
         return age < _AUDIT_CACHE_TTL_SECONDS
 
     def summary(self) -> str:
@@ -176,7 +176,7 @@ class StructuredLogger:
 
     def _write(self, level: str, event: str, **extra: object) -> None:
         entry = {
-            "ts": datetime.now(timezone.utc).isoformat(),
+            "ts": datetime.now(UTC).isoformat(),
             "level": level,
             "version": __version__,
             "event": event,

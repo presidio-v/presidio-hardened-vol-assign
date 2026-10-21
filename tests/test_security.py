@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import subprocess
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -52,13 +52,13 @@ def test_audit_result_summary_error() -> None:
 def test_audit_result_is_fresh() -> None:
     recent = AuditResult(
         status=AuditStatus.OK,
-        checked_at=datetime.now(timezone.utc) - timedelta(hours=1),
+        checked_at=datetime.now(UTC) - timedelta(hours=1),
     )
     assert recent.is_fresh
 
     old = AuditResult(
         status=AuditStatus.OK,
-        checked_at=datetime.now(timezone.utc) - timedelta(hours=25),
+        checked_at=datetime.now(UTC) - timedelta(hours=25),
     )
     assert not old.is_fresh
 
@@ -104,7 +104,7 @@ def test_run_audit_uses_fresh_cache(tmp_path: Path) -> None:
     cache_file = tmp_path / "audit-cache.json"
     fresh = AuditResult(
         status=AuditStatus.OK,
-        checked_at=datetime.now(timezone.utc) - timedelta(minutes=5),
+        checked_at=datetime.now(UTC) - timedelta(minutes=5),
     )
     _save_cache(cache_file, fresh)
 
@@ -119,7 +119,7 @@ def test_run_audit_refreshes_stale_cache(tmp_path: Path) -> None:
     cache_file = tmp_path / "audit-cache.json"
     stale = AuditResult(
         status=AuditStatus.OK,
-        checked_at=datetime.now(timezone.utc) - timedelta(hours=25),
+        checked_at=datetime.now(UTC) - timedelta(hours=25),
     )
     _save_cache(cache_file, stale)
 
