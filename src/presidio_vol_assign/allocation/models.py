@@ -12,14 +12,14 @@ paper exactly.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 # ---------------------------------------------------------------------------
 # Enumerations — status fields with discrete score mappings (ATRes Table 1)
 # ---------------------------------------------------------------------------
 
 
-class DisabilityStatus(str, Enum):
+class DisabilityStatus(StrEnum):
     """ATRes DS_j: disability status of an affected person."""
 
     NONE = "none"
@@ -31,7 +31,7 @@ class DisabilityStatus(str, Enum):
         return {"none": 0.0, "minor": 0.5, "severe": 1.0}[self.value]
 
 
-class InjuryLevel(str, Enum):
+class InjuryLevel(StrEnum):
     """ATRes IL_j: injury severity classification."""
 
     NONE = "none"
@@ -51,7 +51,7 @@ class InjuryLevel(str, Enum):
         }[self.value]
 
 
-class LivingStatus(str, Enum):
+class LivingStatus(StrEnum):
     """ATRes LS_j: living-arrangement classification."""
 
     WITH_SUPPORT = "with_support"
@@ -62,7 +62,7 @@ class LivingStatus(str, Enum):
         return {"with_support": 0.0, "alone": 1.0}[self.value]
 
 
-class RoadCondition(str, Enum):
+class RoadCondition(StrEnum):
     """ATRes RCS_{j,i}: road condition score for a (person, center) route."""
 
     CLEAR = "clear"
@@ -74,7 +74,7 @@ class RoadCondition(str, Enum):
         return {"clear": 0.1, "partially_blocked": 0.5, "blocked": 1.0}[self.value]
 
 
-class HazardLevel(str, Enum):
+class HazardLevel(StrEnum):
     """ATRes PHS_{j,i}: possible-hazard score for a (person, center) route."""
 
     NONE = "none"
@@ -94,7 +94,7 @@ class HazardLevel(str, Enum):
         }[self.value]
 
 
-class AllocationSolverType(str, Enum):
+class AllocationSolverType(StrEnum):
     """Multi-objective evolutionary algorithms supported by `pva allocate`."""
 
     NSGA2 = "nsga2"
