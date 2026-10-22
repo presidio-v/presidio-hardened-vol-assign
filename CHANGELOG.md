@@ -6,6 +6,16 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Security
+- Floor `pillow>=13.0.0` on Python 3.11+. Pillow 12.3.0, pulled in by
+  matplotlib, carries 35 advisories first fixed in 13.0.0. Pillow 13 requires
+  Python 3.11, so Python 3.10 installs keep 12.3.0; the 3.10 CI audit ignores
+  exactly those advisories (`.github/pip-audit-py310-ignore.txt`).
+- `certifi` 2026.2.25 → 2026.10.19 in `uv.lock` (PYSEC-2026-4320). The new
+  bundle drops emSign ECC Root CA - G3, the root behind the eMudhra intermediates
+  with trivially recoverable keys (Mozilla bug 2083449). certifi is pulled in only
+  through the `dev` extra (httpx, pip-audit); the core install has no certifi.
+
 ## [0.4.0] — 2026-10-06
 
 ### Added

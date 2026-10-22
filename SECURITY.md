@@ -33,6 +33,16 @@ within 30 days of a confirmed vulnerability.
 - **Dependency audit** — `pip-audit` runs at startup and in CI; unpatched CVEs trigger a warning
 - **No secrets via CLI** — API keys and credentials must be supplied via environment variables, never as CLI flags
 
+## Known Limitations
+
+- On Python 3.10, matplotlib's transitive `pillow` stays at 12.3.0, which carries
+  35 advisories (CVE-2026-96636..96778, CVE-2026-112390..112901,
+  GHSA-78g4-xqwv-q3g8). The fix, pillow 13.0.0, requires Python 3.11, so the
+  `pillow>=13.0.0` floor applies on 3.11+ only. vol-assign uses pillow only to
+  write PNG charts (`savefig`) and never decodes untrusted images, but 3.10
+  users should upgrade Python. The 3.10 CI audit ignores exactly these IDs
+  (`.github/pip-audit-py310-ignore.txt`); the 3.11 and 3.12 audits ignore nothing.
+
 ## Software Development Lifecycle
 
 This repository is developed under the Presidio hardened-family SDLC. The public report

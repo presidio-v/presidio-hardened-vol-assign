@@ -20,6 +20,11 @@ dependencies = [
     # so metrics.py falls back to pymoo's hypervolume. That fallback is on the
     # import path of every CLI command and must always be installable.
     "pymoo>=0.6",
+    # CVE guard for matplotlib's transitive dependency: pillow 12.3.0 carries 35
+    # advisories (CVE-2026-96636..96778, CVE-2026-112390..112901,
+    # GHSA-78g4-xqwv-q3g8), first fixed in 13.0.0. Pillow 13 requires Python
+    # 3.11+, so the floor is marker-scoped; 3.10 has no fixed pillow release.
+    "pillow>=13.0.0; python_version >= '3.11'",
     "numpy>=1.24",
     "pandas>=2.0",
 ]
