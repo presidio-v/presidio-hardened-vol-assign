@@ -35,7 +35,7 @@ jobs:
         run: uv run pytest --cov=presidio_vol_assign --cov-fail-under=80
 
       - name: Dependency audit
-        # Python 3.10 has no fixed pillow release; it ignores only the advisories
+        # Python 3.10 has no fixed pillow or filelock release; it ignores only the advisories
         # listed in .github/pip-audit-py310-ignore.txt. Other legs ignore nothing.
         env:
           PY_VERSION: ${{ matrix.python-version }}
