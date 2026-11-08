@@ -322,4 +322,6 @@ def precompute_fis_cache_fast(problem: AllocationProblem, config: AllocationConf
         phs = np.array([t.possible_hazard.score for _, t in keys], dtype=float)
         trd = scatter(compiled("fis2a_trd").batch(rcs, phs))
         rpd = scatter(compiled("fis2b_rpd").batch(td))
-    return FISCache(ulpp=ulpp, til=til, trd=trd, rpd=rpd, cail=cail)
+    return FISCache(
+        ulpp=ulpp, til=til, trd=trd, rpd=rpd, cail=cail, ulpp_objective=config.ulpp_objective
+    )

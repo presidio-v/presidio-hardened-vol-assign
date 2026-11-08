@@ -106,6 +106,9 @@ class FISCache:
             post-allocation occupancy of centre i when it receives load l
             (``allocation.load_coupling``). When set, CAIL becomes load-coupled and
             ``evaluate_pairs`` reads it at each centre's realised load.
+        ulpp_objective: ``"directed"`` (as published) or ``"left_out"``
+            (corrected): which people the ULPP mean runs over; see
+            ``AllocationConfig.ulpp_objective``.
     """
 
     ulpp: np.ndarray
@@ -114,6 +117,7 @@ class FISCache:
     rpd: np.ndarray
     cail: np.ndarray
     cail_load: np.ndarray | None = None
+    ulpp_objective: str = "directed"
 
 
 def precompute_fis_cache(problem: AllocationProblem, config: AllocationConfig) -> FISCache:
@@ -162,7 +166,9 @@ def precompute_fis_cache(problem: AllocationProblem, config: AllocationConfig) -
             )
             rpd[i, j] = evaluate_fis2b_rpd(travel.travel_duration)
 
-    return FISCache(ulpp=ulpp, til=til, trd=trd, rpd=rpd, cail=cail)
+    return FISCache(
+        ulpp=ulpp, til=til, trd=trd, rpd=rpd, cail=cail, ulpp_objective=config.ulpp_objective
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -212,7 +218,7 @@ def evaluate_pairs(
     persons = np.fromiter((p for p, _ in pairs), dtype=int, count=n_dir)
     centers = np.fromiter((c for _, c in pairs), dtype=int, count=n_dir)
 
-    mn_ulpp = float(cache.ulpp[persons].mean())
+    mn_ulpp = _mean_ulpp(cache, persons)
     mn_cail = float(_cail_terms(cache, persons, centers).mean())
 
     if objectives == 4:
@@ -222,6 +228,15 @@ def evaluate_pairs(
 
     mn_til = float(cache.til[persons, centers].mean())
     return (mn_ulpp, mn_til, mn_cail)
+
+
+def _mean_ulpp(cache: FISCache, persons: np.ndarray) -> float:
+    """The ULPP objective: mean over the directed people, or over those left out."""
+    if cache.ulpp_objective == "directed":
+        return float(cache.ulpp[persons].mean())
+    left_out = np.ones(cache.ulpp.shape[0], dtype=bool)
+    left_out[persons] = False
+    return float(cache.ulpp[left_out].mean())
 
 
 def _cail_terms(cache: FISCache, persons: np.ndarray, centers: np.ndarray) -> np.ndarray:

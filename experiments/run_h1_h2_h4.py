@@ -111,6 +111,7 @@ def run_matrix(
     pop_size: int,
     generations: int,
     nsga3_divisions: int,
+    ulpp_objective: str = "directed",
 ) -> Path:
     """Execute every Cell in `cells`, write per-run outputs and a manifest CSV.
 
@@ -133,6 +134,7 @@ def run_matrix(
             solver=AllocationSolverType.NSGA2,
             objectives=objs,
             weights=weights,
+            ulpp_objective=ulpp_objective,
         )
         t0 = time.monotonic()
         caches[(size, objs)] = precompute_fis_cache(problems[size], sample_cfg)
@@ -181,6 +183,7 @@ def run_matrix(
                 seed=cell.seed,
                 nsga3_divisions=nsga3_divisions,
                 output_dir=str(run_dir),
+                ulpp_objective=ulpp_objective,
             )
 
             t0 = time.monotonic()
@@ -269,6 +272,12 @@ def main() -> None:
     parser.add_argument("--pop-size", type=int, default=DEFAULT_POP_SIZE)
     parser.add_argument("--generations", type=int, default=DEFAULT_GENERATIONS)
     parser.add_argument("--nsga3-divisions", type=int, default=4)
+    parser.add_argument(
+        "--ulpp-objective",
+        choices=["directed", "left_out"],
+        default="directed",
+        help="ULPP objective: as published (directed) or corrected (left_out).",
+    )
     args = parser.parse_args()
 
     if args.pilot:
@@ -309,6 +318,7 @@ def main() -> None:
         pop_size=args.pop_size,
         generations=args.generations,
         nsga3_divisions=args.nsga3_divisions,
+        ulpp_objective=args.ulpp_objective,
     )
     print(f"Done: {len(cells)} runs in {time.monotonic() - t0:.1f}s. Manifest → {manifest}")
 

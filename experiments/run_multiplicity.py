@@ -146,7 +146,12 @@ def part1() -> None:
 def _permuted(cache: FISCache, perm: np.ndarray) -> FISCache:
     """The same cache with people presented in the order ``perm``."""
     fields = {f.name: getattr(cache, f.name) for f in dataclasses.fields(cache)}
-    return FISCache(**{k: (None if v is None else np.asarray(v)[perm]) for k, v in fields.items()})
+    return FISCache(
+        **{
+            k: v if v is None or isinstance(v, str) else np.asarray(v)[perm]
+            for k, v in fields.items()
+        }
+    )
 
 
 def part2() -> None:

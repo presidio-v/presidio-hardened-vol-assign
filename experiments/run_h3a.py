@@ -61,6 +61,7 @@ def _run_cell(
     reps: int,
     pop_size: int,
     generations: int,
+    ulpp_objective: str = "directed",
 ) -> dict:
     """Run NSGA-II × `reps` reps with the given FIS overrides; return aggregated metrics."""
     cfg_template = AllocationConfig(
@@ -69,6 +70,7 @@ def _run_cell(
         weights=Weights(),
         pop_size=pop_size,
         generations=generations,
+        ulpp_objective=ulpp_objective,
     )
     if overrides:
         ctx = fis_overrides(overrides)
@@ -95,6 +97,7 @@ def _run_cell(
                 pop_size=pop_size,
                 generations=generations,
                 seed=BASE_SEED + rep * SEED_STEP,
+                ulpp_objective=ulpp_objective,
             )
             front = solve(problem, cfg, cache=cache)
             metrics = compute_allocation_metrics(front)
@@ -125,6 +128,12 @@ def main() -> None:
     parser.add_argument("--pop-size", type=int, default=100)
     parser.add_argument("--generations", type=int, default=200)
     parser.add_argument("--out", type=Path, default=Path("experiments/results/h3a"))
+    parser.add_argument(
+        "--ulpp-objective",
+        choices=["directed", "left_out"],
+        default="directed",
+        help="ULPP objective: as published (directed) or corrected (left_out).",
+    )
     args = parser.parse_args()
 
     spec = SIZES[args.size]
@@ -164,7 +173,9 @@ def main() -> None:
 
         # Baseline first
         t0 = time.monotonic()
-        baseline = _run_cell(problem, None, args.reps, args.pop_size, args.generations)
+        baseline = _run_cell(
+            problem, None, args.reps, args.pop_size, args.generations, args.ulpp_objective
+        )
         wall = time.monotonic() - t0
         writer.writerow(
             [
@@ -191,7 +202,12 @@ def main() -> None:
         for idx, (fis_name, rule_idx) in enumerate(deletions, start=1):
             t0 = time.monotonic()
             cell = _run_cell(
-                problem, {fis_name: [rule_idx]}, args.reps, args.pop_size, args.generations
+                problem,
+                {fis_name: [rule_idx]},
+                args.reps,
+                args.pop_size,
+                args.generations,
+                args.ulpp_objective,
             )
             wall = time.monotonic() - t0
             delta = 100.0 * (cell["hv_avg"] - baseline_hv) / baseline_hv if baseline_hv else 0.0
