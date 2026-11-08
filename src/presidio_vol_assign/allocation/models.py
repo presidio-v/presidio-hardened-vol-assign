@@ -341,12 +341,15 @@ class AllocationParetoFront:
             `objectives_count`.
         solutions: Non-dominated AllocationSolution objects.
         cpu_time_sec: Wall-clock solver time.
+        generations_run: Generations actually completed (fewer than configured when a
+            wall-clock budget stopped the run).
     """
 
     solver: AllocationSolverType
     objectives_count: int
     solutions: list[AllocationSolution] = field(default_factory=list)
     cpu_time_sec: float = 0.0
+    generations_run: int = 0
 
     @property
     def nns(self) -> int:

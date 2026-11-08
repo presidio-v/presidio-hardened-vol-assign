@@ -63,6 +63,35 @@ def _pairwise(rows: list[dict], metric: str) -> float:
     return float(np.mean([float(r[metric]) for r in rows]))
 
 
+_BOOT = 4000
+
+
+def _ci_seeds(values: list[float]) -> tuple[float, float]:
+    """95% percentile interval of the mean, resampling seeds."""
+    rng = np.random.Generator(np.random.PCG64(0))
+    v = np.asarray(values, dtype=float)
+    means = v[rng.integers(0, len(v), size=(_BOOT, len(v)))].mean(axis=1)
+    return float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5))
+
+
+def _ci_pairs(rows: list[dict], metric: str, n_seeds: int) -> tuple[float, float]:
+    """95% cluster-bootstrap interval of a pairwise mean: resample seeds, drop self-pairs."""
+    rng = np.random.Generator(np.random.PCG64(0))
+    table = np.full((n_seeds, n_seeds), np.nan)
+    for r in rows:
+        a, b = int(r["seed_a"]), int(r["seed_b"])
+        table[a, b] = table[b, a] = float(r[metric])
+    means = []
+    for _ in range(_BOOT):
+        pick = rng.integers(0, n_seeds, size=n_seeds)
+        sub = table[np.ix_(pick, pick)]
+        same = pick[:, None] == pick[None, :]
+        vals = sub[~same & ~np.isnan(sub)]
+        if vals.size:
+            means.append(vals.mean())
+    return float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5))
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     # a run is complete once its pairwise table is written (it is the driver's last output)
@@ -136,6 +165,12 @@ def main() -> None:
                     "committed_q_mean": float(np.mean(quality)),
                     "committed_q_sd": float(np.std(quality, ddof=1)),
                     "churn_floor": _pairwise(pairwise, "allocation_churn"),
+                    "churn_ci_lo": _ci_pairs(pairwise, "allocation_churn", meta["seeds"])[0],
+                    "churn_ci_hi": _ci_pairs(pairwise, "allocation_churn", meta["seeds"])[1],
+                    "hv_share_ci_lo": _ci_seeds(shares)[0],
+                    "hv_share_ci_hi": _ci_seeds(shares)[1],
+                    "committed_q_ci_lo": _ci_seeds(quality)[0],
+                    "committed_q_ci_hi": _ci_seeds(quality)[1],
                     "jaccard_floor": _pairwise(pairwise, "directed_jaccard"),
                     "mean_latency_s": float(
                         np.mean(

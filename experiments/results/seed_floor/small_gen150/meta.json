@@ -1,4 +1,6 @@
 {
+  "solver": "nsga2",
+  "instances": "experiments/instances/small",
   "size": "small",
   "seeds": 20,
   "pop_size": 100,

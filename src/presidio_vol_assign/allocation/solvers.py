@@ -353,16 +353,27 @@ _CXPB = 0.7
 _MUTPB = 0.2
 
 
+def encode_pairs(pairs: list[tuple[int, int]], n_centers: int, individual_cls: type) -> list:
+    """Inverse of ``decode_chromosome``: centre i is encoded at the middle of its bin."""
+    return individual_cls([p for p, _ in pairs] + [(c + 0.5) / n_centers for _, c in pairs])
+
+
 def _evolve(
     problem: AllocationProblem,
     config: AllocationConfig,
     cache: FISCache,
     individual_cls: type,
     selector: Any,
-) -> list:
+    deadline: float | None = None,
+    seed_allocations: list[list[tuple[int, int]]] | None = None,
+) -> tuple[list, int]:
     """Run a (mu+lambda) evolutionary loop with the given selection operator.
 
-    Returns the final population after `config.generations` generations.
+    Returns the final population and the number of generations completed: all of
+    ``config.generations``, or fewer when ``deadline`` (a ``time.monotonic()`` value) passes
+    first. ``seed_allocations`` replace the first random individuals of the initial
+    population; the random stream is drawn in full either way, so an unseeded,
+    unbounded run is unchanged.
     """
     if config.seed is not None:
         _random.seed(config.seed)
@@ -374,10 +385,17 @@ def _evolve(
     objectives = config.objectives
 
     population = [_make_individual(n_people, n_dir, individual_cls) for _ in range(config.pop_size)]
+    for k, pairs in enumerate((seed_allocations or [])[: config.pop_size]):
+        if len(pairs) != n_dir or len({p for p, _ in pairs}) != n_dir:
+            raise ValueError("a seed allocation must direct exactly n_dir distinct people")
+        population[k] = encode_pairs(pairs, n_centers, individual_cls)
     for ind in population:
         ind.fitness.values = evaluate_chromosome(ind, cache, n_dir, n_centers, objectives)
 
+    completed = 0
     for _ in range(config.generations):
+        if deadline is not None and completed > 0 and time.monotonic() >= deadline:
+            break
         offspring = [individual_cls(list(ind)) for ind in population]
         for ind, parent in zip(offspring, population):
             ind.fitness.values = parent.fitness.values
@@ -398,8 +416,9 @@ def _evolve(
                 ind.fitness.values = evaluate_chromosome(ind, cache, n_dir, n_centers, objectives)
 
         population = selector(population + offspring, config.pop_size)
+        completed += 1
 
-    return population
+    return population, completed
 
 
 # ---------------------------------------------------------------------------
@@ -490,6 +509,8 @@ def solve(
     problem: AllocationProblem,
     config: AllocationConfig,
     cache: FISCache | None = None,
+    time_budget: float | None = None,
+    seed_allocations: list[list[tuple[int, int]]] | None = None,
 ) -> AllocationParetoFront:
     """Run a single solver and return its Pareto front.
 
@@ -501,6 +522,10 @@ def solve(
     across many runs that share the same `(problem, weights, objectives,
     fis_overrides)` configuration — typical for the experiment matrix
     where FIS evaluation is the dominant cost. Pass None to recompute.
+
+    `time_budget` (seconds) stops the loop at a wall-clock deadline, with
+    `config.generations` as an upper bound; `seed_allocations` inject known
+    allocations (e.g. exact or greedy decisions) into the initial population.
     """
     if cache is None:
         cache = precompute_fis_cache(problem, config)
@@ -517,9 +542,14 @@ def solve(
     selector = _make_selector(solver_type, config)
 
     t0 = time.monotonic()
-    population = _evolve(problem, config, cache, individual_cls, selector)
+    deadline = None if time_budget is None else t0 + time_budget
+    population, completed = _evolve(
+        problem, config, cache, individual_cls, selector, deadline, seed_allocations
+    )
     elapsed = time.monotonic() - t0
-    return _extract_pareto_front(population, cache, problem, config, solver_type, elapsed)
+    front = _extract_pareto_front(population, cache, problem, config, solver_type, elapsed)
+    front.generations_run = completed
+    return front
 
 
 def _make_selector(solver_type: AllocationSolverType, config: AllocationConfig) -> Any:

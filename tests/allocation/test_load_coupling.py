@@ -46,3 +46,13 @@ def test_post_occupancy_clips_and_overload_counts(problem) -> None:
     assert overload([(j, 0) for j in range(problem.n_dir)], problem, kappa=1.0) > 0.0
     with pytest.raises(ValueError):
         centre_capacities(problem, kappa=0.0)
+
+
+def test_repair_form_defaults_to_the_linear_share() -> None:
+    cor, cap, loads = np.array([20.0]), np.array([10.0]), np.array([4.0])
+    assert post_occupancy(cor, cap, loads)[0] == pytest.approx(60.0)
+    assert post_occupancy(cor, cap, loads, alpha=2.0)[0] == pytest.approx(100.0)
+    assert post_occupancy(cor, cap, loads, gamma=2.0)[0] == pytest.approx(36.0)
+    assert post_occupancy(cor, np.array([np.inf]), loads, gamma=0.5)[0] == pytest.approx(20.0)
+    with pytest.raises(ValueError):
+        post_occupancy(cor, cap, loads, gamma=0.0)
