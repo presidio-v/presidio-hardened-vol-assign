@@ -35,6 +35,12 @@ for macro in ("\\Title", "\\abstract", "\\keyword"):
             k = s.index("\n", k) + 1; continue
         depth += (s[k] == "{") - (s[k] == "}"); k += 1
     s = s[:j] + "\\DIFadd{" + s[j:k - 1] + "}" + s[k - 1:]
+# The Highlights section is new (template update of November 2026): mark its items and headings.
+a = s.index("\\renewcommand{\\addhighlights}{")
+e = re.compile(r"(?m)^\}\s*(%DIF[^\n]*)?$").search(s, a).start()
+blk = re.sub(r"(?m)^\\item (.*?)\s*(%DIF[^\n]*)?$", r"\\item \\DIFadd{\1} \2", s[a:e])
+blk = re.sub(r"\\textbf\{(What are[^}]*)\}", r"\\textbf{\\DIFadd{\1}}", blk)
+s = s[:a] + blk + s[e:]
 open("diff.tex", "w").write(s)
 PY
 build diff; cp diff.pdf "$P/paperB-mdpi-diff-highlighted.pdf"
