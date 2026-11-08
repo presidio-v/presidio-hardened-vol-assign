@@ -5,12 +5,15 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12"]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -35,16 +38,20 @@ jobs:
         run: uv run pytest --cov=presidio_vol_assign --cov-fail-under=80
 
       - name: Dependency audit
-        # Python 3.10 has no fixed pillow or filelock release; it ignores only the advisories
-        # listed in .github/pip-audit-py310-ignore.txt. Other legs ignore nothing.
+        run: uv run --locked pip-audit
+
+  # Single required check for branch protection: it stays named `ci-ok` whatever
+  # the Python matrix is, so adding or dropping a version never strands a PR on a
+  # required check that no longer reports. Require this, not the matrix legs.
+  ci-ok:
+    if: always()
+    needs: [test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every test job to have passed
         env:
-          PY_VERSION: ${{ matrix.python-version }}
+          RESULT: ${{ needs.test.result }}
         run: |
-          ignore=()
-          if [ "$PY_VERSION" = "3.10" ]; then
-            while read -r id; do
-              case "$id" in ""|"#"*) continue ;; esac
-              ignore+=(--ignore-vuln "$id")
-            done < .github/pip-audit-py310-ignore.txt
-          fi
-          uv run --locked pip-audit "${ignore[@]}"
+          echo "test matrix result: $RESULT"
+          test "$RESULT" = "success"

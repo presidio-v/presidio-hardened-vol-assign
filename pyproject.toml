@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "presidio-hardened-vol-assign"
-version = "0.5.1"
+version = "0.6.0"
 description = "Multi-objective post-disaster assignment: ED volunteer staffing (Rabiei et al., ESWA 2023) and humanitarian people-to-centre allocation"
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "typer>=0.9",
     "rich>=13",
@@ -22,9 +22,8 @@ dependencies = [
     "pymoo>=0.6",
     # CVE guard for matplotlib's transitive dependency: pillow 12.3.0 carries 35
     # advisories (CVE-2026-96636..96778, CVE-2026-112390..112901,
-    # GHSA-78g4-xqwv-q3g8), first fixed in 13.0.0. Pillow 13 requires Python
-    # 3.11+, so the floor is marker-scoped; 3.10 has no fixed pillow release.
-    "pillow>=13.0.0; python_version >= '3.11'",
+    # GHSA-78g4-xqwv-q3g8), first fixed in 13.0.0.
+    "pillow>=13.0.0",
     "numpy>=1.24",
     "pandas>=2.0",
 ]
@@ -65,7 +64,7 @@ packages = ["src/presidio_vol_assign"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP"]

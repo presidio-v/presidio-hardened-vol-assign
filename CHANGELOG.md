@@ -6,6 +6,28 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-11-08
+
+Security release: Python 3.10 support dropped, which clears every open
+dependency advisory.
+
+### Changed
+- **Minimum Python is now 3.11** (3.10 reached end of life on 2026-10-31).
+  The fixed releases of Pillow (13.0.0) and filelock (4.2.1) no longer support
+  3.10, so the lockfile kept vulnerable versions for 3.10 installs
+  (Pillow 12.3.0, filelock 4.1.0: 58 Dependabot alerts). Relocking for 3.11+
+  removes them.
+- CI: a `ci-ok` job passes only if every Python version in the matrix passed,
+  so branch protection can require one check that survives matrix changes;
+  the workflow token is read-only.
+- String enums (`SolverType`, `SkillType`, `AuditStatus`,
+  `AllocationSolverType`, the ATRes categorical enums and `TurbulenceMode`) are
+  now `enum.StrEnum`: `str()` and f-strings yield the member value (e.g.
+  `nsga2`) instead of `SolverType.NSGA2`. No package output changes; every
+  writer already serialises `.value`.
+- README and PRESIDIO-REQ roadmaps list releases through 0.6.0; the data
+  connectors once planned as 0.3.1 stay planned, unnumbered.
+
 ## [0.5.1] — 2026-11-08
 
 Code and result manifests for the correction of Rabiei, Arias-Aranda, Stantchev,

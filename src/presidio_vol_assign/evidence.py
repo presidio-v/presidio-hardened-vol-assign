@@ -44,7 +44,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -366,8 +366,8 @@ def build_record(
         "metrics": {k: float_to_decimal_str(v) for k, v in metrics.items()},
     }
 
-    ts = generated_at or datetime.now(timezone.utc)
-    generated_at_str = ts.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    ts = generated_at or datetime.now(UTC)
+    generated_at_str = ts.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     return {
         "content": content,

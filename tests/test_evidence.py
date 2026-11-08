@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import copy
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -27,7 +27,7 @@ from presidio_vol_assign.evidence import (
     verify_record,
 )
 
-_FIXED_TS = datetime(2026, 7, 5, 12, 0, 0, tzinfo=timezone.utc)
+_FIXED_TS = datetime(2026, 7, 5, 12, 0, 0, tzinfo=UTC)
 _HMAC_SECRET = bytes.fromhex("aa" * 32)
 _SIGNER = "test-signer"
 
@@ -146,7 +146,7 @@ def test_generated_at_and_emitter_in_envelope_not_content(tmp_path: Path) -> Non
 def test_content_hash_deterministic_across_builds(tmp_path: Path) -> None:
     r1 = _build(tmp_path)
     # Different generated_at should NOT change content_hash (it's in the envelope).
-    r2 = _build(tmp_path, generated_at=datetime(2030, 1, 1, tzinfo=timezone.utc))
+    r2 = _build(tmp_path, generated_at=datetime(2030, 1, 1, tzinfo=UTC))
     assert r1["content_hash"] == r2["content_hash"]
     assert content_hash(r1["content"]) == r1["content_hash"]
 

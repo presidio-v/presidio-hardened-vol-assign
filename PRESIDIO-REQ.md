@@ -31,7 +31,7 @@ pva metrics --pareto results/pareto_nsga2_20240101T120000.csv
 
 ## Technical Requirements
 
-- **Language:** Python 3.10+
+- **Language:** Python 3.11+
 - **Build system:** `pyproject.toml` with `hatchling` backend; `uv` for dependency management
 - **Project layout:** `src/presidio_vol_assign/` (src-layout)
 - **CLI framework:** Typer + rich (terminal tables and progress bars)
@@ -136,7 +136,11 @@ Both implemented via DEAP:
 | v0.1.0 | Released | MVP: FIS (scikit-fuzzy) + NSGA-II + NRGA (DEAP), CSV I/O, Pareto metrics (ED-staffing model) |
 | v0.2.0 | Released | Humanitarian allocation model (3 new FIS, 3 objectives) side by side with the ED model; N-D metrics + reproducibility metric; `pva benchmark` + `pva sensitivity` + `pva show` figure export |
 | v0.3.0 | Released | Evidence-carrying allocation (`--emit-evidence` / `pva verify-evidence`); interactive Pareto explorer as a browser GUI (`pva serve`) |
-| v0.3.1 | Planned | Real-world data connectors (`pva import`); bring-your-own-CSV in the demo GUI |
+| v0.4.0 | Released | Published relief-allocation model in the demo, with exact deciders (weighted-sum rule, MIP) and a compiled FIS evaluator; static demo build (`pva build-demo`); experiment drivers and result manifests (`experiments/`) |
+| v0.5.0 | Released | Near-optimal multiplicity and tie-breaking, capacity-aware local search, solver time budget and seeding, repair forms; reproducible instance generator; drivers and results for the allocation-model audit (MDPI *Systems*) |
+| v0.5.1 | Released | Corrected ULPP objective (`ulpp_objective="left_out"`) and the reruns behind the correction to *Appl. Sci.* 2026, 16, 7581 |
+| v0.6.0 | Released | Python 3.11+ (clears every open dependency advisory); string enums are `StrEnum`; single `ci-ok` CI gate |
+| next | Planned | Real-world data connectors (`pva import`); bring-your-own-CSV in the demo GUI |
 
 See **Version Deliberations** below for full rationale, and
 [docs/v0.2.0-plan.md](docs/v0.2.0-plan.md) for the detailed v0.2.0 implementation plan.
@@ -250,9 +254,13 @@ publication-quality static figures.
 **Evidence-carrying allocation.** Landed after the v0.2.0 tag and releases here;
 scope and rationale are documented under v0.2.0 above.
 
-### v0.3.1 — Benchmark Reproducibility + Data Connectors
+### Next — Data Connectors (planned; originally scheduled as v0.3.1)
 
-**Benchmark reproducibility (`pva benchmark`):**
+The benchmark-reproducibility half of the original v0.3.1 scope shipped in
+v0.4.0–v0.5.1 as the `experiments/` drivers and archived result manifests, with a
+cross-environment reproducibility workflow; the data connectors remain open.
+
+**Benchmark reproducibility (`pva benchmark`) — as originally scoped:**
 - Regenerate all 30 small-size and 30 large-size problem instances using the paper's documented random seed procedure
 - Run both solvers on all instances; compute aggregate metrics
 - Output: summary table reproducing paper Table 3 format (mean ± std for CPU time, NNS, MID, SM, HV)
