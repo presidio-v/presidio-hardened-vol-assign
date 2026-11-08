@@ -22,7 +22,7 @@ from __future__ import annotations
 import copy
 from collections import Counter
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 import numpy as np
 
@@ -36,7 +36,7 @@ from presidio_vol_assign.allocation.models import (
 )
 
 
-class TurbulenceMode(str, Enum):
+class TurbulenceMode(StrEnum):
     """How an input field is degraded."""
 
     NOISE = "noise"  # additive Gaussian, sigma = level * field range
@@ -58,7 +58,7 @@ _CONTINUOUS: dict[str, tuple[str, str, float, float]] = {
 }
 
 # (owner, attribute, enum type)
-_CATEGORICAL: dict[str, tuple[str, str, type[Enum]]] = {
+_CATEGORICAL: dict[str, tuple[str, str, type[StrEnum]]] = {
     "disability_status": ("person", "disability_status", DisabilityStatus),
     "injury_level": ("person", "injury_level", InjuryLevel),
     "living_status": ("person", "living_status", LivingStatus),
@@ -113,15 +113,15 @@ def _perturb_continuous(
 
 
 def _perturb_categorical(
-    values: list[Enum],
+    values: list[StrEnum],
     mode: TurbulenceMode,
     level: float,
-    enum_cls: type[Enum],
+    enum_cls: type[StrEnum],
     rng: np.random.Generator,
-) -> list[Enum]:
+) -> list[StrEnum]:
     members = list(enum_cls)
     if mode is TurbulenceMode.FLIP:
-        out: list[Enum] = []
+        out: list[StrEnum] = []
         for current in values:
             if rng.random() < level:
                 others = [m for m in members if m != current]

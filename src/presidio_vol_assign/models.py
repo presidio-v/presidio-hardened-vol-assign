@@ -7,21 +7,21 @@ Validation lives in validation.py; algorithm logic in fis.py and solvers.py.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 # ---------------------------------------------------------------------------
 # Enumerations
 # ---------------------------------------------------------------------------
 
 
-class SkillType(str, Enum):
+class SkillType(StrEnum):
     """Volunteer/vacancy role type."""
 
     TRIAGE = "triage"
     ER_NURSE = "er_nurse"
 
 
-class SolverType(str, Enum):
+class SolverType(StrEnum):
     """Available solvers.
 
     NSGA2, NRGA and NRGA_RANKED are the evolutionary multi-objective solvers:

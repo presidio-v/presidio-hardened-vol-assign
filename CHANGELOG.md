@@ -15,6 +15,11 @@ project adheres to [Semantic Versioning](https://semver.org/).
 - CI: a `ci-ok` job passes only if every Python version in the matrix passed,
   so branch protection can require one check that survives matrix changes;
   the workflow token is read-only.
+- String enums (`SolverType`, `SkillType`, `AuditStatus`,
+  `AllocationSolverType`, the ATRes categorical enums and `TurbulenceMode`) are
+  now `enum.StrEnum`: `str()` and f-strings yield the member value (e.g.
+  `nsga2`) instead of `SolverType.NSGA2`. No package output changes; every
+  writer already serialises `.value`.
 
 ## [0.5.1] — 2026-11-08
 
