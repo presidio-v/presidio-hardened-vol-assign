@@ -16,7 +16,7 @@ pip install presidio-hardened-vol-assign
 uv add presidio-hardened-vol-assign
 ```
 
-**Requirements:** Python 3.10+
+**Requirements:** Python 3.11+
 
 ---
 

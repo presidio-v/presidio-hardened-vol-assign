@@ -6,6 +6,16 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- **Minimum Python is now 3.11** (3.10 reached end of life on 2026-10-31).
+  The fixed releases of Pillow (13.0.0) and filelock (4.2.1) no longer support
+  3.10, so the lockfile kept vulnerable versions for 3.10 installs
+  (Pillow 12.3.0, filelock 4.1.0: 58 Dependabot alerts). Relocking for 3.11+
+  removes them.
+- CI: a `ci-ok` job passes only if every Python version in the matrix passed,
+  so branch protection can require one check that survives matrix changes;
+  the workflow token is read-only.
+
 ## [0.5.1] — 2026-11-08
 
 Code and result manifests for the correction of Rabiei, Arias-Aranda, Stantchev,
