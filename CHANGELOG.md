@@ -6,6 +6,11 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-11-08
+
+Security release: Python 3.10 support dropped, which clears every open
+dependency advisory.
+
 ### Changed
 - **Minimum Python is now 3.11** (3.10 reached end of life on 2026-10-31).
   The fixed releases of Pillow (13.0.0) and filelock (4.2.1) no longer support
