@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: "latest"
 
@@ -24,7 +24,7 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --locked --extra dev
 
       - name: Lint
         run: |
@@ -35,4 +35,16 @@ jobs:
         run: uv run pytest --cov=presidio_vol_assign --cov-fail-under=80
 
       - name: Dependency audit
-        run: uv run pip-audit
+        # Python 3.10 has no fixed pillow or filelock release; it ignores only the advisories
+        # listed in .github/pip-audit-py310-ignore.txt. Other legs ignore nothing.
+        env:
+          PY_VERSION: ${{ matrix.python-version }}
+        run: |
+          ignore=()
+          if [ "$PY_VERSION" = "3.10" ]; then
+            while read -r id; do
+              case "$id" in ""|"#"*) continue ;; esac
+              ignore+=(--ignore-vuln "$id")
+            done < .github/pip-audit-py310-ignore.txt
+          fi
+          uv run --locked pip-audit "${ignore[@]}"
