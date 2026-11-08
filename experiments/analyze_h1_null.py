@@ -25,6 +25,7 @@ the null 95% CI, and a z-score / percentile.
 
 from __future__ import annotations
 
+import os
 import time
 from pathlib import Path
 
@@ -39,6 +40,9 @@ from experiments.analyze_h1 import (
 from experiments.generate_instances import SIZES
 from presidio_vol_assign.allocation.models import AllocationProblem, Weights
 from presidio_vol_assign.allocation.validation import load_allocation_problem
+
+# Results root; PVA_RESULTS points the analysis at another run (e.g. the corrected one).
+H1_DIR = Path(os.environ.get("PVA_RESULTS", "experiments/results")) / "h1_h2_h4"
 
 
 def _null_dominance(
@@ -72,8 +76,8 @@ def main() -> None:
     n_null_samples = 100
     rng = np.random.default_rng(seed=2026)
 
-    manifest = pd.read_csv("experiments/results/h1_h2_h4/manifest.csv")
-    h1 = pd.read_csv("experiments/results/h1_h2_h4/h1_analysis.csv")
+    manifest = pd.read_csv(H1_DIR / "manifest.csv")
+    h1 = pd.read_csv(H1_DIR / "h1_analysis.csv")
 
     problems: dict[str, AllocationProblem] = {}
     til_caches: dict[str, dict[tuple[str, str], float]] = {}
@@ -91,7 +95,7 @@ def main() -> None:
     t0 = time.monotonic()
     rows = []
     for _, row in four.iterrows():
-        run_dir = Path("experiments/results/h1_h2_h4") / row["run_id"]
+        run_dir = H1_DIR / row["run_id"]
         front = reconstruct_front(run_dir)
         # Actual ATRes-RWS-weighted fraction from h1_analysis.csv
         h1_row = h1[
@@ -165,7 +169,7 @@ def main() -> None:
         f"{100.0 * (out['actual_fraction'] < out['null_p05']).mean():.1f}%"
     )
 
-    out_path = Path("experiments/results/h1_h2_h4/h1_null_analysis.csv")
+    out_path = H1_DIR / "h1_null_analysis.csv"
     out.to_csv(out_path, index=False)
     print(f"\nDetail → {out_path}")
 

@@ -55,6 +55,8 @@ def build_static_mip(
     w = tuple(weights) if weights is not None else (1.0,) * objectives
     if len(w) != objectives or any(x < 0 for x in w):
         raise ValueError("weights must be one non-negative value per objective")
+    if cache.ulpp_objective != "directed":  # the per-person cost below is the published form
+        raise NotImplementedError("exact deciders implement the published ULPP objective only")
     m, n = cache.til.shape
     if not 0 < n_dir <= m:
         raise ValueError("n_dir must be in (0, number of people]")

@@ -57,3 +57,26 @@ revision's envelope instances are archived as well.
 
 Timings in the manifests are wall-clock on the machine recorded in each `meta.json` or
 environment fingerprint; they are indicative, not reproducible.
+
+## Paper A correction (Appl. Sci. 2026, 16, 7581; November 2026)
+
+The objective of the published four-objective model averages the per-person score ULPP_j (the
+unfairness of leaving person j behind) over the people **directed**; it should average it over
+the people **left out**. `AllocationConfig(ulpp_objective="left_out")` (driver flag
+`--ulpp-objective left_out`) implements the corrected objective; the default `"directed"` keeps
+the published one, so the v0.2.0 results still reproduce. The exact deciders (`baselines`,
+`exact_mip`, `multiplicity`, `local_search`) implement the published objective only and refuse
+`"left_out"`.
+
+`sh experiments/run_correction.sh <v0.2.0 results dir>` runs everything (about 1 h 45 min on
+an M-series laptop):
+
+| Step | Producer | Output under `results/correction/` |
+|---|---|---|
+| Reproduce the published H1/H2/H4 matrix (matches the v0.2.0 manifest exactly) | `run_h1_h2_h4` | `repro_directed/h1_h2_h4/manifest.csv` |
+| H1/H2/H4, pop-200, H3a (3 sizes), H3b (3 sizes) under the corrected objective | `run_h1_h2_h4`, `run_h3a`, `run_h3b` with `--ulpp-objective left_out` | `left_out/` |
+| Tables 3, 4, A7, A8 and the H3b CVs, published and corrected | `correction_tables` | `tables/{published,corrected}_*.csv` |
+| H1 Spearman, null model, instance-aware HV | `analyze_h1`, `analyze_h1_null`, `analyze_hv_instance_aware` (`PVA_RESULTS`) | `left_out/h1_h2_h4/*.csv` |
+| Figures 1–5 of the article (corrected HV, published CPU times) | `correction_cpu_merge`, `make_figures` (`PVA_RESULTS`, `PVA_FIGURES`, `PVA_H1_MANIFEST`) | `figures_corrected/` (not committed) |
+
+Per-run fronts (`*/rep*/`) are not committed; they regenerate bit for bit from the seeds.

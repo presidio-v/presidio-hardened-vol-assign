@@ -1,0 +1,548 @@
+Plan: 540 cells (sizes=['large', 'medium', 'small'], formulations=[3, 4], algos=['nsga2', 'nrga', 'nsga3'], reps=30)
+  [cache] large  3-obj precomputed in   25.9s
+  [cache] large  4-obj precomputed in   27.7s
+  [cache] medium 3-obj precomputed in   16.3s
+  [cache] medium 4-obj precomputed in   18.2s
+  [cache] small  3-obj precomputed in    7.5s
+  [cache] small  4-obj precomputed in    8.2s
+  [  1/540] large_3obj_nsga2_rep00                           NNS=100  HV=        232707  wall=  3.16s
+  [  2/540] large_3obj_nsga2_rep01                           NNS=100  HV=        232467  wall=  3.25s
+  [  3/540] large_3obj_nsga2_rep02                           NNS=100  HV=        236602  wall=  3.00s
+  [  4/540] large_3obj_nsga2_rep03                           NNS=100  HV=        238125  wall=  3.04s
+  [  5/540] large_3obj_nsga2_rep04                           NNS=100  HV=        237572  wall=  3.24s
+  [  6/540] large_3obj_nsga2_rep05                           NNS=100  HV=        233696  wall=  3.10s
+  [  7/540] large_3obj_nsga2_rep06                           NNS=100  HV=        233578  wall=  2.97s
+  [  8/540] large_3obj_nsga2_rep07                           NNS=100  HV=        237750  wall=  3.32s
+  [  9/540] large_3obj_nsga2_rep08                           NNS=100  HV=        230230  wall=  3.11s
+  [ 10/540] large_3obj_nsga2_rep09                           NNS=100  HV=        237778  wall=  3.07s
+  [ 11/540] large_3obj_nsga2_rep10                           NNS=100  HV=        228398  wall=  3.19s
+  [ 12/540] large_3obj_nsga2_rep11                           NNS=100  HV=        234307  wall=  3.18s
+  [ 13/540] large_3obj_nsga2_rep12                           NNS=100  HV=        242850  wall=  3.21s
+  [ 14/540] large_3obj_nsga2_rep13                           NNS=100  HV=        235303  wall=  2.93s
+  [ 15/540] large_3obj_nsga2_rep14                           NNS=100  HV=        239291  wall=  2.97s
+  [ 16/540] large_3obj_nsga2_rep15                           NNS=100  HV=        239772  wall=  3.07s
+  [ 17/540] large_3obj_nsga2_rep16                           NNS=100  HV=        235280  wall=  3.08s
+  [ 18/540] large_3obj_nsga2_rep17                           NNS=100  HV=        241198  wall=  3.04s
+  [ 19/540] large_3obj_nsga2_rep18                           NNS=100  HV=        233136  wall=  2.86s
+  [ 20/540] large_3obj_nsga2_rep19                           NNS=100  HV=        231922  wall=  3.20s
+  [ 21/540] large_3obj_nsga2_rep20                           NNS=100  HV=        239305  wall=  3.47s
+  [ 22/540] large_3obj_nsga2_rep21                           NNS=100  HV=        240809  wall=  3.14s
+  [ 23/540] large_3obj_nsga2_rep22                           NNS=100  HV=        231568  wall=  3.22s
+  [ 24/540] large_3obj_nsga2_rep23                           NNS=100  HV=        232603  wall=  3.12s
+  [ 25/540] large_3obj_nsga2_rep24                           NNS=100  HV=        238118  wall=  3.27s
+  [ 26/540] large_3obj_nsga2_rep25                           NNS=100  HV=        238333  wall=  2.97s
+  [ 27/540] large_3obj_nsga2_rep26                           NNS=100  HV=        227313  wall=  3.21s
+  [ 28/540] large_3obj_nsga2_rep27                           NNS=100  HV=        237930  wall=  3.09s
+  [ 29/540] large_3obj_nsga2_rep28                           NNS=100  HV=        239402  wall=  3.11s
+  [ 30/540] large_3obj_nsga2_rep29                           NNS=100  HV=        232197  wall=  3.03s
+  [ 31/540] large_3obj_nrga_rep00                            NNS=100  HV=        212481  wall=  2.60s
+  [ 32/540] large_3obj_nrga_rep01                            NNS=100  HV=        212759  wall=  2.51s
+  [ 33/540] large_3obj_nrga_rep02                            NNS=100  HV=        216852  wall=  2.50s
+  [ 34/540] large_3obj_nrga_rep03                            NNS=100  HV=        231451  wall=  2.60s
+  [ 35/540] large_3obj_nrga_rep04                            NNS=100  HV=        213708  wall=  2.64s
+  [ 36/540] large_3obj_nrga_rep05                            NNS= 95  HV=        226796  wall=  2.67s
+  [ 37/540] large_3obj_nrga_rep06                            NNS=100  HV=        214612  wall=  2.48s
+  [ 38/540] large_3obj_nrga_rep07                            NNS= 45  HV=        216417  wall=  2.64s
+  [ 39/540] large_3obj_nrga_rep08                            NNS=100  HV=        216722  wall=  2.88s
+  [ 40/540] large_3obj_nrga_rep09                            NNS=100  HV=        228850  wall=  2.49s
+  [ 41/540] large_3obj_nrga_rep10                            NNS=100  HV=        229193  wall=  2.60s
+  [ 42/540] large_3obj_nrga_rep11                            NNS=100  HV=        225142  wall=  2.53s
+  [ 43/540] large_3obj_nrga_rep12                            NNS=100  HV=        218679  wall=  2.47s
+  [ 44/540] large_3obj_nrga_rep13                            NNS=100  HV=        223894  wall=  2.63s
+  [ 45/540] large_3obj_nrga_rep14                            NNS=100  HV=        219977  wall=  2.81s
+  [ 46/540] large_3obj_nrga_rep15                            NNS= 41  HV=        224637  wall=  2.56s
+  [ 47/540] large_3obj_nrga_rep16                            NNS=100  HV=        221610  wall=  2.47s
+  [ 48/540] large_3obj_nrga_rep17                            NNS=100  HV=        221757  wall=  2.61s
+  [ 49/540] large_3obj_nrga_rep18                            NNS=100  HV=        224208  wall=  2.58s
+  [ 50/540] large_3obj_nrga_rep19                            NNS=100  HV=        220322  wall=  2.58s
+  [ 51/540] large_3obj_nrga_rep20                            NNS=100  HV=        221330  wall=  2.68s
+  [ 52/540] large_3obj_nrga_rep21                            NNS=100  HV=        228097  wall=  2.61s
+  [ 53/540] large_3obj_nrga_rep22                            NNS=100  HV=        217223  wall=  2.68s
+  [ 54/540] large_3obj_nrga_rep23                            NNS=100  HV=        216441  wall=  2.91s
+  [ 55/540] large_3obj_nrga_rep24                            NNS=100  HV=        238378  wall=  2.99s
+  [ 56/540] large_3obj_nrga_rep25                            NNS=100  HV=        219556  wall=  2.61s
+  [ 57/540] large_3obj_nrga_rep26                            NNS=100  HV=        220716  wall=  2.84s
+  [ 58/540] large_3obj_nrga_rep27                            NNS= 45  HV=        219875  wall=  2.77s
+  [ 59/540] large_3obj_nrga_rep28                            NNS= 55  HV=        220314  wall=  2.60s
+  [ 60/540] large_3obj_nrga_rep29                            NNS=100  HV=        216514  wall=  2.52s
+  [ 61/540] large_3obj_nsga3_rep00                           NNS=100  HV=        221792  wall=  2.16s
+  [ 62/540] large_3obj_nsga3_rep01                           NNS=100  HV=        222039  wall=  2.12s
+  [ 63/540] large_3obj_nsga3_rep02                           NNS=100  HV=        235897  wall=  2.29s
+  [ 64/540] large_3obj_nsga3_rep03                           NNS=100  HV=        226287  wall=  2.51s
+  [ 65/540] large_3obj_nsga3_rep04                           NNS=100  HV=        232993  wall=  2.23s
+  [ 66/540] large_3obj_nsga3_rep05                           NNS=100  HV=        223099  wall=  2.14s
+  [ 67/540] large_3obj_nsga3_rep06                           NNS=100  HV=        234777  wall=  2.23s
+  [ 68/540] large_3obj_nsga3_rep07                           NNS=100  HV=        239004  wall=  2.25s
+  [ 69/540] large_3obj_nsga3_rep08                           NNS=100  HV=        229676  wall=  2.26s
+  [ 70/540] large_3obj_nsga3_rep09                           NNS=100  HV=        231862  wall=  2.09s
+  [ 71/540] large_3obj_nsga3_rep10                           NNS=100  HV=        234826  wall=  2.19s
+  [ 72/540] large_3obj_nsga3_rep11                           NNS=100  HV=        226141  wall=  2.10s
+  [ 73/540] large_3obj_nsga3_rep12                           NNS=100  HV=        237881  wall=  2.27s
+  [ 74/540] large_3obj_nsga3_rep13                           NNS=100  HV=        234110  wall=  2.22s
+  [ 75/540] large_3obj_nsga3_rep14                           NNS=100  HV=        230878  wall=  2.29s
+  [ 76/540] large_3obj_nsga3_rep15                           NNS=100  HV=        238225  wall=  2.26s
+  [ 77/540] large_3obj_nsga3_rep16                           NNS=100  HV=        235009  wall=  2.18s
+  [ 78/540] large_3obj_nsga3_rep17                           NNS=100  HV=        236917  wall=  2.11s
+  [ 79/540] large_3obj_nsga3_rep18                           NNS=100  HV=        237279  wall=  2.25s
+  [ 80/540] large_3obj_nsga3_rep19                           NNS=100  HV=        233845  wall=  2.12s
+  [ 81/540] large_3obj_nsga3_rep20                           NNS=100  HV=        226379  wall=  2.25s
+  [ 82/540] large_3obj_nsga3_rep21                           NNS=100  HV=        244137  wall=  2.28s
+  [ 83/540] large_3obj_nsga3_rep22                           NNS=100  HV=        225045  wall=  2.16s
+  [ 84/540] large_3obj_nsga3_rep23                           NNS=100  HV=        232169  wall=  2.16s
+  [ 85/540] large_3obj_nsga3_rep24                           NNS=100  HV=        222126  wall=  2.15s
+  [ 86/540] large_3obj_nsga3_rep25                           NNS=100  HV=        227399  wall=  2.37s
+  [ 87/540] large_3obj_nsga3_rep26                           NNS=100  HV=        238720  wall=  2.18s
+  [ 88/540] large_3obj_nsga3_rep27                           NNS=100  HV=        222523  wall=  2.20s
+  [ 89/540] large_3obj_nsga3_rep28                           NNS=100  HV=        240779  wall=  2.30s
+  [ 90/540] large_3obj_nsga3_rep29                           NNS=100  HV=        234000  wall=  2.19s
+  [ 91/540] large_4obj_nsga2_rep00                           NNS=100  HV=      13756516  wall=  3.34s
+  [ 92/540] large_4obj_nsga2_rep01                           NNS=100  HV=      14429022  wall=  3.45s
+  [ 93/540] large_4obj_nsga2_rep02                           NNS=100  HV=      13865469  wall=  3.52s
+  [ 94/540] large_4obj_nsga2_rep03                           NNS=100  HV=      14598724  wall=  3.48s
+  [ 95/540] large_4obj_nsga2_rep04                           NNS=100  HV=      13964489  wall=  3.32s
+  [ 96/540] large_4obj_nsga2_rep05                           NNS=100  HV=      13836684  wall=  3.37s
+  [ 97/540] large_4obj_nsga2_rep06                           NNS=100  HV=      13897452  wall=  3.38s
+  [ 98/540] large_4obj_nsga2_rep07                           NNS=100  HV=      13667209  wall=  3.56s
+  [ 99/540] large_4obj_nsga2_rep08                           NNS=100  HV=      14136132  wall=  3.47s
+  [100/540] large_4obj_nsga2_rep09                           NNS=100  HV=      14064628  wall=  3.48s
+  [101/540] large_4obj_nsga2_rep10                           NNS=100  HV=      14057269  wall=  3.34s
+  [102/540] large_4obj_nsga2_rep11                           NNS=100  HV=      13773627  wall=  3.46s
+  [103/540] large_4obj_nsga2_rep12                           NNS=100  HV=      13996057  wall=  3.24s
+  [104/540] large_4obj_nsga2_rep13                           NNS=100  HV=      14179889  wall=  3.34s
+  [105/540] large_4obj_nsga2_rep14                           NNS=100  HV=      13884896  wall=  3.44s
+  [106/540] large_4obj_nsga2_rep15                           NNS=100  HV=      13381406  wall=  3.39s
+  [107/540] large_4obj_nsga2_rep16                           NNS=100  HV=      13841793  wall=  3.38s
+  [108/540] large_4obj_nsga2_rep17                           NNS=100  HV=      14325913  wall=  3.80s
+  [109/540] large_4obj_nsga2_rep18                           NNS=100  HV=      13498798  wall=  3.27s
+  [110/540] large_4obj_nsga2_rep19                           NNS=100  HV=      13578816  wall=  3.48s
+  [111/540] large_4obj_nsga2_rep20                           NNS=100  HV=      13693987  wall=  3.42s
+  [112/540] large_4obj_nsga2_rep21                           NNS=100  HV=      14050145  wall=  3.43s
+  [113/540] large_4obj_nsga2_rep22                           NNS=100  HV=      14114989  wall=  3.39s
+  [114/540] large_4obj_nsga2_rep23                           NNS=100  HV=      14029812  wall=  3.47s
+  [115/540] large_4obj_nsga2_rep24                           NNS=100  HV=      14015828  wall=  3.42s
+  [116/540] large_4obj_nsga2_rep25                           NNS=100  HV=      14438037  wall=  3.34s
+  [117/540] large_4obj_nsga2_rep26                           NNS=100  HV=      14080303  wall=  3.26s
+  [118/540] large_4obj_nsga2_rep27                           NNS=100  HV=      14433305  wall=  3.50s
+  [119/540] large_4obj_nsga2_rep28                           NNS=100  HV=      14084098  wall=  3.23s
+  [120/540] large_4obj_nsga2_rep29                           NNS=100  HV=      13703964  wall=  3.53s
+  [121/540] large_4obj_nrga_rep00                            NNS=100  HV=      12571141  wall=  3.10s
+  [122/540] large_4obj_nrga_rep01                            NNS=100  HV=      13375985  wall=  2.84s
+  [123/540] large_4obj_nrga_rep02                            NNS=100  HV=      12792089  wall=  2.88s
+  [124/540] large_4obj_nrga_rep03                            NNS=100  HV=      12609154  wall=  2.87s
+  [125/540] large_4obj_nrga_rep04                            NNS=100  HV=      13037065  wall=  2.69s
+  [126/540] large_4obj_nrga_rep05                            NNS=100  HV=      13200514  wall=  2.86s
+  [127/540] large_4obj_nrga_rep06                            NNS=100  HV=      12939092  wall=  2.94s
+  [128/540] large_4obj_nrga_rep07                            NNS=100  HV=      13149471  wall=  2.84s
+  [129/540] large_4obj_nrga_rep08                            NNS= 94  HV=      12659144  wall=  2.99s
+  [130/540] large_4obj_nrga_rep09                            NNS=100  HV=      13038364  wall=  2.89s
+  [131/540] large_4obj_nrga_rep10                            NNS=100  HV=      13674137  wall=  2.99s
+  [132/540] large_4obj_nrga_rep11                            NNS=100  HV=      12849244  wall=  3.01s
+  [133/540] large_4obj_nrga_rep12                            NNS=100  HV=      12644792  wall=  3.05s
+  [134/540] large_4obj_nrga_rep13                            NNS=100  HV=      12895303  wall=  2.97s
+  [135/540] large_4obj_nrga_rep14                            NNS=100  HV=      12273148  wall=  2.72s
+  [136/540] large_4obj_nrga_rep15                            NNS=100  HV=      12869974  wall=  2.97s
+  [137/540] large_4obj_nrga_rep16                            NNS=100  HV=      12720857  wall=  2.97s
+  [138/540] large_4obj_nrga_rep17                            NNS=100  HV=      12615195  wall=  2.73s
+  [139/540] large_4obj_nrga_rep18                            NNS=100  HV=      12908670  wall=  2.93s
+  [140/540] large_4obj_nrga_rep19                            NNS=100  HV=      13049793  wall=  2.77s
+  [141/540] large_4obj_nrga_rep20                            NNS=100  HV=      12432769  wall=  2.78s
+  [142/540] large_4obj_nrga_rep21                            NNS=100  HV=      12809781  wall=  2.89s
+  [143/540] large_4obj_nrga_rep22                            NNS=100  HV=      13253398  wall=  2.94s
+  [144/540] large_4obj_nrga_rep23                            NNS=100  HV=      12878149  wall=  2.82s
+  [145/540] large_4obj_nrga_rep24                            NNS=100  HV=      12743182  wall=  2.91s
+  [146/540] large_4obj_nrga_rep25                            NNS=100  HV=      12416949  wall=  2.93s
+  [147/540] large_4obj_nrga_rep26                            NNS=100  HV=      12662536  wall=  2.84s
+  [148/540] large_4obj_nrga_rep27                            NNS=100  HV=      12930943  wall=  2.94s
+  [149/540] large_4obj_nrga_rep28                            NNS=100  HV=      13007191  wall=  2.97s
+  [150/540] large_4obj_nrga_rep29                            NNS=100  HV=      12817135  wall=  2.91s
+  [151/540] large_4obj_nsga3_rep00                           NNS=100  HV=      13300203  wall=  2.50s
+  [152/540] large_4obj_nsga3_rep01                           NNS=100  HV=      13524049  wall=  2.67s
+  [153/540] large_4obj_nsga3_rep02                           NNS=100  HV=      13362508  wall=  2.63s
+  [154/540] large_4obj_nsga3_rep03                           NNS=100  HV=      13463135  wall=  2.54s
+  [155/540] large_4obj_nsga3_rep04                           NNS=100  HV=      13252211  wall=  2.43s
+  [156/540] large_4obj_nsga3_rep05                           NNS=100  HV=      13552984  wall=  2.41s
+  [157/540] large_4obj_nsga3_rep06                           NNS=100  HV=      13428023  wall=  2.60s
+  [158/540] large_4obj_nsga3_rep07                           NNS=100  HV=      13263669  wall=  2.43s
+  [159/540] large_4obj_nsga3_rep08                           NNS=100  HV=      13666509  wall=  2.48s
+  [160/540] large_4obj_nsga3_rep09                           NNS=100  HV=      13816391  wall=  2.53s
+  [161/540] large_4obj_nsga3_rep10                           NNS=100  HV=      13679484  wall=  2.51s
+  [162/540] large_4obj_nsga3_rep11                           NNS=100  HV=      14002304  wall=  2.48s
+  [163/540] large_4obj_nsga3_rep12                           NNS=100  HV=      13452997  wall=  2.56s
+  [164/540] large_4obj_nsga3_rep13                           NNS=100  HV=      13568301  wall=  2.43s
+  [165/540] large_4obj_nsga3_rep14                           NNS=100  HV=      13737794  wall=  2.48s
+  [166/540] large_4obj_nsga3_rep15                           NNS=100  HV=      13527286  wall=  2.39s
+  [167/540] large_4obj_nsga3_rep16                           NNS=100  HV=      13126882  wall=  2.32s
+  [168/540] large_4obj_nsga3_rep17                           NNS=100  HV=      13680709  wall=  2.29s
+  [169/540] large_4obj_nsga3_rep18                           NNS=100  HV=      13752541  wall=  2.32s
+  [170/540] large_4obj_nsga3_rep19                           NNS=100  HV=      13419627  wall=  2.36s
+  [171/540] large_4obj_nsga3_rep20                           NNS=100  HV=      13707363  wall=  2.45s
+  [172/540] large_4obj_nsga3_rep21                           NNS=100  HV=      14141420  wall=  2.37s
+  [173/540] large_4obj_nsga3_rep22                           NNS=100  HV=      13923184  wall=  2.35s
+  [174/540] large_4obj_nsga3_rep23                           NNS=100  HV=      13632078  wall=  2.26s
+  [175/540] large_4obj_nsga3_rep24                           NNS=100  HV=      13207224  wall=  2.29s
+  [176/540] large_4obj_nsga3_rep25                           NNS=100  HV=      13216180  wall=  2.33s
+  [177/540] large_4obj_nsga3_rep26                           NNS=100  HV=      13194861  wall=  2.32s
+  [178/540] large_4obj_nsga3_rep27                           NNS=100  HV=      14538279  wall=  2.32s
+  [179/540] large_4obj_nsga3_rep28                           NNS=100  HV=      14250528  wall=  2.40s
+  [180/540] large_4obj_nsga3_rep29                           NNS=100  HV=      13410202  wall=  2.34s
+  [181/540] medium_3obj_nsga2_rep00                          NNS=100  HV=        323489  wall=  2.36s
+  [182/540] medium_3obj_nsga2_rep01                          NNS=100  HV=        324239  wall=  2.38s
+  [183/540] medium_3obj_nsga2_rep02                          NNS=100  HV=        314021  wall=  2.39s
+  [184/540] medium_3obj_nsga2_rep03                          NNS=100  HV=        324251  wall=  2.55s
+  [185/540] medium_3obj_nsga2_rep04                          NNS=100  HV=        303565  wall=  2.40s
+  [186/540] medium_3obj_nsga2_rep05                          NNS=100  HV=        322440  wall=  2.41s
+  [187/540] medium_3obj_nsga2_rep06                          NNS=100  HV=        313626  wall=  2.33s
+  [188/540] medium_3obj_nsga2_rep07                          NNS=100  HV=        317496  wall=  2.51s
+  [189/540] medium_3obj_nsga2_rep08                          NNS=100  HV=        307353  wall=  2.37s
+  [190/540] medium_3obj_nsga2_rep09                          NNS=100  HV=        311167  wall=  2.41s
+  [191/540] medium_3obj_nsga2_rep10                          NNS=100  HV=        321050  wall=  2.38s
+  [192/540] medium_3obj_nsga2_rep11                          NNS=100  HV=        322543  wall=  2.37s
+  [193/540] medium_3obj_nsga2_rep12                          NNS=100  HV=        318179  wall=  2.37s
+  [194/540] medium_3obj_nsga2_rep13                          NNS=100  HV=        329834  wall=  2.35s
+  [195/540] medium_3obj_nsga2_rep14                          NNS=100  HV=        313032  wall=  2.52s
+  [196/540] medium_3obj_nsga2_rep15                          NNS=100  HV=        313037  wall=  2.27s
+  [197/540] medium_3obj_nsga2_rep16                          NNS=100  HV=        317114  wall=  2.34s
+  [198/540] medium_3obj_nsga2_rep17                          NNS=100  HV=        324558  wall=  2.40s
+  [199/540] medium_3obj_nsga2_rep18                          NNS=100  HV=        313644  wall=  2.42s
+  [200/540] medium_3obj_nsga2_rep19                          NNS=100  HV=        326471  wall=  2.34s
+  [201/540] medium_3obj_nsga2_rep20                          NNS=100  HV=        303843  wall=  2.32s
+  [202/540] medium_3obj_nsga2_rep21                          NNS=100  HV=        312582  wall=  2.28s
+  [203/540] medium_3obj_nsga2_rep22                          NNS=100  HV=        313469  wall=  2.31s
+  [204/540] medium_3obj_nsga2_rep23                          NNS=100  HV=        328984  wall=  2.22s
+  [205/540] medium_3obj_nsga2_rep24                          NNS=100  HV=        311157  wall=  2.38s
+  [206/540] medium_3obj_nsga2_rep25                          NNS=100  HV=        319588  wall=  2.31s
+  [207/540] medium_3obj_nsga2_rep26                          NNS=100  HV=        306111  wall=  2.46s
+  [208/540] medium_3obj_nsga2_rep27                          NNS=100  HV=        320812  wall=  2.41s
+  [209/540] medium_3obj_nsga2_rep28                          NNS=100  HV=        330395  wall=  2.31s
+  [210/540] medium_3obj_nsga2_rep29                          NNS=100  HV=        324562  wall=  2.33s
+  [211/540] medium_3obj_nrga_rep00                           NNS=100  HV=        322484  wall=  1.91s
+  [212/540] medium_3obj_nrga_rep01                           NNS=100  HV=        292943  wall=  1.87s
+  [213/540] medium_3obj_nrga_rep02                           NNS=100  HV=        294600  wall=  1.95s
+  [214/540] medium_3obj_nrga_rep03                           NNS=100  HV=        291903  wall=  1.90s
+  [215/540] medium_3obj_nrga_rep04                           NNS=100  HV=        289007  wall=  1.93s
+  [216/540] medium_3obj_nrga_rep05                           NNS=100  HV=        296642  wall=  1.98s
+  [217/540] medium_3obj_nrga_rep06                           NNS=100  HV=        306480  wall=  1.96s
+  [218/540] medium_3obj_nrga_rep07                           NNS=100  HV=        287627  wall=  1.94s
+  [219/540] medium_3obj_nrga_rep08                           NNS=100  HV=        275161  wall=  1.93s
+  [220/540] medium_3obj_nrga_rep09                           NNS=100  HV=        298825  wall=  1.92s
+  [221/540] medium_3obj_nrga_rep10                           NNS=100  HV=        297170  wall=  2.00s
+  [222/540] medium_3obj_nrga_rep11                           NNS=100  HV=        297284  wall=  1.94s
+  [223/540] medium_3obj_nrga_rep12                           NNS=100  HV=        300780  wall=  1.89s
+  [224/540] medium_3obj_nrga_rep13                           NNS=100  HV=        293638  wall=  1.88s
+  [225/540] medium_3obj_nrga_rep14                           NNS=100  HV=        293565  wall=  1.92s
+  [226/540] medium_3obj_nrga_rep15                           NNS=100  HV=        309877  wall=  2.03s
+  [227/540] medium_3obj_nrga_rep16                           NNS= 92  HV=        284210  wall=  2.23s
+  [228/540] medium_3obj_nrga_rep17                           NNS=100  HV=        296977  wall=  1.92s
+  [229/540] medium_3obj_nrga_rep18                           NNS=100  HV=        284506  wall=  1.93s
+  [230/540] medium_3obj_nrga_rep19                           NNS=100  HV=        286922  wall=  1.88s
+  [231/540] medium_3obj_nrga_rep20                           NNS=100  HV=        302042  wall=  1.90s
+  [232/540] medium_3obj_nrga_rep21                           NNS=100  HV=        297812  wall=  1.92s
+  [233/540] medium_3obj_nrga_rep22                           NNS=100  HV=        286374  wall=  1.87s
+  [234/540] medium_3obj_nrga_rep23                           NNS=100  HV=        305304  wall=  1.97s
+  [235/540] medium_3obj_nrga_rep24                           NNS=100  HV=        295708  wall=  1.81s
+  [236/540] medium_3obj_nrga_rep25                           NNS=100  HV=        292976  wall=  1.97s
+  [237/540] medium_3obj_nrga_rep26                           NNS=100  HV=        304805  wall=  2.00s
+  [238/540] medium_3obj_nrga_rep27                           NNS= 48  HV=        305336  wall=  1.86s
+  [239/540] medium_3obj_nrga_rep28                           NNS=100  HV=        302378  wall=  1.98s
+  [240/540] medium_3obj_nrga_rep29                           NNS= 68  HV=        296374  wall=  1.99s
+  [241/540] medium_3obj_nsga3_rep00                          NNS=100  HV=        319612  wall=  1.60s
+  [242/540] medium_3obj_nsga3_rep01                          NNS=100  HV=        317191  wall=  1.61s
+  [243/540] medium_3obj_nsga3_rep02                          NNS=100  HV=        326252  wall=  1.57s
+  [244/540] medium_3obj_nsga3_rep03                          NNS=100  HV=        332323  wall=  1.60s
+  [245/540] medium_3obj_nsga3_rep04                          NNS=100  HV=        320682  wall=  1.58s
+  [246/540] medium_3obj_nsga3_rep05                          NNS=100  HV=        311242  wall=  1.58s
+  [247/540] medium_3obj_nsga3_rep06                          NNS=100  HV=        307303  wall=  1.60s
+  [248/540] medium_3obj_nsga3_rep07                          NNS=100  HV=        333409  wall=  1.63s
+  [249/540] medium_3obj_nsga3_rep08                          NNS=100  HV=        322282  wall=  1.63s
+  [250/540] medium_3obj_nsga3_rep09                          NNS=100  HV=        306990  wall=  1.58s
+  [251/540] medium_3obj_nsga3_rep10                          NNS=100  HV=        313477  wall=  1.61s
+  [252/540] medium_3obj_nsga3_rep11                          NNS=100  HV=        315425  wall=  1.57s
+  [253/540] medium_3obj_nsga3_rep12                          NNS=100  HV=        310312  wall=  1.64s
+  [254/540] medium_3obj_nsga3_rep13                          NNS=100  HV=        311711  wall=  1.56s
+  [255/540] medium_3obj_nsga3_rep14                          NNS=100  HV=        308960  wall=  1.59s
+  [256/540] medium_3obj_nsga3_rep15                          NNS=100  HV=        339570  wall=  1.61s
+  [257/540] medium_3obj_nsga3_rep16                          NNS=100  HV=        315157  wall=  1.62s
+  [258/540] medium_3obj_nsga3_rep17                          NNS=100  HV=        308797  wall=  1.60s
+  [259/540] medium_3obj_nsga3_rep18                          NNS=100  HV=        310439  wall=  1.66s
+  [260/540] medium_3obj_nsga3_rep19                          NNS=100  HV=        296110  wall=  1.61s
+  [261/540] medium_3obj_nsga3_rep20                          NNS=100  HV=        324901  wall=  1.61s
+  [262/540] medium_3obj_nsga3_rep21                          NNS=100  HV=        331668  wall=  1.79s
+  [263/540] medium_3obj_nsga3_rep22                          NNS=100  HV=        300972  wall=  1.63s
+  [264/540] medium_3obj_nsga3_rep23                          NNS=100  HV=        314844  wall=  1.60s
+  [265/540] medium_3obj_nsga3_rep24                          NNS=100  HV=        315839  wall=  1.93s
+  [266/540] medium_3obj_nsga3_rep25                          NNS=100  HV=        306348  wall=  1.73s
+  [267/540] medium_3obj_nsga3_rep26                          NNS=100  HV=        319046  wall=  1.66s
+  [268/540] medium_3obj_nsga3_rep27                          NNS=100  HV=        316301  wall=  1.70s
+  [269/540] medium_3obj_nsga3_rep28                          NNS=100  HV=        311858  wall=  1.62s
+  [270/540] medium_3obj_nsga3_rep29                          NNS=100  HV=        310842  wall=  1.61s
+  [271/540] medium_4obj_nsga2_rep00                          NNS=100  HV=      18921267  wall=  2.76s
+  [272/540] medium_4obj_nsga2_rep01                          NNS=100  HV=      19047126  wall=  2.64s
+  [273/540] medium_4obj_nsga2_rep02                          NNS=100  HV=      18958278  wall=  2.71s
+  [274/540] medium_4obj_nsga2_rep03                          NNS=100  HV=      18802556  wall=  2.64s
+  [275/540] medium_4obj_nsga2_rep04                          NNS=100  HV=      18071437  wall=  2.73s
+  [276/540] medium_4obj_nsga2_rep05                          NNS=100  HV=      19709040  wall=  2.69s
+  [277/540] medium_4obj_nsga2_rep06                          NNS=100  HV=      18619291  wall=  2.73s
+  [278/540] medium_4obj_nsga2_rep07                          NNS=100  HV=      18603282  wall=  2.71s
+  [279/540] medium_4obj_nsga2_rep08                          NNS=100  HV=      18972490  wall=  2.64s
+  [280/540] medium_4obj_nsga2_rep09                          NNS=100  HV=      18577396  wall=  2.66s
+  [281/540] medium_4obj_nsga2_rep10                          NNS=100  HV=      19213926  wall=  2.64s
+  [282/540] medium_4obj_nsga2_rep11                          NNS=100  HV=      19661029  wall=  2.66s
+  [283/540] medium_4obj_nsga2_rep12                          NNS=100  HV=      18911698  wall=  2.76s
+  [284/540] medium_4obj_nsga2_rep13                          NNS=100  HV=      18993908  wall=  2.65s
+  [285/540] medium_4obj_nsga2_rep14                          NNS=100  HV=      18076656  wall=  2.72s
+  [286/540] medium_4obj_nsga2_rep15                          NNS=100  HV=      18981930  wall=  2.68s
+  [287/540] medium_4obj_nsga2_rep16                          NNS=100  HV=      18839159  wall=  2.64s
+  [288/540] medium_4obj_nsga2_rep17                          NNS=100  HV=      18918122  wall=  2.77s
+  [289/540] medium_4obj_nsga2_rep18                          NNS=100  HV=      18644227  wall=  2.77s
+  [290/540] medium_4obj_nsga2_rep19                          NNS=100  HV=      19050307  wall=  2.67s
+  [291/540] medium_4obj_nsga2_rep20                          NNS=100  HV=      17973713  wall=  2.72s
+  [292/540] medium_4obj_nsga2_rep21                          NNS=100  HV=      18950941  wall=  2.65s
+  [293/540] medium_4obj_nsga2_rep22                          NNS=100  HV=      18534543  wall=  2.66s
+  [294/540] medium_4obj_nsga2_rep23                          NNS=100  HV=      18609782  wall=  2.70s
+  [295/540] medium_4obj_nsga2_rep24                          NNS=100  HV=      18484808  wall=  2.62s
+  [296/540] medium_4obj_nsga2_rep25                          NNS=100  HV=      18524795  wall=  2.75s
+  [297/540] medium_4obj_nsga2_rep26                          NNS=100  HV=      18882310  wall=  2.62s
+  [298/540] medium_4obj_nsga2_rep27                          NNS=100  HV=      18997362  wall=  2.65s
+  [299/540] medium_4obj_nsga2_rep28                          NNS=100  HV=      18466228  wall=  2.70s
+  [300/540] medium_4obj_nsga2_rep29                          NNS=100  HV=      19267142  wall=  2.66s
+  [301/540] medium_4obj_nrga_rep00                           NNS=100  HV=      16741979  wall=  2.16s
+  [302/540] medium_4obj_nrga_rep01                           NNS=100  HV=      18149776  wall=  2.20s
+  [303/540] medium_4obj_nrga_rep02                           NNS=100  HV=      16935680  wall=  2.24s
+  [304/540] medium_4obj_nrga_rep03                           NNS=100  HV=      17404536  wall=  2.24s
+  [305/540] medium_4obj_nrga_rep04                           NNS=100  HV=      17964759  wall=  2.20s
+  [306/540] medium_4obj_nrga_rep05                           NNS=100  HV=      17430278  wall=  2.31s
+  [307/540] medium_4obj_nrga_rep06                           NNS=100  HV=      17640364  wall=  2.16s
+  [308/540] medium_4obj_nrga_rep07                           NNS=100  HV=      17812563  wall=  2.16s
+  [309/540] medium_4obj_nrga_rep08                           NNS=100  HV=      18180250  wall=  2.27s
+  [310/540] medium_4obj_nrga_rep09                           NNS=100  HV=      17288596  wall=  2.24s
+  [311/540] medium_4obj_nrga_rep10                           NNS=100  HV=      17844059  wall=  2.21s
+  [312/540] medium_4obj_nrga_rep11                           NNS=100  HV=      17846367  wall=  2.32s
+  [313/540] medium_4obj_nrga_rep12                           NNS=100  HV=      16860687  wall=  2.17s
+  [314/540] medium_4obj_nrga_rep13                           NNS=100  HV=      17570482  wall=  2.27s
+  [315/540] medium_4obj_nrga_rep14                           NNS=100  HV=      17484189  wall=  2.19s
+  [316/540] medium_4obj_nrga_rep15                           NNS=100  HV=      17384820  wall=  2.21s
+  [317/540] medium_4obj_nrga_rep16                           NNS=100  HV=      17340581  wall=  2.19s
+  [318/540] medium_4obj_nrga_rep17                           NNS=100  HV=      17042760  wall=  2.28s
+  [319/540] medium_4obj_nrga_rep18                           NNS=100  HV=      16424014  wall=  2.25s
+  [320/540] medium_4obj_nrga_rep19                           NNS=100  HV=      16371821  wall=  2.29s
+  [321/540] medium_4obj_nrga_rep20                           NNS=100  HV=      17445065  wall=  2.20s
+  [322/540] medium_4obj_nrga_rep21                           NNS=100  HV=      17659253  wall=  2.15s
+  [323/540] medium_4obj_nrga_rep22                           NNS=100  HV=      17297719  wall=  2.36s
+  [324/540] medium_4obj_nrga_rep23                           NNS=100  HV=      17605194  wall=  2.22s
+  [325/540] medium_4obj_nrga_rep24                           NNS=100  HV=      16482279  wall=  2.18s
+  [326/540] medium_4obj_nrga_rep25                           NNS=100  HV=      17628353  wall=  2.22s
+  [327/540] medium_4obj_nrga_rep26                           NNS= 97  HV=      16021545  wall=  2.29s
+  [328/540] medium_4obj_nrga_rep27                           NNS=100  HV=      17310184  wall=  2.24s
+  [329/540] medium_4obj_nrga_rep28                           NNS=100  HV=      17140725  wall=  2.28s
+  [330/540] medium_4obj_nrga_rep29                           NNS=100  HV=      18143786  wall=  2.21s
+  [331/540] medium_4obj_nsga3_rep00                          NNS=100  HV=      17639028  wall=  1.82s
+  [332/540] medium_4obj_nsga3_rep01                          NNS=100  HV=      18065682  wall=  1.85s
+  [333/540] medium_4obj_nsga3_rep02                          NNS=100  HV=      17797395  wall=  1.90s
+  [334/540] medium_4obj_nsga3_rep03                          NNS=100  HV=      17911179  wall=  1.92s
+  [335/540] medium_4obj_nsga3_rep04                          NNS=100  HV=      18657524  wall=  1.86s
+  [336/540] medium_4obj_nsga3_rep05                          NNS=100  HV=      19155458  wall=  1.85s
+  [337/540] medium_4obj_nsga3_rep06                          NNS=100  HV=      19107737  wall=  1.90s
+  [338/540] medium_4obj_nsga3_rep07                          NNS=100  HV=      20311146  wall=  1.86s
+  [339/540] medium_4obj_nsga3_rep08                          NNS=100  HV=      18736704  wall=  1.89s
+  [340/540] medium_4obj_nsga3_rep09                          NNS=100  HV=      17580658  wall=  1.78s
+  [341/540] medium_4obj_nsga3_rep10                          NNS=100  HV=      18621666  wall=  1.81s
+  [342/540] medium_4obj_nsga3_rep11                          NNS=100  HV=      17835862  wall=  1.91s
+  [343/540] medium_4obj_nsga3_rep12                          NNS=100  HV=      19635835  wall=  1.85s
+  [344/540] medium_4obj_nsga3_rep13                          NNS=100  HV=      17649555  wall=  1.87s
+  [345/540] medium_4obj_nsga3_rep14                          NNS=100  HV=      18640754  wall=  1.90s
+  [346/540] medium_4obj_nsga3_rep15                          NNS=100  HV=      17842448  wall=  1.89s
+  [347/540] medium_4obj_nsga3_rep16                          NNS=100  HV=      18389318  wall=  1.87s
+  [348/540] medium_4obj_nsga3_rep17                          NNS=100  HV=      18479271  wall=  1.88s
+  [349/540] medium_4obj_nsga3_rep18                          NNS=100  HV=      18831619  wall=  1.82s
+  [350/540] medium_4obj_nsga3_rep19                          NNS=100  HV=      18500164  wall=  1.89s
+  [351/540] medium_4obj_nsga3_rep20                          NNS=100  HV=      17977004  wall=  1.96s
+  [352/540] medium_4obj_nsga3_rep21                          NNS=100  HV=      19076191  wall=  1.87s
+  [353/540] medium_4obj_nsga3_rep22                          NNS=100  HV=      17065336  wall=  1.86s
+  [354/540] medium_4obj_nsga3_rep23                          NNS=100  HV=      18713686  wall=  1.87s
+  [355/540] medium_4obj_nsga3_rep24                          NNS=100  HV=      18078839  wall=  1.83s
+  [356/540] medium_4obj_nsga3_rep25                          NNS=100  HV=      17690443  wall=  1.83s
+  [357/540] medium_4obj_nsga3_rep26                          NNS=100  HV=      18435632  wall=  1.88s
+  [358/540] medium_4obj_nsga3_rep27                          NNS=100  HV=      17604435  wall=  1.78s
+  [359/540] medium_4obj_nsga3_rep28                          NNS=100  HV=      18073747  wall=  1.81s
+  [360/540] medium_4obj_nsga3_rep29                          NNS=100  HV=      17939011  wall=  1.88s
+  [361/540] small_3obj_nsga2_rep00                           NNS=100  HV=        354264  wall=  2.10s
+  [362/540] small_3obj_nsga2_rep01                           NNS=100  HV=        348792  wall=  1.97s
+  [363/540] small_3obj_nsga2_rep02                           NNS=100  HV=        350292  wall=  1.94s
+  [364/540] small_3obj_nsga2_rep03                           NNS=100  HV=        353574  wall=  1.99s
+  [365/540] small_3obj_nsga2_rep04                           NNS=100  HV=        345441  wall=  2.01s
+  [366/540] small_3obj_nsga2_rep05                           NNS=100  HV=        346934  wall=  2.07s
+  [367/540] small_3obj_nsga2_rep06                           NNS=100  HV=        350497  wall=  2.02s
+  [368/540] small_3obj_nsga2_rep07                           NNS=100  HV=        366231  wall=  1.90s
+  [369/540] small_3obj_nsga2_rep08                           NNS=100  HV=        353565  wall=  1.97s
+  [370/540] small_3obj_nsga2_rep09                           NNS=100  HV=        342268  wall=  2.09s
+  [371/540] small_3obj_nsga2_rep10                           NNS=100  HV=        366530  wall=  1.94s
+  [372/540] small_3obj_nsga2_rep11                           NNS=100  HV=        363869  wall=  2.00s
+  [373/540] small_3obj_nsga2_rep12                           NNS=100  HV=        352339  wall=  2.03s
+  [374/540] small_3obj_nsga2_rep13                           NNS=100  HV=        343509  wall=  2.03s
+  [375/540] small_3obj_nsga2_rep14                           NNS=100  HV=        352989  wall=  1.98s
+  [376/540] small_3obj_nsga2_rep15                           NNS=100  HV=        347512  wall=  1.96s
+  [377/540] small_3obj_nsga2_rep16                           NNS=100  HV=        347649  wall=  2.04s
+  [378/540] small_3obj_nsga2_rep17                           NNS= 94  HV=        361743  wall=  1.99s
+  [379/540] small_3obj_nsga2_rep18                           NNS=100  HV=        348001  wall=  2.12s
+  [380/540] small_3obj_nsga2_rep19                           NNS=100  HV=        344568  wall=  1.89s
+  [381/540] small_3obj_nsga2_rep20                           NNS=100  HV=        372607  wall=  1.89s
+  [382/540] small_3obj_nsga2_rep21                           NNS=100  HV=        353581  wall=  1.96s
+  [383/540] small_3obj_nsga2_rep22                           NNS=100  HV=        365412  wall=  1.93s
+  [384/540] small_3obj_nsga2_rep23                           NNS=100  HV=        352873  wall=  1.95s
+  [385/540] small_3obj_nsga2_rep24                           NNS=100  HV=        351382  wall=  2.01s
+  [386/540] small_3obj_nsga2_rep25                           NNS=100  HV=        363123  wall=  1.89s
+  [387/540] small_3obj_nsga2_rep26                           NNS=100  HV=        351734  wall=  1.95s
+  [388/540] small_3obj_nsga2_rep27                           NNS=100  HV=        356254  wall=  1.98s
+  [389/540] small_3obj_nsga2_rep28                           NNS=100  HV=        352422  wall=  2.06s
+  [390/540] small_3obj_nsga2_rep29                           NNS=100  HV=        359099  wall=  1.99s
+  [391/540] small_3obj_nrga_rep00                            NNS=100  HV=        330384  wall=  1.59s
+  [392/540] small_3obj_nrga_rep01                            NNS=100  HV=        327397  wall=  1.64s
+  [393/540] small_3obj_nrga_rep02                            NNS=100  HV=        325564  wall=  1.46s
+  [394/540] small_3obj_nrga_rep03                            NNS=100  HV=        356780  wall=  1.50s
+  [395/540] small_3obj_nrga_rep04                            NNS=100  HV=        330102  wall=  1.82s
+  [396/540] small_3obj_nrga_rep05                            NNS=100  HV=        337149  wall=  1.62s
+  [397/540] small_3obj_nrga_rep06                            NNS=100  HV=        350087  wall=  1.62s
+  [398/540] small_3obj_nrga_rep07                            NNS=100  HV=        353578  wall=  1.58s
+  [399/540] small_3obj_nrga_rep08                            NNS=100  HV=        344492  wall=  1.45s
+  [400/540] small_3obj_nrga_rep09                            NNS= 60  HV=        343766  wall=  1.49s
+  [401/540] small_3obj_nrga_rep10                            NNS=100  HV=        342324  wall=  1.55s
+  [402/540] small_3obj_nrga_rep11                            NNS=100  HV=        338393  wall=  1.58s
+  [403/540] small_3obj_nrga_rep12                            NNS=100  HV=        335304  wall=  1.68s
+  [404/540] small_3obj_nrga_rep13                            NNS=100  HV=        343823  wall=  1.65s
+  [405/540] small_3obj_nrga_rep14                            NNS=100  HV=        336771  wall=  1.56s
+  [406/540] small_3obj_nrga_rep15                            NNS=100  HV=        346175  wall=  1.76s
+  [407/540] small_3obj_nrga_rep16                            NNS=100  HV=        321900  wall=  1.61s
+  [408/540] small_3obj_nrga_rep17                            NNS=100  HV=        318426  wall=  1.55s
+  [409/540] small_3obj_nrga_rep18                            NNS=100  HV=        348677  wall=  1.81s
+  [410/540] small_3obj_nrga_rep19                            NNS= 86  HV=        355154  wall=  1.54s
+  [411/540] small_3obj_nrga_rep20                            NNS=100  HV=        332824  wall=  1.50s
+  [412/540] small_3obj_nrga_rep21                            NNS=100  HV=        330931  wall=  1.54s
+  [413/540] small_3obj_nrga_rep22                            NNS= 93  HV=        347813  wall=  1.59s
+  [414/540] small_3obj_nrga_rep23                            NNS= 93  HV=        330446  wall=  1.55s
+  [415/540] small_3obj_nrga_rep24                            NNS=100  HV=        333288  wall=  1.65s
+  [416/540] small_3obj_nrga_rep25                            NNS= 94  HV=        329287  wall=  1.52s
+  [417/540] small_3obj_nrga_rep26                            NNS= 90  HV=        346894  wall=  1.56s
+  [418/540] small_3obj_nrga_rep27                            NNS= 22  HV=        334127  wall=  1.41s
+  [419/540] small_3obj_nrga_rep28                            NNS=100  HV=        341736  wall=  1.59s
+  [420/540] small_3obj_nrga_rep29                            NNS=100  HV=        331462  wall=  1.53s
+  [421/540] small_3obj_nsga3_rep00                           NNS=100  HV=        356087  wall=  1.50s
+  [422/540] small_3obj_nsga3_rep01                           NNS=100  HV=        337332  wall=  1.20s
+  [423/540] small_3obj_nsga3_rep02                           NNS=100  HV=        365961  wall=  1.18s
+  [424/540] small_3obj_nsga3_rep03                           NNS=100  HV=        365718  wall=  1.20s
+  [425/540] small_3obj_nsga3_rep04                           NNS=100  HV=        341954  wall=  1.31s
+  [426/540] small_3obj_nsga3_rep05                           NNS=100  HV=        345215  wall=  1.24s
+  [427/540] small_3obj_nsga3_rep06                           NNS=100  HV=        342271  wall=  1.19s
+  [428/540] small_3obj_nsga3_rep07                           NNS=100  HV=        357055  wall=  1.18s
+  [429/540] small_3obj_nsga3_rep08                           NNS=100  HV=        348216  wall=  1.23s
+  [430/540] small_3obj_nsga3_rep09                           NNS=100  HV=        348048  wall=  1.22s
+  [431/540] small_3obj_nsga3_rep10                           NNS=100  HV=        377510  wall=  1.17s
+  [432/540] small_3obj_nsga3_rep11                           NNS=100  HV=        354215  wall=  1.22s
+  [433/540] small_3obj_nsga3_rep12                           NNS=100  HV=        367406  wall=  1.20s
+  [434/540] small_3obj_nsga3_rep13                           NNS=100  HV=        348768  wall=  1.24s
+  [435/540] small_3obj_nsga3_rep14                           NNS=100  HV=        347239  wall=  1.37s
+  [436/540] small_3obj_nsga3_rep15                           NNS=100  HV=        356222  wall=  1.25s
+  [437/540] small_3obj_nsga3_rep16                           NNS=100  HV=        345428  wall=  1.26s
+  [438/540] small_3obj_nsga3_rep17                           NNS=100  HV=        348696  wall=  1.34s
+  [439/540] small_3obj_nsga3_rep18                           NNS=100  HV=        377936  wall=  1.19s
+  [440/540] small_3obj_nsga3_rep19                           NNS=100  HV=        343123  wall=  1.22s
+  [441/540] small_3obj_nsga3_rep20                           NNS=100  HV=        347909  wall=  1.41s
+  [442/540] small_3obj_nsga3_rep21                           NNS=100  HV=        350990  wall=  1.73s
+  [443/540] small_3obj_nsga3_rep22                           NNS=100  HV=        346723  wall=  1.41s
+  [444/540] small_3obj_nsga3_rep23                           NNS=100  HV=        336886  wall=  1.26s
+  [445/540] small_3obj_nsga3_rep24                           NNS=100  HV=        348549  wall=  1.21s
+  [446/540] small_3obj_nsga3_rep25                           NNS=100  HV=        341874  wall=  1.27s
+  [447/540] small_3obj_nsga3_rep26                           NNS=100  HV=        372171  wall=  1.23s
+  [448/540] small_3obj_nsga3_rep27                           NNS=100  HV=        345230  wall=  1.31s
+  [449/540] small_3obj_nsga3_rep28                           NNS=100  HV=        364459  wall=  1.30s
+  [450/540] small_3obj_nsga3_rep29                           NNS=100  HV=        364372  wall=  1.20s
+  [451/540] small_4obj_nsga2_rep00                           NNS=100  HV=      21263662  wall=  2.41s
+  [452/540] small_4obj_nsga2_rep01                           NNS=100  HV=      21271960  wall=  2.28s
+  [453/540] small_4obj_nsga2_rep02                           NNS=100  HV=      21501875  wall=  2.33s
+  [454/540] small_4obj_nsga2_rep03                           NNS=100  HV=      20495243  wall=  2.33s
+  [455/540] small_4obj_nsga2_rep04                           NNS=100  HV=      20615670  wall=  2.40s
+  [456/540] small_4obj_nsga2_rep05                           NNS=100  HV=      21597337  wall=  2.31s
+  [457/540] small_4obj_nsga2_rep06                           NNS=100  HV=      21077052  wall=  2.35s
+  [458/540] small_4obj_nsga2_rep07                           NNS=100  HV=      20441185  wall=  2.29s
+  [459/540] small_4obj_nsga2_rep08                           NNS=100  HV=      20812225  wall=  2.35s
+  [460/540] small_4obj_nsga2_rep09                           NNS=100  HV=      20417101  wall=  2.31s
+  [461/540] small_4obj_nsga2_rep10                           NNS=100  HV=      20504797  wall=  2.28s
+  [462/540] small_4obj_nsga2_rep11                           NNS=100  HV=      20814197  wall=  2.22s
+  [463/540] small_4obj_nsga2_rep12                           NNS=100  HV=      21482444  wall=  2.32s
+  [464/540] small_4obj_nsga2_rep13                           NNS=100  HV=      20686314  wall=  2.25s
+  [465/540] small_4obj_nsga2_rep14                           NNS=100  HV=      21166388  wall=  2.30s
+  [466/540] small_4obj_nsga2_rep15                           NNS=100  HV=      21193737  wall=  2.24s
+  [467/540] small_4obj_nsga2_rep16                           NNS=100  HV=      21320172  wall=  2.33s
+  [468/540] small_4obj_nsga2_rep17                           NNS=100  HV=      22309234  wall=  2.31s
+  [469/540] small_4obj_nsga2_rep18                           NNS=100  HV=      21557332  wall=  2.22s
+  [470/540] small_4obj_nsga2_rep19                           NNS=100  HV=      21122846  wall=  2.23s
+  [471/540] small_4obj_nsga2_rep20                           NNS=100  HV=      21143183  wall=  2.25s
+  [472/540] small_4obj_nsga2_rep21                           NNS=100  HV=      20431408  wall=  2.27s
+  [473/540] small_4obj_nsga2_rep22                           NNS=100  HV=      21678259  wall=  2.30s
+  [474/540] small_4obj_nsga2_rep23                           NNS=100  HV=      21736264  wall=  2.41s
+  [475/540] small_4obj_nsga2_rep24                           NNS=100  HV=      20936502  wall=  2.28s
+  [476/540] small_4obj_nsga2_rep25                           NNS=100  HV=      20901696  wall=  2.30s
+  [477/540] small_4obj_nsga2_rep26                           NNS=100  HV=      20606894  wall=  2.31s
+  [478/540] small_4obj_nsga2_rep27                           NNS=100  HV=      20931292  wall=  2.28s
+  [479/540] small_4obj_nsga2_rep28                           NNS=100  HV=      20804025  wall=  2.32s
+  [480/540] small_4obj_nsga2_rep29                           NNS=100  HV=      21615299  wall=  2.23s
+  [481/540] small_4obj_nrga_rep00                            NNS=100  HV=      19487962  wall=  1.91s
+  [482/540] small_4obj_nrga_rep01                            NNS=100  HV=      20158374  wall=  1.77s
+  [483/540] small_4obj_nrga_rep02                            NNS=100  HV=      21287116  wall=  1.90s
+  [484/540] small_4obj_nrga_rep03                            NNS=100  HV=      19430397  wall=  1.84s
+  [485/540] small_4obj_nrga_rep04                            NNS=100  HV=      20257787  wall=  1.96s
+  [486/540] small_4obj_nrga_rep05                            NNS=100  HV=      19159640  wall=  1.90s
+  [487/540] small_4obj_nrga_rep06                            NNS=100  HV=      21532736  wall=  1.85s
+  [488/540] small_4obj_nrga_rep07                            NNS= 73  HV=      19840476  wall=  1.81s
+  [489/540] small_4obj_nrga_rep08                            NNS=100  HV=      22079669  wall=  1.82s
+  [490/540] small_4obj_nrga_rep09                            NNS=100  HV=      18499792  wall=  1.86s
+  [491/540] small_4obj_nrga_rep10                            NNS=100  HV=      20068420  wall=  1.83s
+  [492/540] small_4obj_nrga_rep11                            NNS=100  HV=      21931253  wall=  1.88s
+  [493/540] small_4obj_nrga_rep12                            NNS=100  HV=      19292164  wall=  2.00s
+  [494/540] small_4obj_nrga_rep13                            NNS=100  HV=      19221823  wall=  1.95s
+  [495/540] small_4obj_nrga_rep14                            NNS=100  HV=      19846726  wall=  1.89s
+  [496/540] small_4obj_nrga_rep15                            NNS=100  HV=      20367562  wall=  1.88s
+  [497/540] small_4obj_nrga_rep16                            NNS=100  HV=      20303748  wall=  1.85s
+  [498/540] small_4obj_nrga_rep17                            NNS=100  HV=      20722836  wall=  1.84s
+  [499/540] small_4obj_nrga_rep18                            NNS=100  HV=      19630236  wall=  1.79s
+  [500/540] small_4obj_nrga_rep19                            NNS=100  HV=      18843008  wall=  1.89s
+  [501/540] small_4obj_nrga_rep20                            NNS=100  HV=      21055424  wall=  1.90s
+  [502/540] small_4obj_nrga_rep21                            NNS=100  HV=      20527308  wall=  1.78s
+  [503/540] small_4obj_nrga_rep22                            NNS=100  HV=      20798515  wall=  1.87s
+  [504/540] small_4obj_nrga_rep23                            NNS=100  HV=      19591779  wall=  1.80s
+  [505/540] small_4obj_nrga_rep24                            NNS=100  HV=      20346783  wall=  1.87s
+  [506/540] small_4obj_nrga_rep25                            NNS=100  HV=      20515468  wall=  1.83s
+  [507/540] small_4obj_nrga_rep26                            NNS=100  HV=      21178853  wall=  1.86s
+  [508/540] small_4obj_nrga_rep27                            NNS=100  HV=      20439155  wall=  1.92s
+  [509/540] small_4obj_nrga_rep28                            NNS=100  HV=      20381442  wall=  1.88s
+  [510/540] small_4obj_nrga_rep29                            NNS=100  HV=      19619717  wall=  1.87s
+  [511/540] small_4obj_nsga3_rep00                           NNS=100  HV=      20870351  wall=  1.52s
+  [512/540] small_4obj_nsga3_rep01                           NNS=100  HV=      21774791  wall=  1.43s
+  [513/540] small_4obj_nsga3_rep02                           NNS=100  HV=      20723074  wall=  1.44s
+  [514/540] small_4obj_nsga3_rep03                           NNS=100  HV=      20754480  wall=  1.44s
+  [515/540] small_4obj_nsga3_rep04                           NNS=100  HV=      20688087  wall=  1.38s
+  [516/540] small_4obj_nsga3_rep05                           NNS=100  HV=      19691362  wall=  1.44s
+  [517/540] small_4obj_nsga3_rep06                           NNS=100  HV=      22053163  wall=  1.43s
+  [518/540] small_4obj_nsga3_rep07                           NNS=100  HV=      20437411  wall=  1.39s
+  [519/540] small_4obj_nsga3_rep08                           NNS=100  HV=      21050285  wall=  1.45s
+  [520/540] small_4obj_nsga3_rep09                           NNS=100  HV=      21095120  wall=  1.53s
+  [521/540] small_4obj_nsga3_rep10                           NNS=100  HV=      19798390  wall=  1.48s
+  [522/540] small_4obj_nsga3_rep11                           NNS=100  HV=      20904152  wall=  1.47s
+  [523/540] small_4obj_nsga3_rep12                           NNS=100  HV=      20765835  wall=  1.42s
+  [524/540] small_4obj_nsga3_rep13                           NNS=100  HV=      20810657  wall=  1.43s
+  [525/540] small_4obj_nsga3_rep14                           NNS=100  HV=      20860067  wall=  1.47s
+  [526/540] small_4obj_nsga3_rep15                           NNS=100  HV=      20735104  wall=  1.44s
+  [527/540] small_4obj_nsga3_rep16                           NNS=100  HV=      21023945  wall=  1.38s
+  [528/540] small_4obj_nsga3_rep17                           NNS=100  HV=      20935025  wall=  1.43s
+  [529/540] small_4obj_nsga3_rep18                           NNS=100  HV=      21820093  wall=  1.38s
+  [530/540] small_4obj_nsga3_rep19                           NNS=100  HV=      20611192  wall=  1.36s
+  [531/540] small_4obj_nsga3_rep20                           NNS=100  HV=      20303309  wall=  1.35s
+  [532/540] small_4obj_nsga3_rep21                           NNS=100  HV=      20699608  wall=  1.36s
+  [533/540] small_4obj_nsga3_rep22                           NNS=100  HV=      19880251  wall=  1.36s
+  [534/540] small_4obj_nsga3_rep23                           NNS=100  HV=      21317266  wall=  1.39s
+  [535/540] small_4obj_nsga3_rep24                           NNS=100  HV=      20376805  wall=  1.31s
+  [536/540] small_4obj_nsga3_rep25                           NNS=100  HV=      20800427  wall=  1.36s
+  [537/540] small_4obj_nsga3_rep26                           NNS=100  HV=      21773431  wall=  1.46s
+  [538/540] small_4obj_nsga3_rep27                           NNS=100  HV=      19898924  wall=  1.37s
+  [539/540] small_4obj_nsga3_rep28                           NNS=100  HV=      19915550  wall=  1.36s
+  [540/540] small_4obj_nsga3_rep29                           NNS=100  HV=      19888332  wall=  1.40s
+Done: 540 runs in 1317.8s. Manifest → experiments/results/correction/repro_directed/h1_h2_h4/manifest.csv

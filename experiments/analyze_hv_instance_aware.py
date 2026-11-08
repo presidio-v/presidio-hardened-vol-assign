@@ -20,12 +20,16 @@ methodological concern. If it flips, §5.4 needs a different narrative.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from pymoo.indicators.hv import HV
 from scipy.stats import mannwhitneyu
+
+# Results root; PVA_RESULTS points the analysis at another run (e.g. the corrected one).
+H1_DIR = Path(os.environ.get("PVA_RESULTS", "experiments/results")) / "h1_h2_h4"
 
 
 def _front_points(run_dir: Path) -> np.ndarray:
@@ -35,23 +39,18 @@ def _front_points(run_dir: Path) -> np.ndarray:
 
 
 def main() -> None:
-    manifest = pd.read_csv("experiments/results/h1_h2_h4/manifest.csv")
+    manifest = pd.read_csv(H1_DIR / "manifest.csv")
     manifest = manifest[manifest["objectives"] == 4]
 
     rows = []
     for (size, rep), cell in manifest.groupby(["size", "rep"]):
         # Union of points across all three algorithms in this cell
-        union = np.vstack(
-            [
-                _front_points(Path("experiments/results/h1_h2_h4") / row["run_id"])
-                for _, row in cell.iterrows()
-            ]
-        )
+        union = np.vstack([_front_points(H1_DIR / row["run_id"]) for _, row in cell.iterrows()])
         ref = union.max(axis=0) * 1.05  # 5% margin to keep all points inside box
         indicator = HV(ref_point=ref)
 
         for _, row in cell.iterrows():
-            pts = _front_points(Path("experiments/results/h1_h2_h4") / row["run_id"])
+            pts = _front_points(H1_DIR / row["run_id"])
             keep = (pts < ref).all(axis=1)
             pts_in = pts[keep]
             hv_aware = float(indicator(pts_in)) if pts_in.size else 0.0
@@ -70,7 +69,7 @@ def main() -> None:
             )
 
     df = pd.DataFrame(rows)
-    out = Path("experiments/results/h1_h2_h4/hv_instance_aware.csv")
+    out = H1_DIR / "hv_instance_aware.csv"
     df.to_csv(out, index=False)
 
     # Summary

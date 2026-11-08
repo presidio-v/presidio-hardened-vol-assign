@@ -1,0 +1,70 @@
+H3a sweep: 1 baseline + 66 deletions × 5 reps on small 4-obj NSGA-II
+  baseline                       hv_avg=      18448028  wall=  19.8s
+  [  1/66] fis1       rule  0  hv_avg=      18404991  ΔHV= -0.23%  wall=  19.6s
+  [  2/66] fis1       rule  1  hv_avg=      18193719  ΔHV= -1.38%  wall=  20.5s
+  [  3/66] fis1       rule  2  hv_avg=      17676155  ΔHV= -4.18%  wall=  20.3s
+  [  4/66] fis1       rule  3  hv_avg=      18494407  ΔHV= +0.25%  wall=  21.1s
+  [  5/66] fis1       rule  4  hv_avg=      18416014  ΔHV= -0.17%  wall=  20.5s
+  [  6/66] fis1       rule  5  hv_avg=      17449676  ΔHV= -5.41%  wall=  20.3s
+  [  7/66] fis1       rule  6  hv_avg=      18888389  ΔHV= +2.39%  wall=  19.9s
+  [  8/66] fis1       rule  7  hv_avg=      18390934  ΔHV= -0.31%  wall=  20.3s
+  [  9/66] fis1       rule  8  hv_avg=      18184433  ΔHV= -1.43%  wall=  20.5s
+  [ 10/66] fis1       rule  9  hv_avg=      18196553  ΔHV= -1.36%  wall=  20.7s
+  [ 11/66] fis1       rule 10  hv_avg=      18541731  ΔHV= +0.51%  wall=  20.2s
+  [ 12/66] fis1       rule 11  hv_avg=      18182527  ΔHV= -1.44%  wall=  20.6s
+  [ 13/66] fis1       rule 12  hv_avg=      18245444  ΔHV= -1.10%  wall=  20.4s
+  [ 14/66] fis1       rule 13  hv_avg=      18585441  ΔHV= +0.74%  wall=  20.4s
+  [ 15/66] fis1       rule 14  hv_avg=      18275383  ΔHV= -0.94%  wall=  19.7s
+  [ 16/66] fis1       rule 15  hv_avg=      18325536  ΔHV= -0.66%  wall=  20.0s
+  [ 17/66] fis1       rule 16  hv_avg=      18541857  ΔHV= +0.51%  wall=  19.9s
+  [ 18/66] fis1       rule 17  hv_avg=      18716452  ΔHV= +1.46%  wall=  20.2s
+  [ 19/66] fis1       rule 18  hv_avg=      18216622  ΔHV= -1.25%  wall=  20.2s
+  [ 20/66] fis1       rule 19  hv_avg=      18099960  ΔHV= -1.89%  wall=  20.5s
+  [ 21/66] fis1       rule 20  hv_avg=      18448028  ΔHV= +0.00%  wall=  19.8s
+  [ 22/66] fis1       rule 21  hv_avg=      18285400  ΔHV= -0.88%  wall=  19.9s
+  [ 23/66] fis1       rule 22  hv_avg=      18355302  ΔHV= -0.50%  wall=  20.0s
+  [ 24/66] fis1       rule 23  hv_avg=      18448028  ΔHV= +0.00%  wall=  20.0s
+  [ 25/66] fis1       rule 24  hv_avg=      18226143  ΔHV= -1.20%  wall=  20.2s
+  [ 26/66] fis1       rule 25  hv_avg=      18448028  ΔHV= +0.00%  wall=  20.2s
+  [ 27/66] fis1       rule 26  hv_avg=      18354613  ΔHV= -0.51%  wall=  20.0s
+  [ 28/66] fis2a_trd  rule  0  hv_avg=      16125053  ΔHV=-12.59%  wall=  19.3s
+  [ 29/66] fis2a_trd  rule  1  hv_avg=      18044887  ΔHV= -2.19%  wall=  19.0s
+  [ 30/66] fis2a_trd  rule  2  hv_avg=      18517022  ΔHV= +0.37%  wall=  19.0s
+  [ 31/66] fis2a_trd  rule  3  hv_avg=      17796763  ΔHV= -3.53%  wall=  18.5s
+  [ 32/66] fis2a_trd  rule  4  hv_avg=      18396816  ΔHV= -0.28%  wall=  18.8s
+  [ 33/66] fis2a_trd  rule  5  hv_avg=      18364607  ΔHV= -0.45%  wall=  18.6s
+  [ 34/66] fis2a_trd  rule  6  hv_avg=      18201196  ΔHV= -1.34%  wall=  18.4s
+  [ 35/66] fis2a_trd  rule  7  hv_avg=      18426755  ΔHV= -0.12%  wall=  18.4s
+  [ 36/66] fis2a_trd  rule  8  hv_avg=      18357459  ΔHV= -0.49%  wall=  18.9s
+  [ 37/66] fis2b_rpd  rule  0  hv_avg=      13334037  ΔHV=-27.72%  wall=  18.4s
+  [ 38/66] fis2b_rpd  rule  1  hv_avg=      18986818  ΔHV= +2.92%  wall=  18.1s
+  [ 39/66] fis2b_rpd  rule  2  hv_avg=      18477891  ΔHV= +0.16%  wall=  19.1s
+  [ 40/66] fis3       rule  0  hv_avg=      16275842  ΔHV=-11.77%  wall=  18.7s
+  [ 41/66] fis3       rule  1  hv_avg=      18330547  ΔHV= -0.64%  wall=  18.4s
+  [ 42/66] fis3       rule  2  hv_avg=      18207363  ΔHV= -1.30%  wall=  18.7s
+  [ 43/66] fis3       rule  3  hv_avg=      18894086  ΔHV= +2.42%  wall=  18.5s
+  [ 44/66] fis3       rule  4  hv_avg=      18413288  ΔHV= -0.19%  wall=  18.5s
+  [ 45/66] fis3       rule  5  hv_avg=      18236227  ΔHV= -1.15%  wall=  18.5s
+  [ 46/66] fis3       rule  6  hv_avg=      18227698  ΔHV= -1.19%  wall=  18.5s
+  [ 47/66] fis3       rule  7  hv_avg=      18174309  ΔHV= -1.48%  wall=  18.5s
+  [ 48/66] fis3       rule  8  hv_avg=      18448028  ΔHV= +0.00%  wall=  18.7s
+  [ 49/66] fis3       rule  9  hv_avg=      18448028  ΔHV= +0.00%  wall=  18.8s
+  [ 50/66] fis3       rule 10  hv_avg=      18448028  ΔHV= +0.00%  wall=  18.7s
+  [ 51/66] fis3       rule 11  hv_avg=      18448028  ΔHV= +0.00%  wall=  18.9s
+  [ 52/66] fis3       rule 12  hv_avg=      18874086  ΔHV= +2.31%  wall=  18.8s
+  [ 53/66] fis3       rule 13  hv_avg=      18448028  ΔHV= +0.00%  wall=  18.6s
+  [ 54/66] fis3       rule 14  hv_avg=      18448028  ΔHV= +0.00%  wall=  18.9s
+  [ 55/66] fis3       rule 15  hv_avg=      18193169  ΔHV= -1.38%  wall=  19.3s
+  [ 56/66] fis3       rule 16  hv_avg=      18275626  ΔHV= -0.93%  wall=  18.9s
+  [ 57/66] fis3       rule 17  hv_avg=      18448028  ΔHV= +0.00%  wall=  18.9s
+  [ 58/66] fis3       rule 18  hv_avg=      18448028  ΔHV= +0.00%  wall=  20.2s
+  [ 59/66] fis3       rule 19  hv_avg=      18448028  ΔHV= +0.00%  wall=  19.0s
+  [ 60/66] fis3       rule 20  hv_avg=      18448028  ΔHV= +0.00%  wall=  18.7s
+  [ 61/66] fis3       rule 21  hv_avg=      18448028  ΔHV= +0.00%  wall=  18.5s
+  [ 62/66] fis3       rule 22  hv_avg=      18448028  ΔHV= +0.00%  wall=  18.6s
+  [ 63/66] fis3       rule 23  hv_avg=      18448028  ΔHV= +0.00%  wall=  18.8s
+  [ 64/66] fis3       rule 24  hv_avg=      18676001  ΔHV= +1.24%  wall=  18.9s
+  [ 65/66] fis3       rule 25  hv_avg=      18398620  ΔHV= -0.27%  wall=  18.8s
+  [ 66/66] fis3       rule 26  hv_avg=      18448028  ΔHV= +0.00%  wall=  18.6s
+
+Done: 66 deletions in 21.6 min. Manifest → experiments/results/correction/left_out/h3a_small/h3a_manifest.csv

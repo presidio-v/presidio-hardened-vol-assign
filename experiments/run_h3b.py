@@ -60,6 +60,12 @@ def main() -> None:
         default=Path("experiments/results/h3b"),
         help="Output directory.",
     )
+    parser.add_argument(
+        "--ulpp-objective",
+        choices=["directed", "left_out"],
+        default="directed",
+        help="ULPP objective: as published (directed) or corrected (left_out).",
+    )
     args = parser.parse_args()
 
     spec = SIZES[args.size]
@@ -126,6 +132,7 @@ def main() -> None:
                 pop_size=args.pop_size,
                 generations=args.generations,
                 seed=None,  # set per rep
+                ulpp_objective=args.ulpp_objective,
             )
             cache = precompute_fis_cache(problem, sweep_cfg)
 
@@ -150,6 +157,7 @@ def main() -> None:
                     pop_size=args.pop_size,
                     generations=args.generations,
                     seed=BASE_SEED + rep * SEED_STEP,
+                    ulpp_objective=args.ulpp_objective,
                 )
                 front = solve(problem, cfg, cache=cache)
                 metrics = compute_allocation_metrics(front)

@@ -151,4 +151,5 @@ def precompute_load_coupled_cache(
         rpd=base.rpd,
         cail=base.cail,
         cail_load=table,
+        ulpp_objective=base.ulpp_objective,
     )

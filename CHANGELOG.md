@@ -6,6 +6,29 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.1] — 2026-11-08
+
+Code and result manifests for the correction of Rabiei, Arias-Aranda, Stantchev,
+*Appl. Sci.* 2026, 16, 7581.
+
+### Fixed
+- **ULPP objective of the four-objective model.** ULPP_j is the unfairness of
+  leaving person j behind, but the published objective averaged it over the
+  people directed, so minimising it favoured directing the least vulnerable.
+  `AllocationConfig(ulpp_objective="left_out")` (driver flag
+  `--ulpp-objective left_out` on `run_h1_h2_h4`, `run_h3a`, `run_h3b`) averages it
+  over the people left out. The default stays `"directed"`, so the published
+  results still reproduce; the exact deciders implement the published objective
+  only and raise `NotImplementedError` for `"left_out"`.
+
+### Added
+- `experiments/run_correction.sh`, `correction_tables`, `correction_cpu_merge`:
+  reproduction of the published H1/H2/H4 matrix (exact match), every Paper A
+  experiment under the corrected objective, and the corrected Tables 3, 4, A7, A8
+  and Figures 1-5. Result manifests under `experiments/results/correction/`.
+- `PVA_RESULTS`, `PVA_FIGURES`, `PVA_H1_MANIFEST` redirect the analysis and
+  figure scripts.
+
 ## [0.5.0] — 2026-11-08
 
 Code, instances and result manifests for the revision of the allocation-model

@@ -13,6 +13,7 @@ manuscript.
 from __future__ import annotations
 
 import math
+import os
 import time
 from pathlib import Path
 
@@ -30,6 +31,9 @@ from presidio_vol_assign.allocation.models import (
     Weights,
 )
 from presidio_vol_assign.allocation.validation import load_allocation_problem
+
+# Results root; PVA_RESULTS points the analysis at another run (e.g. the corrected one).
+H1_DIR = Path(os.environ.get("PVA_RESULTS", "experiments/results")) / "h1_h2_h4"
 
 
 def precompute_til(problem: AllocationProblem, weights: Weights) -> dict[tuple[str, str], float]:
@@ -116,8 +120,8 @@ def spearman_rho_array(trd: np.ndarray, rpd: np.ndarray) -> float:
 
 
 def main() -> None:
-    manifest = pd.read_csv("experiments/results/h1_h2_h4/manifest.csv")
-    out_path = Path("experiments/results/h1_h2_h4/h1_analysis.csv")
+    manifest = pd.read_csv(H1_DIR / "manifest.csv")
+    out_path = H1_DIR / "h1_analysis.csv"
 
     # Pre-load problems and TIL caches
     problems: dict[str, AllocationProblem] = {}
@@ -140,7 +144,7 @@ def main() -> None:
     t0 = time.monotonic()
     rows = []
     for _, row in four.iterrows():
-        front = reconstruct_front(Path("experiments/results/h1_h2_h4") / row["run_id"])
+        front = reconstruct_front(H1_DIR / row["run_id"])
         cache = til_caches[row["size"]]
         pts, dominated = project_with_cache(front, cache)
         trd = np.array([s.mn_trd for s in front.solutions])

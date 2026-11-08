@@ -257,6 +257,12 @@ class AllocationConfig:
         nsga3_divisions: Das-Dennis reference-point divisions for NSGA-III
             (default p=4, yielding 35 reference points in 4D simplex).
         output_dir: Directory where result files are written.
+        ulpp_objective: Which people the ULPP objective averages over.
+            ``"directed"`` (default) is the objective as published in
+            Rabiei et al., Appl. Sci. 2026, 16, 7581: the mean ULPP over the
+            people directed. ``"left_out"`` is the corrected objective: ULPP_j
+            is the unfairness of leaving person j out, so the objective is the
+            mean ULPP over the people *not* directed. Both are minimised.
     """
 
     solver: AllocationSolverType
@@ -267,6 +273,17 @@ class AllocationConfig:
     seed: int | None = None
     nsga3_divisions: int = 4
     output_dir: str = "./results"
+    ulpp_objective: str = "directed"
+
+    def __post_init__(self) -> None:
+        if self.ulpp_objective not in ULPP_OBJECTIVES:
+            raise ValueError(
+                f"ulpp_objective must be one of {ULPP_OBJECTIVES}, got {self.ulpp_objective!r}"
+            )
+
+
+#: Admissible values of ``AllocationConfig.ulpp_objective``.
+ULPP_OBJECTIVES = ("directed", "left_out")
 
 
 # ---------------------------------------------------------------------------

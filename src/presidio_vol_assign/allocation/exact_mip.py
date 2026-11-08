@@ -114,6 +114,8 @@ def build_weighted_mip(
             cursor += m  # one z per person at this (centre, level)
     n_var = cursor
 
+    if cache.ulpp_objective != "directed":  # the per-person cost below is the published form
+        raise NotImplementedError("exact deciders implement the published ULPP objective only")
     cost = np.zeros(n_var)
     cost[:n_x] = ((w[0] * cache.ulpp)[:, None] + pair_static).ravel() / n_dir
     for i in range(n):

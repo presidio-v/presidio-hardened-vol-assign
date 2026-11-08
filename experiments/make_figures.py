@@ -14,6 +14,7 @@ captions per the figure-budget table in book-implementation-plan.md.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import matplotlib as mpl
@@ -37,8 +38,11 @@ mpl.rcParams.update(
 )
 
 ROOT = Path(__file__).parent.parent
-RESULTS = ROOT / "experiments" / "results"
-FIGURES = ROOT / "pubs" / "v0.2.0-mdpi" / "figures"
+# PVA_RESULTS / PVA_FIGURES redirect input and output (e.g. for the corrected ULPP runs).
+RESULTS = Path(os.environ.get("PVA_RESULTS", ROOT / "experiments" / "results"))
+FIGURES = Path(os.environ.get("PVA_FIGURES", ROOT / "pubs" / "v0.2.0-mdpi" / "figures"))
+# PVA_H1_MANIFEST names the H1/H2/H4 manifest file inside RESULTS/h1_h2_h4 (default manifest.csv).
+H1_MANIFEST = os.environ.get("PVA_H1_MANIFEST", "manifest.csv")
 FIGURES.mkdir(parents=True, exist_ok=True)
 
 ALGO_COLOR = {
@@ -65,7 +69,7 @@ def fig5_pareto_fronts() -> None:
         r"$\overline{\mathrm{CAIL}}$",
     ]
 
-    manifest = pd.read_csv(RESULTS / "h1_h2_h4" / "manifest.csv")
+    manifest = pd.read_csv(RESULTS / "h1_h2_h4" / H1_MANIFEST)
     manifest = manifest[(manifest["objectives"] == 4) & (manifest["rep"] == 0)]
 
     for ax, size in zip(axes, SIZE_ORDER):
@@ -174,7 +178,7 @@ def fig6_h1_spearman() -> None:
 
 
 def fig7_h2_algorithm_compare() -> None:
-    df = pd.read_csv(RESULTS / "h1_h2_h4" / "manifest.csv")
+    df = pd.read_csv(RESULTS / "h1_h2_h4" / H1_MANIFEST)
     df = df[df["objectives"] == 4]
 
     fig, axes = plt.subplots(1, 2, figsize=(8.5, 3.2))

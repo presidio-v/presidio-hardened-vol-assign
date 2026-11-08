@@ -42,6 +42,8 @@ class _State:
     def __init__(self, cache: FISCache, n_dir: int, objectives: int, weights, pairs, max_load):
         if cache.cail_load is None:
             raise ValueError("local search needs a load-coupled cache")
+        if cache.ulpp_objective != "directed":  # the per-person cost below is the published form
+            raise NotImplementedError("exact deciders implement the published ULPP objective only")
         self.m, self.n, _ = cache.cail_load.shape
         w = tuple(weights) if weights is not None else (1.0,) * objectives
         pair_static = w[1] * cache.trd + w[2] * cache.rpd if objectives == 4 else w[1] * cache.til
@@ -186,6 +188,8 @@ def capacity_greedy(
     as in the published model) and keeps a pair when the person is still free and the
     centre still has room, until ``n_dir`` people are directed. Ties go to the lower index.
     """
+    if cache.ulpp_objective != "directed":  # the per-person cost below is the published form
+        raise NotImplementedError("exact deciders implement the published ULPP objective only")
     w = tuple(weights) if weights is not None else (1.0,) * objectives
     pair_terms = (cache.trd, cache.rpd, cache.cail) if objectives == 4 else (cache.til, cache.cail)
     cost = w[0] * cache.ulpp[:, None] + sum(

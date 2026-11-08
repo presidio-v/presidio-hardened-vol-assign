@@ -10,6 +10,7 @@ import pytest
 from presidio_vol_assign.allocation.models import AllocationSolverType
 from presidio_vol_assign.allocation.solvers import (
     decode_chromosome,
+    evaluate_pairs,
     precompute_fis_cache,
     solve,
 )
@@ -128,3 +129,52 @@ class TestBudgetAndSeeding:
         cfg = dataclasses.replace(base_config, objectives=3, generations=2, seed=11)
         with pytest.raises(ValueError):
             solve(problem, cfg, seed_allocations=[[(0, 0)]])
+
+
+class TestUlppObjective:
+    """The corrected ULPP objective (Appl. Sci. correction): mean over the people left out."""
+
+    def test_rejects_unknown_mode(self, base_config):
+        with pytest.raises(ValueError):
+            dataclasses.replace(base_config, ulpp_objective="both")
+
+    def test_cache_carries_mode(self, problem, base_config):
+        cfg = dataclasses.replace(base_config, ulpp_objective="left_out")
+        assert precompute_fis_cache(problem, cfg).ulpp_objective == "left_out"
+        assert precompute_fis_cache(problem, base_config).ulpp_objective == "directed"
+
+    def test_left_out_is_mean_over_undirected(self, problem, base_config):
+        cache = dataclasses.replace(
+            precompute_fis_cache(problem, base_config), ulpp_objective="left_out"
+        )
+        pairs = [(j, 0) for j in range(problem.n_dir)]
+        directed = set(range(problem.n_dir))
+        expected = sum(cache.ulpp[j] for j in range(problem.n_people) if j not in directed) / (
+            problem.n_people - problem.n_dir
+        )
+        assert evaluate_pairs(pairs, cache, 4)[0] == pytest.approx(expected)
+
+    def test_left_out_reverses_preference(self, problem, base_config):
+        """Directing the highest-ULPP people is best under the corrected objective."""
+        base = precompute_fis_cache(problem, base_config)
+        order = sorted(range(problem.n_people), key=lambda j: base.ulpp[j])
+        low = [(j, 0) for j in order[: problem.n_dir]]
+        high = [(j, 0) for j in order[-problem.n_dir :]]
+        assert evaluate_pairs(low, base, 4)[0] < evaluate_pairs(high, base, 4)[0]
+        fixed = dataclasses.replace(base, ulpp_objective="left_out")
+        assert evaluate_pairs(high, fixed, 4)[0] < evaluate_pairs(low, fixed, 4)[0]
+
+    def test_other_objectives_unchanged(self, problem, base_config):
+        base = precompute_fis_cache(problem, base_config)
+        fixed = dataclasses.replace(base, ulpp_objective="left_out")
+        pairs = [(j, j % problem.n_centers) for j in range(problem.n_dir)]
+        assert evaluate_pairs(pairs, base, 4)[1:] == evaluate_pairs(pairs, fixed, 4)[1:]
+
+    def test_exact_decider_refuses_corrected_mode(self, problem, base_config):
+        from presidio_vol_assign.allocation.baselines import exact_weighted_sum_pairs
+
+        fixed = dataclasses.replace(
+            precompute_fis_cache(problem, base_config), ulpp_objective="left_out"
+        )
+        with pytest.raises(NotImplementedError):
+            exact_weighted_sum_pairs(fixed, problem.n_dir, 4)

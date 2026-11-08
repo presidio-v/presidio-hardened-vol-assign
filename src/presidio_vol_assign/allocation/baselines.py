@@ -160,6 +160,8 @@ def exact_weighted_sum_pairs(
     w = tuple(weights) if weights is not None else (1.0,) * objectives
     if len(w) != objectives or any(x < 0 for x in w):
         raise ValueError("weights must be one non-negative value per objective")
+    if cache.ulpp_objective != "directed":  # the per-person cost below is the published form
+        raise NotImplementedError("exact deciders implement the published ULPP objective only")
     m = cache.ulpp.shape[0]
     if not 0 < n_dir <= m:  # fail closed on a malformed instance
         raise ValueError("n_dir must be in (0, number of people]")
