@@ -25,6 +25,8 @@ dependency advisory.
   now `enum.StrEnum`: `str()` and f-strings yield the member value (e.g.
   `nsga2`) instead of `SolverType.NSGA2`. No package output changes; every
   writer already serialises `.value`.
+- README and PRESIDIO-REQ roadmaps list releases through 0.6.0; the data
+  connectors once planned as 0.3.1 stay planned, unnumbered.
 
 ## [0.5.1] — 2026-11-08
 

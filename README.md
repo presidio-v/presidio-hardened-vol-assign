@@ -618,7 +618,11 @@ See [PRESIDIO-REQ.md](PRESIDIO-REQ.md) for full version deliberations.
 | v0.1.0 | Released | MVP: FIS + NSGA-II + NRGA, CSV I/O, Pareto metrics (ED-staffing model) |
 | v0.2.0 | Released | Humanitarian allocation model (3 new FIS, 3 objectives) **side by side** with the ED model; N-D metrics + reproducibility metric; `benchmark` + `sensitivity` + figure export. See [docs/v0.2.0-plan.md](docs/v0.2.0-plan.md) |
 | v0.3.0 | Released | Evidence-carrying allocation (`--emit-evidence` / `verify-evidence`); interactive Pareto explorer as a browser GUI (`pva serve`) |
-| v0.3.1 | Planned | Real-world data connectors (`pva import`: Excel roster, HTTPS REST vacancy feed); bring-your-own-CSV in the demo GUI |
+| v0.4.0 | Released | Published relief-allocation model in the demo, with exact deciders (weighted-sum rule, MIP) and a compiled FIS evaluator; static demo build (`pva build-demo`); experiment drivers and result manifests (`experiments/`) |
+| v0.5.0 | Released | Near-optimal multiplicity and tie-breaking, capacity-aware local search, solver time budget and seeding, repair forms; reproducible instance generator; drivers and results for the allocation-model audit (MDPI *Systems*) |
+| v0.5.1 | Released | Corrected ULPP objective (`ulpp_objective="left_out"`) and the reruns behind the correction to *Appl. Sci.* 2026, 16, 7581 |
+| v0.6.0 | Released | Python 3.11+ (clears every open dependency advisory); string enums are `StrEnum`; single `ci-ok` CI gate |
+| next | Planned | Real-world data connectors (`pva import`: Excel roster, HTTPS REST vacancy feed); bring-your-own-CSV in the demo GUI |
 
 ---
 
