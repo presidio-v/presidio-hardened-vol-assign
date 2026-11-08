@@ -6,6 +6,35 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-11-08
+
+Code, instances and result manifests for the revision of the allocation-model
+audit (MDPI *Systems*, systems-4669426).
+
+### Added
+- **Near-optimal multiplicity** (`allocation/multiplicity.py`): modelling to
+  generate alternatives on the exact MIP (allocations within ε of the optimum
+  with minimal overlap), a seeded lexicographic tie-break that commits to one
+  optimum, and churn / directed-set Jaccard measures.
+- **Capacity-aware local search** (`allocation/local_search.py`) on the repaired
+  model, started from the capacity greedy, as a reference beyond the exact
+  boundary.
+- **Solver budget and seeding**: `solve(time_budget=..., seed_allocations=...)`
+  stops the evolutionary search on a wall-clock deadline and can seed it with
+  given allocations; fronts record `generations_run`. Runs without either
+  option are bit-for-bit unchanged.
+- **Repair forms**: load-dependent occupancy takes `alpha` and `gamma`.
+- Experiment drivers for the deployment envelope on stored instances, the
+  extended exact-decider turbulence study (36 conditions per size, joint
+  perturbations, bias), repair forms, the ED staffing and multi-objective
+  knapsack cases, the ULPP direction check and the revision figures and tables.
+- Result manifests and stored instances under `experiments/results/`.
+
+### Fixed
+- `experiments/generate_instances.py` salted its random stream with Python's
+  `hash()`, which is randomised per process, so the scaling instances differed
+  between runs. It now uses CRC-32, with a reproducibility test.
+
 ### Security
 - Floor `pillow>=13.0.0` on Python 3.11+. Pillow 12.3.0, pulled in by
   matplotlib, carries 35 advisories first fixed in 13.0.0. Pillow 13 requires

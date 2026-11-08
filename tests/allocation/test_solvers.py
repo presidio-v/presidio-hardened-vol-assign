@@ -88,3 +88,43 @@ class TestSolveAllAlgorithms:
         front3 = solve(problem, dataclasses.replace(base_config, objectives=3))
         assert len(front4.solutions[0].fitness) == 4
         assert len(front3.solutions[0].fitness) == 3
+
+
+class TestBudgetAndSeeding:
+    def test_encode_inverts_decode(self):
+        from deap import creator
+
+        from presidio_vol_assign.allocation.solvers import encode_pairs
+
+        pairs = [(4, 0), (1, 2), (7, 1)]
+        ind = encode_pairs(pairs, 3, creator.AllocIndividual3)
+        assert decode_chromosome(ind, n_dir=3, n_centers=3) == pairs
+
+    def test_unbounded_unseeded_run_is_unchanged(self, problem, base_config):
+        cfg = dataclasses.replace(base_config, objectives=3, generations=5, seed=11)
+        a = solve(problem, cfg)
+        b = solve(problem, cfg, time_budget=None, seed_allocations=None)
+        assert [s.mn_ulpp for s in a.solutions] == [s.mn_ulpp for s in b.solutions]
+        assert a.generations_run == b.generations_run == 5
+
+    def test_time_budget_stops_early_after_one_generation(self, problem, base_config):
+        cfg = dataclasses.replace(base_config, objectives=3, generations=10_000, seed=11)
+        front = solve(problem, cfg, time_budget=0.0)
+        assert front.generations_run == 1
+
+    def test_seeded_optimum_survives_elitist_selection(self, problem, base_config):
+        from presidio_vol_assign.allocation.baselines import exact_weighted_sum_pairs
+        from presidio_vol_assign.allocation.solvers import evaluate_pairs
+
+        cfg = dataclasses.replace(base_config, objectives=3, generations=3, seed=11)
+        cache = precompute_fis_cache(problem, cfg)
+        exact = exact_weighted_sum_pairs(cache, problem.n_dir, 3)
+        target = sum(evaluate_pairs(exact, cache, 3))
+        front = solve(problem, cfg, cache=cache, seed_allocations=[exact])
+        best = min(s.mn_ulpp + s.mn_til + s.mn_cail for s in front.solutions)
+        assert best == pytest.approx(target, abs=1e-9)
+
+    def test_rejects_malformed_seed(self, problem, base_config):
+        cfg = dataclasses.replace(base_config, objectives=3, generations=2, seed=11)
+        with pytest.raises(ValueError):
+            solve(problem, cfg, seed_allocations=[[(0, 0)]])

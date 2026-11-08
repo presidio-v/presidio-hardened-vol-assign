@@ -23,7 +23,7 @@ from dataclasses import dataclass
 
 import numpy as np
 from scipy.optimize import Bounds, LinearConstraint, milp
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix, csr_matrix
 
 from presidio_vol_assign.allocation.solvers import FISCache
 
@@ -46,18 +46,34 @@ def _levels(cail_load_i: np.ndarray) -> list[tuple[int, int]]:
     return [(lvl, lvl) for lvl in range(last)] + [(last, n_levels - 1)]
 
 
-def solve_weighted_mip(
+@dataclass(frozen=True)
+class MipModel:
+    """The weighted-sum MIP in ``scipy.optimize.milp`` form; ``x`` is the first ``m * n``."""
+
+    cost: np.ndarray
+    a: csr_matrix
+    lb: np.ndarray
+    ub: np.ndarray
+    integrality: np.ndarray
+    m: int
+    n: int
+
+    @property
+    def n_x(self) -> int:
+        return self.m * self.n
+
+
+def build_weighted_mip(
     cache: FISCache,
     n_dir: int,
     objectives: int,
     weights: tuple[float, ...] | None = None,
-    time_limit: float = 60.0,
     max_load: np.ndarray | None = None,
-) -> MipResult:
-    """Exact (or gap-bounded) minimiser of the weighted objective sum, load-coupled CAIL.
+) -> MipModel:
+    """Assemble the load-coupled weighted-sum MIP without solving it.
 
-    ``max_load`` (persons per centre) turns capacity into a hard constraint by removing
-    load levels above it; without it capacity stays soft, as in the published model.
+    ``solve_weighted_mip`` solves it as is; ``allocation.multiplicity`` adds a quality bound
+    and a different objective to enumerate alternative near-optimal allocations.
     """
     if cache.cail_load is None:
         raise ValueError("cache has no load table; the static model is solved by the greedy")
@@ -136,11 +152,37 @@ def solve_weighted_mip(
     integrality = np.zeros(n_var)
     for idx in y_index:
         integrality[idx] = 1
+    return MipModel(
+        cost=cost,
+        a=a,
+        lb=np.asarray(lb, dtype=float),
+        ub=np.asarray(ub, dtype=float),
+        integrality=integrality,
+        m=m,
+        n=n,
+    )
+
+
+def solve_weighted_mip(
+    cache: FISCache,
+    n_dir: int,
+    objectives: int,
+    weights: tuple[float, ...] | None = None,
+    time_limit: float = 60.0,
+    max_load: np.ndarray | None = None,
+) -> MipResult:
+    """Exact (or gap-bounded) minimiser of the weighted objective sum, load-coupled CAIL.
+
+    ``max_load`` (persons per centre) turns capacity into a hard constraint by removing
+    load levels above it; without it capacity stays soft, as in the published model.
+    """
+    model = build_weighted_mip(cache, n_dir, objectives, weights, max_load)
+    m, n, n_x = model.m, model.n, model.n_x
     start = time.perf_counter()
     res = milp(
-        cost,
-        constraints=LinearConstraint(a, lb, ub),
-        integrality=integrality,
+        model.cost,
+        constraints=LinearConstraint(model.a, model.lb, model.ub),
+        integrality=model.integrality,
         bounds=Bounds(0.0, 1.0),
         options={"time_limit": time_limit, "disp": False},
     )

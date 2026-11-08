@@ -13,10 +13,15 @@ are bit-for-bit identical on macOS arm64 and Ubuntu x86-64 (Python 3.11, 3.12).
 ## What is committed and what is regenerated
 
 Committed under `experiments/results/`: every summary and manifest the paper quotes
-(CSV and `meta.json`). Not committed, because they are large and regenerate bit for bit:
-per-seed Pareto fronts (`seed_floor/*/fronts.jsonl`, ~15 MB) and the generated scaling
-instances (`scaling/instances/`, ~26 MB). Rebuild them with the commands below before running
-the analysis scripts that read them.
+(CSV and `meta.json`). Not committed, because they are large: per-seed Pareto fronts
+(`seed_floor/*/fronts.jsonl`) and generated instances (`envelope/instances/`,
+`turbulence_extended/instances/`). Fronts regenerate bit for bit from the seeds. Generated
+instances regenerate bit for bit since revision R1 of Paper B: the generator used to salt its
+random stream with Python's `hash()`, which is randomised per process, and now uses CRC-32
+(`tests/test_generate_instances.py`). The instances behind the submitted version's scaling table
+(`run_scaling`) and the alternate instances `results/alt_instances/` were made with the old salt
+and cannot be regenerated; the alternate instances are archived with their SHA-256 hashes, and the
+revision's envelope instances are archived as well.
 
 ## Paper B: where each number comes from
 
@@ -34,6 +39,21 @@ the analysis scripts that read them.
 | Paper A H1 on the exact 4-objective front (Discussion) | `analyze_paperA_h1_exact --steps {12,20}` | `results/audit/paperA_h1_exact*.csv` |
 | Cross-environment reproducibility (Appendix) | CI workflow `repro-crossenv.yml` (`run_reproducibility`, `compare_repro`) | `results/repro/crossenv/` |
 | All audit figures | `make_audit_figures [fronts budget turbulence scaling]` | `pubs/.../figures/audit/` (not in git) |
+
+## Paper B revision (R1, November 2026)
+
+| Paper element | Producer | Output |
+|---|---|---|
+| Table 2 with 20 seeds and CIs | `run_seed_floor --seeds 20` for every row (see the table) → `analyze_audit` | `results/audit/audit_summary.csv` |
+| Sampled supported front vs lattice (Table "grid") | `analyze_weight_grid` | `results/audit/weight_grid.csv` |
+| ULPP direction (RQ1) | `analyze_ulpp_direction` | `results/audit/ulpp_direction.csv` |
+| Near-optimal multiplicity, tie-break (RQ2, Fig. "multiplicity", Table "tiebreak") | `run_multiplicity` | `results/multiplicity/` |
+| Exact-decider trend tests without level 0 | `analyze_trend_exact` | `results/turbulence_exact/trend_tests.csv` |
+| Turbulence across instances, conditions, bias, joint (RQ3) | `run_turbulence_extended --size {small,large} --instance {ref,101..105}` → `analyze_turbulence_extended` | `results/turbulence_extended/` |
+| Repair-form sensitivity (Table "forms") | `run_repair_forms` | `results/repair/repair_forms.csv` |
+| Envelope rerun (Table "envelope", Fig. 7, Appendix) | `run_envelope --time-limit {60,300} --seed {0,1,2}` (300 s from 1000 people up) → `make_envelope_tables` | `results/envelope/` |
+| Second cases (Section "further models") | `run_ed_audit`, `run_knapsack_audit` | `results/ed_audit/`, `results/knapsack/` |
+| Revision figures | `make_revision_figures --out <dir> [multiplicity turbulence envelope]` | figure PDFs |
 
 Timings in the manifests are wall-clock on the machine recorded in each `meta.json` or
 environment fingerprint; they are indicative, not reproducible.

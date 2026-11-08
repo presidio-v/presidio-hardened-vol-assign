@@ -61,11 +61,24 @@ def hard_load_limits(problem: AllocationProblem, capacity: np.ndarray) -> np.nda
     return np.floor(capacity * (1.0 - np.clip(cor, 0.0, 100.0) / 100.0) + 1e-9).astype(int)
 
 
-def post_occupancy(cor: np.ndarray, capacity: np.ndarray, loads: np.ndarray) -> np.ndarray:
-    """COR' for each centre given its load; broadcasts over a trailing load axis."""
-    with np.errstate(divide="ignore"):
-        added = np.where(np.isinf(capacity), 0.0, 100.0 * loads / capacity)
-    return np.minimum(100.0, cor + added)
+def post_occupancy(
+    cor: np.ndarray,
+    capacity: np.ndarray,
+    loads: np.ndarray,
+    alpha: float = 1.0,
+    gamma: float = 1.0,
+) -> np.ndarray:
+    """COR' for each centre given its load; broadcasts over a trailing load axis.
+
+    The repair of the paper is ``alpha = gamma = 1``: the load adds its share of capacity
+    to the occupancy rate. ``alpha`` scales that share and ``gamma`` bends it (convex above
+    1, concave below), for the sensitivity analysis of the repair's form.
+    """
+    if not (alpha > 0 and gamma > 0):
+        raise ValueError("alpha and gamma must be positive")
+    with np.errstate(divide="ignore", invalid="ignore"):
+        share = np.where(np.isinf(capacity), 0.0, loads / capacity)
+    return np.minimum(100.0, cor + alpha * 100.0 * share**gamma)
 
 
 def free_capacity(problem: AllocationProblem, kappa: float | np.ndarray) -> np.ndarray:
@@ -99,12 +112,15 @@ def precompute_load_coupled_cache(
     config: AllocationConfig,
     kappa: float | np.ndarray,
     static: FISCache | None = None,
+    alpha: float = 1.0,
+    gamma: float = 1.0,
 ) -> FISCache:
     """Static FIS cache plus ``cail_load[j, i, l]`` for every load l = 0..n_dir.
 
     Pass ``static`` to reuse an existing cache (perturbations of person-only fields leave
     every CAIL input unchanged). ``kappa`` is the size factor or an explicit capacity array
-    (e.g. from ``capacities_from_free_factor``). The load table goes through the compiled
+    (e.g. from ``capacities_from_free_factor``); ``alpha`` and ``gamma`` select the repair's
+    form (``post_occupancy``). The load table goes through the compiled
     FIS3, which is pinned to scikit-fuzzy by tests; at l = 0 it equals the static CAIL.
     """
     base = static if static is not None else precompute_fis_cache_fast(problem, config)
@@ -119,7 +135,7 @@ def precompute_load_coupled_cache(
         td[person_idx[pid], centre_idx[cid]] = travel.travel_duration
 
     loads = np.arange(n_dir + 1, dtype=float)
-    cor_post = post_occupancy(cor[:, None], cap[:, None], loads[None, :])  # (n, L+1)
+    cor_post = post_occupancy(cor[:, None], cap[:, None], loads[None, :], alpha, gamma)
     fis3 = compiled_fis3()
     table = np.empty((m, n, n_dir + 1))
     for i in range(n):

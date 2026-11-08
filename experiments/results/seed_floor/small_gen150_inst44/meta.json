@@ -2,7 +2,7 @@
   "solver": "nsga2",
   "instances": "experiments/results/alt_instances/seed44/small",
   "size": "small",
-  "seeds": 10,
+  "seeds": 20,
   "pop_size": 100,
   "generations": 150,
   "objectives": 3,

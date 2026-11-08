@@ -1,6 +1,8 @@
 {
+  "solver": "nsga2",
+  "instances": "experiments/instances/large",
   "size": "large",
-  "seeds": 5,
+  "seeds": 20,
   "pop_size": 100,
   "generations": 2400,
   "objectives": 3,
