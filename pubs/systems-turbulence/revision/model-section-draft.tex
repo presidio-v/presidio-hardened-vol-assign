@@ -1,0 +1,279 @@
+% =====================================================================
+% Draft model section for Section 3 (after "The audited system").
+% Every fact is traced to pva-experiments @ ecbd49a in model-section-facts.md.
+% Lines starting with "% CHECK" are for the authors and must be resolved or deleted.
+% CHECK: add \label{eq:repair} to the COR'/CAIL repair equation in S5 of paper.tex (it has no
+% label; it is no longer Eq. (2) once this section precedes it). The paper is also being
+% edited (new epsilon-multiplicity equations), so refer to equations by label only.
+% =====================================================================
+\subsection{The model}\label{sec:model}
+This subsection states the audited model as the reference implementation computes it. The
+membership functions and rule bases are those of~\cite{rabiei2026resilient}; the full rule
+tables are given there.
+
+\subsubsection{Decision and inputs}
+Let $J=\{1,\dots,m\}$ index the affected people and $I=\{1,\dots,n\}$ the relief centres, with
+$0<n_{\mathrm{dir}}<m$. A decision $d=(D,c)$ is a set $D\subset J$ of exactly $n_{\mathrm{dir}}$
+directed people and an assignment $c\colon D\to I$ of each directed person to one centre;
+equivalently $x_{j,i}\in\{0,1\}$ with $\sum_{i}x_{j,i}\le 1$ for every $j$ and
+$\sum_{j,i}x_{j,i}=n_{\mathrm{dir}}$. People outside $D$ are not directed. The published model
+has no capacity constraint: any number of people may be sent to one centre.
+
+Table~\ref{tab:inputs} lists the inputs. Ordinal fields enter the model through fixed scores.
+Two scores are derived. The age score is $\mathrm{AS}_j=(25-a_j)/25$ for $a_j<25$, $0$ for
+$25\le a_j\le 60$, $(a_j-60)/30$ for $60<a_j\le 90$ and $1$ above; the vulnerability score and
+the roadworthiness score are
+\begin{equation}\label{eq:vs-rws}
+\mathrm{VS}_j=\tfrac14\bigl(\mathrm{AS}_j+\mathrm{DS}_j+\mathrm{IL}_j+\mathrm{LS}_j\bigr),
+\qquad
+\mathrm{RWS}_{j,i}=1-\tfrac12\bigl(\mathrm{RCS}_{j,i}+\mathrm{PHS}_{j,i}\bigr),
+\end{equation}
+the weighted means of~\cite{rabiei2026resilient} with all weights equal to one. $\mathrm{RWS}$
+is written so that $1$ is a clear, safe route, which is the reading its rule base requires.
+
+\begin{table}[H]
+\centering
+\caption{Model inputs, their encoding and the instance generator. Scores are listed in the
+order of the levels. All draws are independent; $\mathrm{U}$ is uniform, $\mathrm{B}$ the beta
+distribution, and probabilities follow the levels in order.\label{tab:inputs}}
+\small
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+Symbol & Input (unit) & Domain or levels $\to$ score & Generator\\
+\midrule
+$a_j$ & age (years) & $[0,120]$ & $\mathrm{U}(5,90)$, 1 decimal\\
+$\mathrm{DS}_j$ & disability status & none, minor, severe $\to 0, 0.5, 1$ & $0.70, 0.20, 0.10$\\
+$\mathrm{IL}_j$ & injury level & none, minor, moderate, serious, life-threatening $\to 0, 0.25, 0.5, 0.75, 1$ & $0.40, 0.25, 0.20, 0.10, 0.05$\\
+$\mathrm{LS}_j$ & living status & with support, alone $\to 0, 1$ & $0.65, 0.35$\\
+$\mathrm{IDL}_j$ & infrastructure damage at the person's location (\%) & $[0,100]$ & $100\cdot\mathrm{B}(2.5,2)$\\
+$\mathrm{RTR}_j$ & resource time remaining (h) & $[0,48]$ & $\mathrm{U}(1,48)$\\
+$\mathrm{COR}_i$ & centre occupancy rate (\% of capacity in use) & $[0,100]$ & $\mathrm{U}(20,90)$\\
+$\mathrm{RDR}_i$ & resource depletion rate (\% of resources per hour) & $[0,100]$ & $\mathrm{U}(10,80)$\\
+$\mathrm{TD}_{j,i}$ & travel duration from person $j$ to centre $i$ (min) & $[0,180]$ & $\min\{180,\max\{2,\,100\cdot\mathrm{B}(1.5,4)\}\}$\\
+$\mathrm{RCS}_{j,i}$ & road condition & clear, partially blocked, blocked $\to 0.1, 0.5, 1$ & $0.45, 0.40, 0.15$\\
+$\mathrm{PHS}_{j,i}$ & possible hazard & none, minor, moderate, significant, extreme $\to 0.05, 0.25, 0.5, 0.75, 1$ & $0.30, 0.30, 0.25, 0.10, 0.05$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsubsection{Fuzzy inference systems}
+Three Mamdani systems produce the scores of the three-objective model
+(Table~\ref{tab:fis}). Every input has three terms on its universe: with breakpoints
+$p_0<\dots<p_4$, a left-shoulder trapezoid $(p_0,p_0,p_1,p_2)$, a triangle $(p_1,p_2,p_3)$ and a
+right-shoulder trapezoid $(p_2,p_3,p_4,p_4)$. Every output has five terms on $[0,100]$: very low
+$(0,0,10,30)$, low $(10,30,50)$, moderate $(30,50,70)$, high $(50,70,90)$ and very high
+$(70,90,100,100)$. The rule bases are complete grids, one rule per combination of input terms.
+Rules fire with the minimum of their antecedent memberships, clip their consequent term at
+that strength, and are aggregated by the maximum; the output is the centroid of the
+aggregate. Universes are sampled at 101 points (travel duration at 181), crisp inputs are
+clipped to the interior of their universe before inference, and a system that fires no rule
+returns the mid-point $50$.
+
+\begin{table}[H]
+\centering
+\caption{The fuzzy inference systems. Breakpoints $(p_0,\dots,p_4)$ as defined in the text;
+all outputs on $[0,100]$ with five terms.\label{tab:fis}}
+\small
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}Xcl@{}}
+\toprule
+System & Inputs: universe, terms, breakpoints & Rules & Output\\
+\midrule
+$\mathrm{FIS}_1$ & $\mathrm{VS}$: $[0,1]$, low/medium/high, $(0,.25,.5,.75,1)$;
+$\mathrm{IDL}$: $[0,100]$, minor/moderate/severe, $(0,25,50,75,100)$;
+$\mathrm{RTR}$: $[0,48]$\,h, short/moderate/long, $(0,12,24,36,48)$ & 27 & $\mathrm{ULPP}_j$\\
+$\mathrm{FIS}_2$ & $\mathrm{TD}$: $[0,180]$\,min, short/moderate/long, $(0,30,60,90,180)$;
+$\mathrm{RWS}$: $[0,1]$, low/moderate/high, $(0,.25,.5,.75,1)$ & 9 & $\mathrm{TIL}_{j,i}$\\
+$\mathrm{FIS}_3$ & $\mathrm{COR}$: $[0,100]$, low/moderate/high, $(0,25,50,75,100)$;
+$\mathrm{RDR}$: $[0,100]$, slow/moderate/rapid, $(0,25,50,75,100)$;
+$\mathrm{TD}$ as in $\mathrm{FIS}_2$ & 27 & $\mathrm{CAIL}_{j,i}$\\
+\midrule
+$\mathrm{FIS}_{2a}$ & $\mathrm{RCS}$: $[0,1]$, $(0,.2,.5,.8,1)$; $\mathrm{PHS}$: $[0,1]$, low
+$(0,0,.2,.4)$, moderate $(.2,.5,.8)$, high $(.6,.8,1,1)$ & 9 & $\mathrm{TRD}_{j,i}$\\
+$\mathrm{FIS}_{2b}$ & $\mathrm{TD}$ as in $\mathrm{FIS}_2$ & 3 & $\mathrm{RPD}_{j,i}$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Two rules of $\mathrm{FIS}_1$ show the direction of its scale: if $\mathrm{VS}$ is high and
+$\mathrm{IDL}$ is severe and $\mathrm{RTR}$ is short, $\mathrm{ULPP}$ is very high; if
+$\mathrm{VS}$ is low and $\mathrm{IDL}$ is minor and $\mathrm{RTR}$ is long, $\mathrm{ULPP}$ is
+very low. In $\mathrm{FIS}_3$, low occupancy, slow depletion and a short trip give very low
+$\mathrm{CAIL}$, and high occupancy with rapid depletion gives very high $\mathrm{CAIL}$ at
+every travel duration.
+% CHECK (author decision): ULPP_j rises with VS_j and IDL_j and falls with RTR_j, and f_1 below
+% is minimised over the directed people. The model therefore prefers to direct people with
+% LOW ULPP. On the small instance the exact equal-weight optimum directs people whose mean crisp
+% priority is 0.31 (all people: 0.39; crisp rule: 0.53), and 32 of the 40 units by which the
+% crisp rule trails the optimum come from f_1 (72.1 vs 40.0). See facts file, item F-ULPP.
+% Decide whether the paper states this, before reviewers infer it from this section.
+
+\subsubsection{Objectives}
+With $\mathrm{FIS}_1$--$\mathrm{FIS}_3$ the per-person and per-pair scores are
+\begin{equation}\label{eq:scores}
+\mathrm{ULPP}_j=\mathrm{FIS}_1(\mathrm{VS}_j,\mathrm{IDL}_j,\mathrm{RTR}_j),\quad
+\mathrm{TIL}_{j,i}=\mathrm{FIS}_2(\mathrm{TD}_{j,i},\mathrm{RWS}_{j,i}),\quad
+\mathrm{CAIL}_{j,i}=\mathrm{FIS}_3(\mathrm{COR}_i,\mathrm{RDR}_i,\mathrm{TD}_{j,i}),
+\end{equation}
+and the three objectives, all minimised, are plain means over the directed people:
+\begin{equation}\label{eq:objectives}
+f_1(d)=\frac{1}{n_{\mathrm{dir}}}\sum_{j\in D}\mathrm{ULPP}_j,\qquad
+f_2(d)=\frac{1}{n_{\mathrm{dir}}}\sum_{j\in D}\mathrm{TIL}_{j,c(j)},\qquad
+f_3(d)=\frac{1}{n_{\mathrm{dir}}}\sum_{j\in D}\mathrm{CAIL}_{j,c(j)}.
+\end{equation}
+In the published model $\mathrm{CAIL}_{j,i}$ is the per-pair $\mathrm{FIS}_3$ score at the
+centre's input occupancy $\mathrm{COR}_i$, which no decision changes. In the repaired model of
+S5 the same rule base is evaluated at the post-allocation occupancy
+$\mathrm{COR}'_i(\ell_i)$ of Eq.~(\ref{eq:repair}), where $\ell_i=|\{j\in D: c(j)=i\}|$ and
+$\mathrm{cap}_i=\lceil\kappa\,n_{\mathrm{dir}}/n\rceil$ persons; nothing else changes. The
+\emph{quality} of a decision is $Q(d)=f_1(d)+f_2(d)+f_3(d)$, always computed on clean inputs.
+In the four-objective variant of~\cite{rabiei2026resilient}, $f_2$ is replaced by the means of
+$\mathrm{TRD}_{j,c(j)}=\mathrm{FIS}_{2a}(\mathrm{RCS},\mathrm{PHS})$ and
+$\mathrm{RPD}_{j,c(j)}=\mathrm{FIS}_{2b}(\mathrm{TD})$ (Table~\ref{tab:fis}). All scores are
+computed once per instance and cached, so evaluating a decision costs $O(n_{\mathrm{dir}})$
+look-ups.
+
+\subsubsection{Encoding and operators}
+A chromosome has $2n_{\mathrm{dir}}$ genes. Genes $1,\dots,n_{\mathrm{dir}}$ are distinct
+person indices (a partial permutation of $J$); gene $n_{\mathrm{dir}}+k$ is a real
+$r_k\in[0,1)$ that assigns the $k$-th listed person to centre
+$1+\min\{\lfloor n\,r_k\rfloor,\,n-1\}$. Any chromosome therefore decodes to a decision with
+exactly $n_{\mathrm{dir}}$ directed people, each at one centre, and the order of the pairs
+carries no meaning. The initial population draws the person slice as a uniform sample
+without replacement and each $r_k$ from $\mathrm{U}[0,1)$.
+
+The three solvers share one $(\mu+\lambda)$ loop with $\lambda=\mu$ and differ only in
+survivor selection. Each generation copies the population; there is no separate mating
+selection. Consecutive copies are paired, and each pair is crossed with probability $0.7$.
+On the person slice each child takes every position from one parent or the other with
+probability $0.5$; repeated persons are then dropped (the first occurrence is kept), the list
+closes up, and it is refilled at the end with persons drawn at random from those not yet
+listed. On the centre slice a blend crossover with $\alpha=0.5$ draws, per gene,
+$\gamma\sim\mathrm{U}[-0.5,1.5]$ and sets the children to $(1-\gamma)a+\gamma b$ and
+$\gamma a+(1-\gamma)b$, clipped to $[0,1)$. Each copy is then mutated with probability $0.2$.
+Mutation acts per gene with probability $0.05$: a person gene is replaced by a person not
+currently directed, and the person it displaces becomes the next replacement, so one
+mutation changes the directed set by at most one person; a centre gene receives Gaussian
+noise with $\sigma=0.1$, clipped to $[0,1)$. The $\mu$ survivors are selected from parents
+and offspring together: NSGA-II uses non-dominated sorting with crowding distance; NRGA, as implemented,
+fills the next population front by front and samples the last admitted front uniformly at
+random, without crowding distance; NSGA-III uses Das--Dennis reference points with $p=4$
+divisions ($15$ points for three objectives, $35$ for four)~\cite{deb2014nsga3}. A run stops
+after a fixed number of generations and returns the first non-dominated front of its final population, sorted
+lexicographically by objective vector. Table~\ref{tab:params} lists the settings of every run.
+
+\begin{table}[H]
+\centering
+\caption{Solver settings. All runs use the three-objective model unless stated. Seeds are
+$1000+7919k$, $k=0,1,\dots$; ``evaluations'' counts $\mu\times$ generations.\label{tab:params}}
+\small
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Setting & Value\\
+\midrule
+Population $\mu=\lambda$ & $100$ in all runs, except the equal-evaluation controls ($200$ and $400$)\\
+Crossover & probability $0.7$ per pair; person slice uniform ($0.5$) with repair; centre slice blend, $\alpha=0.5$\\
+Mutation & probability $0.2$ per individual; per gene $0.05$; person gene: swap-in of an undirected person; centre gene: $\mathcal{N}(0,0.1^2)$, clipped to $[0,1)$\\
+Survivor selection & NSGA-II: rank and crowding distance; NRGA: rank, random truncation of the last front; NSGA-III: reference points, $p=4$\\
+Termination & fixed number of generations (below)\\
+\midrule
+Operational budget (S3, S4) & NSGA-II, $150$ generations; $20$ seeds for the seed floor; $8$ (small) and $6$ (large) seeds in the turbulence runs\\
+Budget curve (S3) & NSGA-II, $150, 300, 600, 1200, 2400, 4800, 9600$ generations; $5$ seeds above $150$\\
+Solver controls (S2, S3) & NRGA and NSGA-III, small instance: $150$ generations ($10$ seeds) and $2400$ generations ($5$ seeds)\\
+Population controls (S2, S3) & NSGA-II, small, $240{,}000$ evaluations: $\mu=200$ for $1200$ and $\mu=400$ for $600$ generations; $5$ seeds\\
+Instance controls (S2, S3) & NSGA-II, $150$ generations, two further instances per size, $10$ seeds each\\
+Envelope (S5) & NSGA-II on the repaired model ($\kappa=2$), seed $1000$; generations $\max\{20,\lfloor T/t_{\mathrm{gen}}\rfloor\}$, where $t_{\mathrm{gen}}$ is the mean time per generation of a 20-generation run and $T=60$ or $300$\,s\\
+% CHECK: this row describes run_scaling.py (the r1 envelope). If the revision switches to
+% run_envelope.py, replace it by: "NSGA-II, plain and seeded with the fallback and 21 exact
+% weight-sweep optima; stopped by a wall-clock deadline T = 60 or 300 s (generation bound 1e9)",
+% and restore "or at a wall-clock deadline (S5)" in the Termination row and the text above.
+Published experiments~\cite{rabiei2026resilient} & NSGA-II, NRGA, NSGA-III; three and four objectives; $200$ generations; $30$ seeds ($k=0,\dots,29$)\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsubsection{Reference deciders}
+The \emph{exact} decider is the separable optimum of S1 at equal weights: person $j$ costs
+$\mathrm{ULPP}_j+\min_i(\mathrm{TIL}_{j,i}+\mathrm{CAIL}_{j,i})$ at its cheapest centre, and the
+$n_{\mathrm{dir}}$ cheapest people are directed there; ties go to the lower index. The
+\emph{crisp priority} rule uses no fuzzy inference. It ranks people by
+\begin{equation}\label{eq:crisp-priority}
+\pi_j=\tfrac16\Bigl(\mathrm{AS}_j+\mathrm{DS}_j+\mathrm{IL}_j+\mathrm{LS}_j+\frac{\mathrm{IDL}_j}{100}
++1-\frac{\min\{\mathrm{RTR}_j,72\}}{72}\Bigr),
+\end{equation}
+directs the $n_{\mathrm{dir}}$ people with the highest $\pi_j$ (ties to the lower index), and
+sends each to the centre of lowest crisp cost
+\begin{equation}\label{eq:crisp-cost}
+k_{j,i}=\tfrac15\Bigl(\frac{\mathrm{TD}_{j,i}}{180}+\frac{\mathrm{COR}_i}{100}+\frac{\mathrm{RDR}_i}{100}
++\mathrm{RCS}_{j,i}+\mathrm{PHS}_{j,i}\Bigr),
+\end{equation}
+again with ties to the lower index and without regard to load. Both rules are deterministic;
+their decisions are scored by the same objectives (\ref{eq:objectives}) as the evolutionary
+system's.
+
+\subsubsection{Committal rule and stability measures}
+From a front $F$ the committal rule takes
+\begin{equation}\label{eq:committal}
+d^\ast=\arg\min_{d\in F}\sum_{k=1}^{3}\frac{f_k(d)-\min_{F}f_k}{\max_{F}f_k-\min_{F}f_k},
+\end{equation}
+where an objective that is constant on $F$ contributes zero, and ties go to the first point
+in the sorted front. The alternative rule of S3 takes $\arg\min_{d\in F}\lVert f(d)\rVert_2$
+in raw objectives. For a reference decision $A=(D_A,c_A)$ and a comparison decision
+$B=(D_B,c_B)$,
+\begin{equation}\label{eq:churn}
+\chi(A,B)=\frac{\bigl|\{j\in D_A:\ j\notin D_B\ \text{or}\ c_B(j)\neq c_A(j)\}\bigr|}{|D_A|},
+\qquad
+\mathrm{Jac}(A,B)=\frac{|D_A\cap D_B|}{|D_A\cup D_B|},
+\qquad
+\Delta Q(A,B)=Q(B)-Q(A).
+\end{equation}
+The denominator of the churn $\chi$ is the reference decision's directed set: the clean
+decision in S4, the lower-indexed seed in S3. A person directed only in $B$ does not enter the
+numerator. Because both decisions direct exactly $n_{\mathrm{dir}}$ people, every person in
+$D_A\setminus D_B$ is matched by one in $D_B\setminus D_A$, so
+$\chi(A,B)=1-|\{j\in D_A\cap D_B: c_A(j)=c_B(j)\}|/n_{\mathrm{dir}}$ and the measure is
+symmetric in value. All three measures are computed on clean data.
+
+The seed floor is the mean over the $190$ pairs $P$ of the $20$ clean seed decisions $A_s$,
+$\bar\chi_0=|P|^{-1}\sum_{(a,b)\in P,\,a<b}\chi(A_a,A_b)$, with a 95\% interval from $4000$
+bootstrap resamples of seeds in which self-pairs are dropped. In S4, realisation $r$ of a
+perturbation at level $\lambda$ is drawn from a generator seeded with $1000+r$, the same for
+every level, and the system decides on the perturbed instance with each of its $S$ solver
+seeds; $A_s$ is the clean decision and $B_{s,r}^\lambda$ the perturbed one for seed $s$. With
+$R$ realisations, the churn above the floor and the quality harm are
+\begin{equation}\label{eq:above-floor}
+\Delta\chi(\lambda)=\frac1R\sum_{r=1}^{R}\frac1S\sum_{s=1}^{S}\chi\bigl(A_s,B_{s,r}^{\lambda}\bigr)-\bar\chi_0,
+\qquad
+L_r(\lambda)=\frac1S\sum_{s=1}^{S}\Delta Q\bigl(A_s,B_{s,r}^{\lambda}\bigr),
+\end{equation}
+with $R=12$, $S=8$ (small) and $R=8$, $S=6$ (large). The harm is paired by seed, so its null
+is zero and no floor is subtracted from it; the seed floor enters as its scale,
+$\bar L(\lambda)/\sigma_Q$, where $\bar L(\lambda)$ is the mean of $L_r(\lambda)$ over
+realisations and $\sigma_Q$ the sample standard deviation of $Q(A_s)$ over the $20$ clean seeds.
+Intervals for $\bar L$ and for the mean churn bootstrap the realisations ($4000$ resamples).
+The trend test is Spearman's $\rho$ between $\lambda\in\{0.05,0.1,0.2,0.4\}$ and $L_r(\lambda)$
+over all $(r,\lambda)$, one-sided for $\rho>0$, Holm-adjusted across cells within a system
+and size. For the exact decider ($S=1$, $R=50$) the same $\Delta Q$ is its regret.
+
+\subsubsection{Instances and perturbations}
+The reference instances are \emph{small} ($n=5$, $m=150$, $n_{\mathrm{dir}}=50$),
+\emph{medium} ($8$, $225$, $75$) and \emph{large} ($10$, $300$, $100$), each drawn from the
+distributions of Table~\ref{tab:inputs} by one generator per size with base seed $42$, in the
+order people, centres, routes. They are fixed files, archived with the code and identified by
+their SHA-256 in every manifest.
+% CHECK (facts file, item F-SALT): the committed instances were generated with a size salt
+% taken from Python's per-process str hash(), so they cannot be regenerated; the working tree
+% now salts with CRC-32 (uncommitted), which yields different files. Do not claim the reference
+% instances regenerate from the seed. The same applies to the alternate instances (seed43/44)
+% and to the r1 envelope instances. Fields are drawn independently: no input
+depends on another, and travel durations are drawn per pair, not from a spatial layout, so
+they lie in $[2,100]$\,min and the upper clip at $180$ never binds. The only couplings are
+structural: $\mathrm{COR}_i$ and $\mathrm{RDR}_i$ are shared by every route into centre $i$,
+and $\mathrm{VS}_j$ and $\mathrm{RWS}_{j,i}$ combine several fields by
+Eq.~(\ref{eq:vs-rws}). The envelope instances of S5 come from the same generator with
+$m\in\{150,300,600,1000,1500,3000\}$, $n\in\{5,10,20,25,40,50\}$,
+$n_{\mathrm{dir}}=\lfloor m/3\rfloor$ and base seeds $7+s$. Turbulence (S4) scales noise
+and clips perturbed values to fixed ranges: $[0,100]$ for $\mathrm{IDL}$, $\mathrm{COR}$ and
+$\mathrm{RDR}$, $[0,72]$\,h for $\mathrm{RTR}$ (values above $48$ enter $\mathrm{FIS}_1$ at the
+top of its universe), $[0,180]$\,min for $\mathrm{TD}$ and $[0,120]$ for age. A flip replaces
+a categorical level by one of the other levels with equal probability; missing values are
+replaced by the instance median (continuous) or mode (categorical).

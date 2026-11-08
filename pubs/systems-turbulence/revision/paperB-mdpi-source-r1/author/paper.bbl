@@ -1,0 +1,834 @@
+\begin{thebibliography}{-------}
+\providecommand{\natexlab}[1]{#1}
+
+\bibitem[Bloom(2009)]{bloom2009uncertainty}
+Bloom, N.
+\newblock The Impact of Uncertainty Shocks.
+\newblock {\em Econometrica} {\bf 2009}, {\em 77},~623--685.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.3982/ECTA6248}{\detokenize{10.3982/ECTA6248}}}.
+
+\bibitem[Baker \em{et~al.}(2016)Baker, Bloom, and Davis]{baker2016epu}
+Baker, S.R.; Bloom, N.; Davis, S.J.
+\newblock Measuring Economic Policy Uncertainty.
+\newblock {\em The Quarterly Journal of Economics} {\bf 2016}, {\em
+  131},~1593--1636.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1093/qje/qjw024}{\detokenize{10.1093/qje/qjw024}}}.
+
+\bibitem[Ivanov and Dolgui(2020)]{ivanov2020viability}
+Ivanov, D.; Dolgui, A.
+\newblock Viability of Intertwined Supply Networks: Extending the Supply Chain
+  Resilience Angles towards Survivability. {A} Position Paper Motivated by
+  {COVID-19} Outbreak.
+\newblock {\em International Journal of Production Research} {\bf 2020}, {\em
+  58},~2904--2915.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1080/00207543.2020.1750727}{\detokenize{10.1080/00207543.2020.1750727}}}.
+
+\bibitem[Ivanov(2020)]{ivanov2020covid}
+Ivanov, D.
+\newblock Predicting the Impacts of Epidemic Outbreaks on Global Supply Chains:
+  A Simulation-Based Analysis on the Coronavirus Outbreak
+  ({COVID-19/SARS-CoV-2}) Case.
+\newblock {\em Transportation Research Part E: Logistics and Transportation
+  Review} {\bf 2020}, {\em 136},~101922.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1016/j.tre.2020.101922}{\detokenize{10.1016/j.tre.2020.101922}}}.
+
+\bibitem[Modgil \em{et~al.}(2022)Modgil, Singh, and Hannibal]{modgil2022ai}
+Modgil, S.; Singh, R.K.; Hannibal, C.
+\newblock Artificial Intelligence for Supply Chain Resilience: Learning from
+  {COVID-19}.
+\newblock {\em The International Journal of Logistics Management} {\bf 2022},
+  {\em 33},~1246--1268.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1108/IJLM-02-2021-0094}{\detokenize{10.1108/IJLM-02-2021-0094}}}.
+
+\bibitem[Belhadi \em{et~al.}(2024)Belhadi, Mani, Kamble, Khan, and
+  Verma]{belhadi2024ai}
+Belhadi, A.; Mani, V.; Kamble, S.S.; Khan, S.A.R.; Verma, S.
+\newblock Artificial Intelligence-Driven Innovation for Enhancing Supply Chain
+  Resilience and Performance under the Effect of Supply Chain Dynamism: An
+  Empirical Investigation.
+\newblock {\em Annals of Operations Research} {\bf 2024}, {\em 333},~627--652.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/s10479-021-03956-x}{\detokenize{10.1007/s10479-021-03956-x}}}.
+
+\bibitem[Pan \em{et~al.}(2025)Pan, Zou, Wang, Ma, and Liu]{pan2025aiusage}
+Pan, H.; Zou, N.; Wang, R.; Ma, J.; Liu, D.
+\newblock Artificial Intelligence Usage and Supply Chain Resilience: An
+  Organizational Information Processing Theory Perspective.
+\newblock {\em Systems} {\bf 2025}, {\em 13},~724.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.3390/systems13090724}{\detokenize{10.3390/systems13090724}}}.
+
+\bibitem[Rabiei and Arias-Aranda(2021)]{rabiei2021vehicle}
+Rabiei, P.; Arias-Aranda, D.
+\newblock Introducing a Novel Multi-Objective Optimization Model for Vehicle
+  Routing and Relief Supply Distribution in Post-Disaster Phase: Combining
+  Fuzzy Inference Systems with {NSGA-II} and {NRGA}.
+\newblock  Proceedings of the 2021 6th International Conference on
+  Transportation Information and Safety (ICTIS); IEEE: Wuhan, China,  2021; pp.
+  1226--1243.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1109/ICTIS54573.2021.9798556}{\detokenize{10.1109/ICTIS54573.2021.9798556}}}.
+
+\bibitem[Rabiei \em{et~al.}(2023)Rabiei, Arias-Aranda, and
+  Stantchev]{rabiei2023volunteer}
+Rabiei, P.; Arias-Aranda, D.; Stantchev, V.
+\newblock Introducing a Novel Multi-Objective Optimization Model for Volunteer
+  Assignment in the Post-Disaster Phase: Combining Fuzzy Inference Systems with
+  {NSGA-II} and {NRGA}.
+\newblock {\em Expert Systems with Applications} {\bf 2023}, {\em 226},~120142.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1016/j.eswa.2023.120142}{\detokenize{10.1016/j.eswa.2023.120142}}}.
+
+\bibitem[Rabiei \em{et~al.}(2026)Rabiei, Arias-Aranda, and
+  Stantchev]{rabiei2026resilient}
+Rabiei, P.; Arias-Aranda, D.; Stantchev, V.
+\newblock Resilient Last-Mile Allocation in Humanitarian Supply Chains: A
+  Reproducible Four-Objective Fuzzy Framework.
+\newblock {\em Applied Sciences} {\bf 2026}, {\em 16},~7581.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.3390/app16157581}{\detokenize{10.3390/app16157581}}}.
+
+\bibitem[Zitzler and Thiele(1999)]{zitzler1999spea}
+Zitzler, E.; Thiele, L.
+\newblock Multiobjective Evolutionary Algorithms: A Comparative Case Study and
+  the Strength {Pareto} Approach.
+\newblock {\em IEEE Transactions on Evolutionary Computation} {\bf 1999}, {\em
+  3},~257--271.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1109/4235.797969}{\detokenize{10.1109/4235.797969}}}.
+
+\bibitem[Ashby(1956)]{ashby1956cybernetics}
+Ashby, W.R.
+\newblock {\em An Introduction to Cybernetics}; John Wiley \& Sons: New York,
+  NY, USA,  1956.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.5962/bhl.title.5851}{\detokenize{10.5962/bhl.title.5851}}}.
+
+\bibitem[Simon(1955)]{simon1955behavioral}
+Simon, H.A.
+\newblock A Behavioral Model of Rational Choice.
+\newblock {\em The Quarterly Journal of Economics} {\bf 1955}, {\em
+  69},~99--118.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.2307/1884852}{\detokenize{10.2307/1884852}}}.
+
+\bibitem[Rosenhead \em{et~al.}(1972)Rosenhead, Elton, and
+  Gupta]{rosenhead1972robustness}
+Rosenhead, J.; Elton, M.; Gupta, S.K.
+\newblock Robustness and Optimality as Criteria for Strategic Decisions.
+\newblock {\em Operational Research Quarterly} {\bf 1972}, {\em 23},~413--431.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1057/jors.1972.72}{\detokenize{10.1057/jors.1972.72}}}.
+
+\bibitem[Ackoff(1979)]{ackoff1979future}
+Ackoff, R.L.
+\newblock The Future of Operational Research is Past.
+\newblock {\em Journal of the Operational Research Society} {\bf 1979}, {\em
+  30},~93--104.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1057/jors.1979.22}{\detokenize{10.1057/jors.1979.22}}}.
+
+\bibitem[Lempert \em{et~al.}(2006)Lempert, Groves, Popper, and
+  Bankes]{lempert2006robust}
+Lempert, R.J.; Groves, D.G.; Popper, S.W.; Bankes, S.C.
+\newblock A General, Analytic Method for Generating Robust Strategies and
+  Narrative Scenarios.
+\newblock {\em Management Science} {\bf 2006}, {\em 52},~514--528.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1287/mnsc.1050.0472}{\detokenize{10.1287/mnsc.1050.0472}}}.
+
+\bibitem[Walker \em{et~al.}(2003)Walker, Harremo{\"e}s, Rotmans, van~der
+  Sluijs, van Asselt, Janssen, and Krayer~von Krauss]{walker2003uncertainty}
+Walker, W.E.; Harremo{\"e}s, P.; Rotmans, J.; van~der Sluijs, J.P.; van Asselt,
+  M.B.A.; Janssen, P.; Krayer~von Krauss, M.P.
+\newblock Defining Uncertainty: A Conceptual Basis for Uncertainty Management
+  in Model-Based Decision Support.
+\newblock {\em Integrated Assessment} {\bf 2003}, {\em 4},~5--17.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1076/iaij.4.1.5.16466}{\detokenize{10.1076/iaij.4.1.5.16466}}}.
+
+\bibitem[Marchau \em{et~al.}(2019)Marchau, Walker, Bloemen, and
+  Popper]{marchau2019deep}
+Marchau, V.A.W.J.; Walker, W.E.; Bloemen, P.J.T.M.; Popper, S.W., Eds.
+\newblock {\em Decision Making under Deep Uncertainty: From Theory to
+  Practice}; Springer: Cham, Switzerland,  2019.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/978-3-030-05252-2}{\detokenize{10.1007/978-3-030-05252-2}}}.
+
+\bibitem[Ben-Tal and Nemirovski(2002)]{bental2002robust}
+Ben-Tal, A.; Nemirovski, A.
+\newblock Robust Optimization---Methodology and Applications.
+\newblock {\em Mathematical Programming} {\bf 2002}, {\em 92},~453--480.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/s101070100286}{\detokenize{10.1007/s101070100286}}}.
+
+\bibitem[Bertsimas and Sim(2004)]{bertsimas2004price}
+Bertsimas, D.; Sim, M.
+\newblock The Price of Robustness.
+\newblock {\em Operations Research} {\bf 2004}, {\em 52},~35--53.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1287/opre.1030.0065}{\detokenize{10.1287/opre.1030.0065}}}.
+
+\bibitem[Deb \em{et~al.}(2002)Deb, Pratap, Agarwal, and
+  Meyarivan]{deb2002nsga2}
+Deb, K.; Pratap, A.; Agarwal, S.; Meyarivan, T.
+\newblock A Fast and Elitist Multiobjective Genetic Algorithm: {NSGA-II}.
+\newblock {\em IEEE Transactions on Evolutionary Computation} {\bf 2002}, {\em
+  6},~182--197.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1109/4235.996017}{\detokenize{10.1109/4235.996017}}}.
+
+\bibitem[Al~Jadaan \em{et~al.}(2008)Al~Jadaan, Rajamani, and
+  Rao]{aljadaan2008nrga}
+Al~Jadaan, O.; Rajamani, L.; Rao, C.R.
+\newblock Non-Dominated Ranked Genetic Algorithm for Solving Multi-Objective
+  Optimization Problems: {NRGA}.
+\newblock {\em Journal of Theoretical and Applied Information Technology} {\bf
+  2008}, {\em 4},~61--68.
+
+\bibitem[Deb and Jain(2014)]{deb2014nsga3}
+Deb, K.; Jain, H.
+\newblock An Evolutionary Many-Objective Optimization Algorithm Using
+  Reference-Point-Based Nondominated Sorting Approach, Part {I}: Solving
+  Problems With Box Constraints.
+\newblock {\em IEEE Transactions on Evolutionary Computation} {\bf 2014}, {\em
+  18},~577--601.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1109/TEVC.2013.2281535}{\detokenize{10.1109/TEVC.2013.2281535}}}.
+
+\bibitem[Branke \em{et~al.}(2004)Branke, Deb, Dierolf, and
+  Osswald]{branke2004knees}
+Branke, J.; Deb, K.; Dierolf, H.; Osswald, M.
+\newblock Finding Knees in Multi-objective Optimization.
+\newblock  Parallel Problem Solving from Nature---PPSN VIII; Springer:
+  Berlin/Heidelberg, Germany,  2004; Lecture Notes in Computer Science, pp.
+  722--731.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/978-3-540-30217-9_73}{\detokenize{10.1007/978-3-540-30217-9_73}}}.
+
+\bibitem[Jin and Branke(2005)]{jin2005uncertain}
+Jin, Y.; Branke, J.
+\newblock Evolutionary Optimization in Uncertain Environments---A Survey.
+\newblock {\em IEEE Transactions on Evolutionary Computation} {\bf 2005}, {\em
+  9},~303--317.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1109/TEVC.2005.846356}{\detokenize{10.1109/TEVC.2005.846356}}}.
+
+\bibitem[Deb and Gupta(2006)]{deb2006robustness}
+Deb, K.; Gupta, H.
+\newblock Introducing Robustness in Multi-Objective Optimization.
+\newblock {\em Evolutionary Computation} {\bf 2006}, {\em 14},~463--494.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1162/evco.2006.14.4.463}{\detokenize{10.1162/evco.2006.14.4.463}}}.
+
+\bibitem[Beyer and Sendhoff(2007)]{beyer2007robust}
+Beyer, H.G.; Sendhoff, B.
+\newblock Robust Optimization---A Comprehensive Survey.
+\newblock {\em Computer Methods in Applied Mechanics and Engineering} {\bf
+  2007}, {\em 196},~3190--3218.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1016/j.cma.2007.03.003}{\detokenize{10.1016/j.cma.2007.03.003}}}.
+
+\bibitem[Ide and Sch{\"o}bel(2016)]{ide2016robustness}
+Ide, J.; Sch{\"o}bel, A.
+\newblock Robustness for Uncertain Multi-Objective Optimization: A Survey and
+  Analysis of Different Concepts.
+\newblock {\em OR Spectrum} {\bf 2016}, {\em 38},~235--271.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/s00291-015-0418-7}{\detokenize{10.1007/s00291-015-0418-7}}}.
+
+\bibitem[Ehrgott(2005)]{ehrgott2005multicriteria}
+Ehrgott, M.
+\newblock {\em Multicriteria Optimization}; Springer: Berlin/Heidelberg,
+  Germany,  2005.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/3-540-27659-9}{\detokenize{10.1007/3-540-27659-9}}}.
+
+\bibitem[Das and Dennis(1998)]{das1998nbi}
+Das, I.; Dennis, J.E.
+\newblock Normal-Boundary Intersection: A New Method for Generating the
+  {Pareto} Surface in Nonlinear Multicriteria Optimization Problems.
+\newblock {\em SIAM Journal on Optimization} {\bf 1998}, {\em 8},~631--657.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1137/S1052623496307510}{\detokenize{10.1137/S1052623496307510}}}.
+
+\bibitem[Ehrgott and Gandibleux(2000)]{ehrgott2000moco}
+Ehrgott, M.; Gandibleux, X.
+\newblock A Survey and Annotated Bibliography of Multiobjective Combinatorial
+  Optimization.
+\newblock {\em OR Spectrum} {\bf 2000}, {\em 22},~425--460.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/s002910000046}{\detokenize{10.1007/s002910000046}}}.
+
+\bibitem[Hooker(1995)]{hooker1995testing}
+Hooker, J.N.
+\newblock Testing Heuristics: We Have It All Wrong.
+\newblock {\em Journal of Heuristics} {\bf 1995}, {\em 1},~33--42.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/BF02430364}{\detokenize{10.1007/BF02430364}}}.
+
+\bibitem[Wolpert and Macready(1997)]{wolpert1997nfl}
+Wolpert, D.H.; Macready, W.G.
+\newblock No Free Lunch Theorems for Optimization.
+\newblock {\em IEEE Transactions on Evolutionary Computation} {\bf 1997}, {\em
+  1},~67--82.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1109/4235.585893}{\detokenize{10.1109/4235.585893}}}.
+
+\bibitem[Kerschke \em{et~al.}(2019)Kerschke, Hoos, Neumann, and
+  Trautmann]{kerschke2019selection}
+Kerschke, P.; Hoos, H.H.; Neumann, F.; Trautmann, H.
+\newblock Automated Algorithm Selection: Survey and Perspectives.
+\newblock {\em Evolutionary Computation} {\bf 2019}, {\em 27},~3--45.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1162/evco_a_00242}{\detokenize{10.1162/evco_a_00242}}}.
+
+\bibitem[S{\"o}rensen(2015)]{sorensen2015metaphor}
+S{\"o}rensen, K.
+\newblock Metaheuristics---The Metaphor Exposed.
+\newblock {\em International Transactions in Operational Research} {\bf 2015},
+  {\em 22},~3--18.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1111/itor.12001}{\detokenize{10.1111/itor.12001}}}.
+
+\bibitem[Aranha \em{et~al.}(2022)Aranha, Camacho~Villal{\'o}n, Campelo, Dorigo,
+  Ruiz, Sevaux, S{\"o}rensen, and St{\"u}tzle]{aranha2022metaphor}
+Aranha, C.; Camacho~Villal{\'o}n, C.L.; Campelo, F.; Dorigo, M.; Ruiz, R.;
+  Sevaux, M.; S{\"o}rensen, K.; St{\"u}tzle, T.
+\newblock Metaphor-Based Metaheuristics, a Call for Action: The Elephant in the
+  Room.
+\newblock {\em Swarm Intelligence} {\bf 2022}, {\em 16},~1--6.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/s11721-021-00202-9}{\detokenize{10.1007/s11721-021-00202-9}}}.
+
+\bibitem[Bartz-Beielstein \em{et~al.}(2020)Bartz-Beielstein, Doerr, van~den
+  Berg, Bossek, Chandrasekaran, Eftimov, Fischbach, Kerschke, La~Cava,
+  L{\'o}pez-Ib{\'a}{\~n}ez, et~al.]{bartzbeielstein2020benchmarking}
+Bartz-Beielstein, T.; Doerr, C.; van~den Berg, D.; Bossek, J.; Chandrasekaran,
+  S.; Eftimov, T.; Fischbach, A.; Kerschke, P.; La~Cava, W.;
+  L{\'o}pez-Ib{\'a}{\~n}ez, M.; others.
+\newblock Benchmarking in Optimization: Best Practice and Open Issues.
+\newblock arXiv preprint arXiv:2007.03488,  2020.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.48550/arXiv.2007.03488}{\detokenize{10.48550/arXiv.2007.03488}}}.
+
+\bibitem[L{\'o}pez-Ib{\'a}{\~n}ez \em{et~al.}(2021)L{\'o}pez-Ib{\'a}{\~n}ez,
+  Branke, and Paquete]{lopezibanez2021reproducibility}
+L{\'o}pez-Ib{\'a}{\~n}ez, M.; Branke, J.; Paquete, L.
+\newblock Reproducibility in Evolutionary Computation.
+\newblock {\em ACM Transactions on Evolutionary Learning and Optimization} {\bf
+  2021}, {\em 1},~1--21.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1145/3466624}{\detokenize{10.1145/3466624}}}.
+
+\bibitem[Zadeh(1965)]{zadeh1965fuzzy}
+Zadeh, L.A.
+\newblock Fuzzy Sets.
+\newblock {\em Information and Control} {\bf 1965}, {\em 8},~338--353.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1016/S0019-9958(65)90241-X}{\detokenize{10.1016/S0019-9958(65)90241-X}}}.
+
+\bibitem[Mamdani and Assilian(1975)]{mamdani1975linguistic}
+Mamdani, E.H.; Assilian, S.
+\newblock An Experiment in Linguistic Synthesis with a Fuzzy Logic Controller.
+\newblock {\em International Journal of Man-Machine Studies} {\bf 1975}, {\em
+  7},~1--13.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1016/S0020-7373(75)80002-2}{\detokenize{10.1016/S0020-7373(75)80002-2}}}.
+
+\bibitem[Kahraman \em{et~al.}(2015)Kahraman, Onar, and
+  Oztaysi]{kahraman2015fuzzymcdm}
+Kahraman, C.; Onar, S.C.; Oztaysi, B.
+\newblock Fuzzy Multicriteria Decision-Making: A Literature Review.
+\newblock {\em International Journal of Computational Intelligence Systems}
+  {\bf 2015}, {\em 8},~637.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1080/18756891.2015.1046325}{\detokenize{10.1080/18756891.2015.1046325}}}.
+
+\bibitem[Mendel(2017)]{mendel2017uncertain}
+Mendel, J.M.
+\newblock {\em Uncertain Rule-Based Fuzzy Systems: Introduction and New
+  Directions}, 2nd ed.; Springer: Cham, Switzerland,  2017.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/978-3-319-51370-6}{\detokenize{10.1007/978-3-319-51370-6}}}.
+
+\bibitem[Castillo and Melin(2008)]{castillo2008type2}
+Castillo, O.; Melin, P.
+\newblock {\em Type-2 Fuzzy Logic: Theory and Applications}; Studies in
+  Fuzziness and Soft Computing, Springer: Berlin/Heidelberg, Germany,  2008.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/978-3-540-76284-3}{\detokenize{10.1007/978-3-540-76284-3}}}.
+
+\bibitem[Warner \em{et~al.}(2019)Warner, Sexauer, and {scikit-fuzzy
+  contributors}]{warner2019skfuzzy}
+Warner, J.; Sexauer, J.; {scikit-fuzzy contributors}.
+\newblock {scikit-fuzzy}: Fuzzy Logic Toolkit for {SciPy}, Version 0.4.2.
+\newblock Zenodo software release,  2019.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.5281/zenodo.3541386}{\detokenize{10.5281/zenodo.3541386}}}.
+
+\bibitem[Altay and Green(2006)]{altay2006ormsdisaster}
+Altay, N.; Green, W.G.
+\newblock {OR/MS} Research in Disaster Operations Management.
+\newblock {\em European Journal of Operational Research} {\bf 2006}, {\em
+  175},~475--493.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1016/j.ejor.2005.05.016}{\detokenize{10.1016/j.ejor.2005.05.016}}}.
+
+\bibitem[Galindo and Batta(2013)]{galindo2013review}
+Galindo, G.; Batta, R.
+\newblock Review of Recent Developments in {OR/MS} Research in Disaster
+  Operations Management.
+\newblock {\em European Journal of Operational Research} {\bf 2013}, {\em
+  230},~201--211.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1016/j.ejor.2013.01.039}{\detokenize{10.1016/j.ejor.2013.01.039}}}.
+
+\bibitem[Caunhye \em{et~al.}(2012)Caunhye, Nie, and
+  Pokharel]{caunhye2012emergency}
+Caunhye, A.M.; Nie, X.; Pokharel, S.
+\newblock Optimization Models in Emergency Logistics: A Literature Review.
+\newblock {\em Socio-Economic Planning Sciences} {\bf 2012}, {\em 46},~4--13.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1016/j.seps.2011.04.004}{\detokenize{10.1016/j.seps.2011.04.004}}}.
+
+\bibitem[Holgu{\'i}n-Veras \em{et~al.}(2012)Holgu{\'i}n-Veras, Jaller,
+  Van~Wassenhove, P{\'e}rez, and Wachtendorf]{holguinveras2012unique}
+Holgu{\'i}n-Veras, J.; Jaller, M.; Van~Wassenhove, L.N.; P{\'e}rez, N.;
+  Wachtendorf, T.
+\newblock On the Unique Features of Post-Disaster Humanitarian Logistics.
+\newblock {\em Journal of Operations Management} {\bf 2012}, {\em
+  30},~494--506.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1016/j.jom.2012.08.003}{\detokenize{10.1016/j.jom.2012.08.003}}}.
+
+\bibitem[Kov{\'a}cs and Spens(2007)]{kovacs2007humanitarian}
+Kov{\'a}cs, G.; Spens, K.M.
+\newblock Humanitarian Logistics in Disaster Relief Operations.
+\newblock {\em International Journal of Physical Distribution \& Logistics
+  Management} {\bf 2007}, {\em 37},~99--114.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1108/09600030710734820}{\detokenize{10.1108/09600030710734820}}}.
+
+\bibitem[Sheu(2007)]{sheu2007emergency}
+Sheu, J.B.
+\newblock An Emergency Logistics Distribution Approach for Quick Response to
+  Urgent Relief Demand in Disasters.
+\newblock {\em Transportation Research Part E: Logistics and Transportation
+  Review} {\bf 2007}, {\em 43},~687--709.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1016/j.tre.2006.04.004}{\detokenize{10.1016/j.tre.2006.04.004}}}.
+
+\bibitem[Gralla \em{et~al.}(2014)Gralla, Goentzel, and
+  Fine]{gralla2014tradeoffs}
+Gralla, E.; Goentzel, J.; Fine, C.
+\newblock Assessing Trade-offs among Multiple Objectives for Humanitarian Aid
+  Delivery Using Expert Preferences.
+\newblock {\em Production and Operations Management} {\bf 2014}, {\em
+  23},~978--989.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1111/poms.12110}{\detokenize{10.1111/poms.12110}}}.
+
+\bibitem[Gutjahr and Nolz(2016)]{gutjahr2016multicriteria}
+Gutjahr, W.J.; Nolz, P.C.
+\newblock Multicriteria Optimization in Humanitarian Aid.
+\newblock {\em European Journal of Operational Research} {\bf 2016}, {\em
+  252},~351--366.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1016/j.ejor.2015.12.035}{\detokenize{10.1016/j.ejor.2015.12.035}}}.
+
+\bibitem[Besiou and Van~Wassenhove(2020)]{besiou2020humanitarian}
+Besiou, M.; Van~Wassenhove, L.N.
+\newblock Humanitarian Operations: A World of Opportunity for Relevant and
+  Impactful Research.
+\newblock {\em Manufacturing \& Service Operations Management} {\bf 2020}, {\em
+  22},~135--145.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1287/msom.2019.0799}{\detokenize{10.1287/msom.2019.0799}}}.
+
+\bibitem[Lassiter \em{et~al.}(2015)Lassiter, Khademi, and
+  Taaffe]{lassiter2015volunteer}
+Lassiter, K.; Khademi, A.; Taaffe, K.M.
+\newblock A Robust Optimization Approach to Volunteer Management in
+  Humanitarian Crises.
+\newblock {\em International Journal of Production Economics} {\bf 2015}, {\em
+  163},~97--111.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1016/j.ijpe.2015.02.018}{\detokenize{10.1016/j.ijpe.2015.02.018}}}.
+
+\bibitem[Bruneau \em{et~al.}(2003)Bruneau, Chang, Eguchi, Lee, O'Rourke,
+  Reinhorn, Shinozuka, Tierney, Wallace, and von
+  Winterfeldt]{bruneau2003resilience}
+Bruneau, M.; Chang, S.E.; Eguchi, R.T.; Lee, G.C.; O'Rourke, T.D.; Reinhorn,
+  A.M.; Shinozuka, M.; Tierney, K.; Wallace, W.A.; von Winterfeldt, D.
+\newblock A Framework to Quantitatively Assess and Enhance the Seismic
+  Resilience of Communities.
+\newblock {\em Earthquake Spectra} {\bf 2003}, {\em 19},~733--752.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1193/1.1623497}{\detokenize{10.1193/1.1623497}}}.
+
+\bibitem[Christopher and Peck(2004)]{christopher2004resilient}
+Christopher, M.; Peck, H.
+\newblock Building the Resilient Supply Chain.
+\newblock {\em The International Journal of Logistics Management} {\bf 2004},
+  {\em 15},~1--14.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1108/09574090410700275}{\detokenize{10.1108/09574090410700275}}}.
+
+\bibitem[Sheffi and Rice(2005)]{sheffi2005resilient}
+Sheffi, Y.; Rice, J.B.
+\newblock A Supply Chain View of the Resilient Enterprise.
+\newblock {\em MIT Sloan Management Review} {\bf 2005}, {\em 47},~41--48.
+
+\bibitem[Hosseini \em{et~al.}(2019)Hosseini, Ivanov, and
+  Dolgui]{hosseini2019review}
+Hosseini, S.; Ivanov, D.; Dolgui, A.
+\newblock Review of Quantitative Methods for Supply Chain Resilience Analysis.
+\newblock {\em Transportation Research Part E: Logistics and Transportation
+  Review} {\bf 2019}, {\em 125},~285--307.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1016/j.tre.2019.03.001}{\detokenize{10.1016/j.tre.2019.03.001}}}.
+
+\bibitem[Queiroz \em{et~al.}(2022)Queiroz, Ivanov, Dolgui, and
+  Fosso~Wamba]{queiroz2022epidemic}
+Queiroz, M.M.; Ivanov, D.; Dolgui, A.; Fosso~Wamba, S.
+\newblock Impacts of Epidemic Outbreaks on Supply Chains: Mapping a Research
+  Agenda amid the {COVID-19} Pandemic through a Structured Literature Review.
+\newblock {\em Annals of Operations Research} {\bf 2022}, {\em
+  319},~1159--1196.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/s10479-020-03685-7}{\detokenize{10.1007/s10479-020-03685-7}}}.
+
+\bibitem[Aghsami \em{et~al.}(2024)Aghsami, Sharififar, Markazi~Moghaddam,
+  Hazrati, Jolai, and Yazdani]{aghsami2024humanitarian}
+Aghsami, A.; Sharififar, S.; Markazi~Moghaddam, N.; Hazrati, E.; Jolai, F.;
+  Yazdani, R.
+\newblock Strategies for Humanitarian Logistics and Supply Chain in
+  Organizational Contexts: Pre- and Post-Disaster Management Perspectives.
+\newblock {\em Systems} {\bf 2024}, {\em 12},~215.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.3390/systems12060215}{\detokenize{10.3390/systems12060215}}}.
+
+\bibitem[Wang and Strong(1996)]{wang1996dataquality}
+Wang, R.Y.; Strong, D.M.
+\newblock Beyond Accuracy: What Data Quality Means to Data Consumers.
+\newblock {\em Journal of Management Information Systems} {\bf 1996}, {\em
+  12},~5--33.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1080/07421222.1996.11518099}{\detokenize{10.1080/07421222.1996.11518099}}}.
+
+\bibitem[Sambasivan \em{et~al.}(2021)Sambasivan, Kapania, Highfill, Akrong,
+  Paritosh, and Aroyo]{sambasivan2021cascades}
+Sambasivan, N.; Kapania, S.; Highfill, H.; Akrong, D.; Paritosh, P.; Aroyo,
+  L.M.
+\newblock ``Everyone Wants to Do the Model Work, Not the Data Work'': Data
+  Cascades in High-Stakes {AI}.
+\newblock  Proceedings of the 2021 CHI Conference on Human Factors in Computing
+  Systems; ACM: New York, NY, USA,  2021; pp. 1--15.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1145/3411764.3445518}{\detokenize{10.1145/3411764.3445518}}}.
+
+\bibitem[Qui{\~n}onero-Candela \em{et~al.}(2008)Qui{\~n}onero-Candela,
+  Sugiyama, Schwaighofer, and Lawrence]{quinonerocandela2008shift}
+Qui{\~n}onero-Candela, J.; Sugiyama, M.; Schwaighofer, A.; Lawrence, N.D., Eds.
+\newblock {\em Dataset Shift in Machine Learning}; MIT Press: Cambridge, MA,
+  USA,  2008.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.7551/mitpress/9780262170055.001.0001}{\detokenize{10.7551/mitpress/9780262170055.001.0001}}}.
+
+\bibitem[Amodei \em{et~al.}(2016)Amodei, Olah, Steinhardt, Christiano,
+  Schulman, and Man{\'e}]{amodei2016concrete}
+Amodei, D.; Olah, C.; Steinhardt, J.; Christiano, P.; Schulman, J.; Man{\'e},
+  D.
+\newblock Concrete Problems in {AI} Safety.
+\newblock arXiv preprint arXiv:1606.06565,  2016.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.48550/arXiv.1606.06565}{\detokenize{10.48550/arXiv.1606.06565}}}.
+
+\bibitem[Jacovi \em{et~al.}(2021)Jacovi, Marasovi{\'c}, Miller, and
+  Goldberg]{jacovi2021trust}
+Jacovi, A.; Marasovi{\'c}, A.; Miller, T.; Goldberg, Y.
+\newblock Formalizing Trust in Artificial Intelligence: Prerequisites, Causes
+  and Goals of Human Trust in {AI}.
+\newblock  Proceedings of the 2021 ACM Conference on Fairness, Accountability,
+  and Transparency (FAccT '21); ACM: New York, NY, USA,  2021; pp. 624--635.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1145/3442188.3445923}{\detokenize{10.1145/3442188.3445923}}}.
+
+\bibitem[Kroll \em{et~al.}(2017)Kroll, Huey, Barocas, Felten, Reidenberg,
+  Robinson, and Yu]{kroll2017accountable}
+Kroll, J.A.; Huey, J.; Barocas, S.; Felten, E.W.; Reidenberg, J.R.; Robinson,
+  D.G.; Yu, H.
+\newblock Accountable Algorithms.
+\newblock {\em University of Pennsylvania Law Review} {\bf 2017}, {\em
+  165},~633.
+
+\bibitem[Doshi-Velez and Kim(2017)]{doshivelez2017interpretable}
+Doshi-Velez, F.; Kim, B.
+\newblock Towards A Rigorous Science of Interpretable Machine Learning.
+\newblock arXiv preprint arXiv:1702.08608,  2017.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.48550/arXiv.1702.08608}{\detokenize{10.48550/arXiv.1702.08608}}}.
+
+\bibitem[Raji \em{et~al.}(2020)Raji, Smart, White, Mitchell, Gebru, Hutchinson,
+  Smith-Loud, Theron, and Barnes]{raji2020audit}
+Raji, I.D.; Smart, A.; White, R.N.; Mitchell, M.; Gebru, T.; Hutchinson, B.;
+  Smith-Loud, J.; Theron, D.; Barnes, P.
+\newblock Closing the {AI} Accountability Gap: Defining an End-to-End Framework
+  for Internal Algorithmic Auditing.
+\newblock  Proceedings of the 2020 Conference on Fairness, Accountability, and
+  Transparency (FAT* '20); ACM: New York, NY, USA,  2020; pp. 33--44.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1145/3351095.3372873}{\detokenize{10.1145/3351095.3372873}}}.
+
+\bibitem[M{\"o}kander \em{et~al.}(2021)M{\"o}kander, Morley, Taddeo, and
+  Floridi]{mokander2021ethics}
+M{\"o}kander, J.; Morley, J.; Taddeo, M.; Floridi, L.
+\newblock Ethics-Based Auditing of Automated Decision-Making Systems: Nature,
+  Scope, and Limitations.
+\newblock {\em Science and Engineering Ethics} {\bf 2021}, {\em 27},~44.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/s11948-021-00319-4}{\detokenize{10.1007/s11948-021-00319-4}}}.
+
+\bibitem[Metaxa \em{et~al.}(2021)Metaxa, Park, Robertson, Karahalios, Wilson,
+  Hancock, and Sandvig]{metaxa2021auditing}
+Metaxa, D.; Park, J.S.; Robertson, R.E.; Karahalios, K.; Wilson, C.; Hancock,
+  J.; Sandvig, C.
+\newblock Auditing Algorithms: Understanding Algorithmic Systems from the
+  Outside In.
+\newblock {\em Foundations and Trends in Human--Computer Interaction} {\bf
+  2021}, {\em 14},~272--344.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1561/1100000083}{\detokenize{10.1561/1100000083}}}.
+
+\bibitem[Breck \em{et~al.}(2017)Breck, Cai, Nielsen, Salib, and
+  Sculley]{breck2017mltestscore}
+Breck, E.; Cai, S.; Nielsen, E.; Salib, M.; Sculley, D.
+\newblock The {ML} Test Score: A Rubric for {ML} Production Readiness and
+  Technical Debt Reduction.
+\newblock  Proceedings of the 2017 IEEE International Conference on Big Data
+  (Big Data); IEEE: Boston, MA, USA,  2017; pp. 1123--1132.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1109/BigData.2017.8258038}{\detokenize{10.1109/BigData.2017.8258038}}}.
+
+\bibitem[{European Parliament and Council of the European
+  Union}(2024)]{eu2024aiact}
+{European Parliament and Council of the European Union}.
+\newblock Regulation ({EU}) 2024/1689 of the {European} {Parliament} and of the
+  {Council} of 13 {June} 2024 Laying Down Harmonised Rules on Artificial
+  Intelligence and Amending Regulations ({EC}) No 300/2008, ({EU}) No 167/2013,
+  ({EU}) No 168/2013, ({EU}) 2018/858, ({EU}) 2018/1139 and ({EU}) 2019/2144
+  and Directives 2014/90/{EU}, ({EU}) 2016/797 and ({EU}) 2020/1828
+  ({Artificial} {Intelligence} {Act}).
+\newblock Official Journal of the European Union, OJ L, 2024/1689, 12.7.2024,
+  2024.
+
+\bibitem[{ISO/IEC}(2023{\natexlab{a}})]{iso2023aims}
+{ISO/IEC}.
+\newblock {ISO/IEC} 42001:2023 Information Technology---Artificial
+  Intelligence---Management System.
+\newblock International Organization for Standardization,  2023.
+
+\bibitem[{ISO/IEC}(2023{\natexlab{b}})]{iso2023airisk}
+{ISO/IEC}.
+\newblock {ISO/IEC} 23894:2023 Information Technology---Artificial
+  Intelligence---Guidance on Risk Management.
+\newblock International Organization for Standardization,  2023.
+
+\bibitem[{National Institute of Standards and Technology}(2023)]{nist2023airmf}
+{National Institute of Standards and Technology}.
+\newblock Artificial Intelligence Risk Management Framework ({AI RMF} 1.0).
+\newblock Technical Report NIST AI 100-1, National Institute of Standards and
+  Technology, Gaithersburg, MD, USA,  2023.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.6028/NIST.AI.100-1}{\detokenize{10.6028/NIST.AI.100-1}}}.
+
+\bibitem[Peng(2011)]{peng2011reproducible}
+Peng, R.D.
+\newblock Reproducible Research in Computational Science.
+\newblock {\em Science} {\bf 2011}, {\em 334},~1226--1227.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1126/science.1213847}{\detokenize{10.1126/science.1213847}}}.
+
+\bibitem[Stodden \em{et~al.}(2016)Stodden, McNutt, Bailey, Deelman, Gil,
+  Hanson, Heroux, Ioannidis, and Taufer]{stodden2016enhancing}
+Stodden, V.; McNutt, M.; Bailey, D.H.; Deelman, E.; Gil, Y.; Hanson, B.;
+  Heroux, M.A.; Ioannidis, J.P.A.; Taufer, M.
+\newblock Enhancing Reproducibility for Computational Methods.
+\newblock {\em Science} {\bf 2016}, {\em 354},~1240--1241.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1126/science.aah6168}{\detokenize{10.1126/science.aah6168}}}.
+
+\bibitem[Gundersen and Kjensmo(2018)]{gundersen2018reproducibility}
+Gundersen, O.E.; Kjensmo, S.
+\newblock State of the Art: Reproducibility in Artificial Intelligence.
+\newblock  Proceedings of the Thirty-Second AAAI Conference on Artificial
+  Intelligence (AAAI-18); AAAI Press: Palo Alto, CA, USA,  2018; Vol.~32.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1609/aaai.v32i1.11503}{\detokenize{10.1609/aaai.v32i1.11503}}}.
+
+\bibitem[Pineau \em{et~al.}(2021)Pineau, Vincent-Lamarre, Sinha, Larivi{\`e}re,
+  Beygelzimer, d'Alch{\'e} Buc, Fox, and Larochelle]{pineau2021reproducibility}
+Pineau, J.; Vincent-Lamarre, P.; Sinha, K.; Larivi{\`e}re, V.; Beygelzimer, A.;
+  d'Alch{\'e} Buc, F.; Fox, E.; Larochelle, H.
+\newblock Improving Reproducibility in Machine Learning Research (A Report from
+  the {NeurIPS} 2019 Reproducibility Program).
+\newblock {\em Journal of Machine Learning Research} {\bf 2021}, {\em
+  22},~1--20.
+
+\bibitem[Wilkinson \em{et~al.}(2016)Wilkinson, Dumontier, Aalbersberg,
+  Appleton, Axton, Baak, Blomberg, Boiten, da~Silva~Santos, Bourne,
+  et~al.]{wilkinson2016fair}
+Wilkinson, M.D.; Dumontier, M.; Aalbersberg, I.J.; Appleton, G.; Axton, M.;
+  Baak, A.; Blomberg, N.; Boiten, J.W.; da~Silva~Santos, L.B.; Bourne, P.E.;
+  others.
+\newblock The {FAIR} Guiding Principles for Scientific Data Management and
+  Stewardship.
+\newblock {\em Scientific Data} {\bf 2016}, {\em 3},~160018.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1038/sdata.2016.18}{\detokenize{10.1038/sdata.2016.18}}}.
+
+\bibitem[DeHoratius and Raman(2008)]{dehoratius2008inventory}
+DeHoratius, N.; Raman, A.
+\newblock Inventory Record Inaccuracy: An Empirical Analysis.
+\newblock {\em Management Science} {\bf 2008}, {\em 54},~627--641.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1287/mnsc.1070.0789}{\detokenize{10.1287/mnsc.1070.0789}}}.
+
+\bibitem[Altay and Labonte(2014)]{altay2014haiti}
+Altay, N.; Labonte, M.
+\newblock Challenges in Humanitarian Information Management and Exchange:
+  Evidence from {Haiti}.
+\newblock {\em Disasters} {\bf 2014}, {\em 38},~S50--S72.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1111/disa.12052}{\detokenize{10.1111/disa.12052}}}.
+
+\bibitem[Breiman(2001)]{breiman2001twocultures}
+Breiman, L.
+\newblock Statistical Modeling: The Two Cultures.
+\newblock {\em Statistical Science} {\bf 2001}, {\em 16},~199--231.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1214/ss/1009213726}{\detokenize{10.1214/ss/1009213726}}}.
+
+\bibitem[Marx \em{et~al.}(2020)Marx, Calmon, and Ustun]{marx2020multiplicity}
+Marx, C.T.; Calmon, F.P.; Ustun, B.
+\newblock Predictive Multiplicity in Classification.
+\newblock  Proceedings of the 37th International Conference on Machine
+  Learning. PMLR,  2020, Vol. 119, {\em Proceedings of Machine Learning
+  Research}, pp. 6765--6774.
+
+\bibitem[Semenova \em{et~al.}(2022)Semenova, Rudin, and
+  Parr]{semenova2022rashomon}
+Semenova, L.; Rudin, C.; Parr, R.
+\newblock On the Existence of Simpler Machine Learning Models.
+\newblock  Proceedings of the 2022 ACM Conference on Fairness, Accountability,
+  and Transparency (FAccT '22); ACM: New York, NY, USA,  2022; pp. 1827--1858.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1145/3531146.3533232}{\detokenize{10.1145/3531146.3533232}}}.
+
+\bibitem[Fisher \em{et~al.}(2019)Fisher, Rudin, and
+  Dominici]{fisher2019allmodels}
+Fisher, A.; Rudin, C.; Dominici, F.
+\newblock All Models are Wrong, but Many are Useful: Learning a Variable's
+  Importance by Studying an Entire Class of Prediction Models Simultaneously.
+\newblock {\em Journal of Machine Learning Research} {\bf 2019}, {\em
+  20},~1--81.
+
+\bibitem[Black \em{et~al.}(2022)Black, Raghavan, and
+  Barocas]{black2022multiplicity}
+Black, E.; Raghavan, M.; Barocas, S.
+\newblock Model Multiplicity: Opportunities, Concerns, and Solutions.
+\newblock  Proceedings of the 2022 ACM Conference on Fairness, Accountability,
+  and Transparency (FAccT '22); ACM: New York, NY, USA,  2022; pp. 850--863.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1145/3531146.3533149}{\detokenize{10.1145/3531146.3533149}}}.
+
+\bibitem[Brill(1979)]{brill1979public}
+Brill, E.D.
+\newblock The Use of Optimization Models in Public-Sector Planning.
+\newblock {\em Management Science} {\bf 1979}, {\em 25},~413--422.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1287/mnsc.25.5.413}{\detokenize{10.1287/mnsc.25.5.413}}}.
+
+\bibitem[Brill \em{et~al.}(1982)Brill, Chang, and Hopkins]{brill1982mga}
+Brill, E.D.; Chang, S.Y.; Hopkins, L.D.
+\newblock Modeling to Generate Alternatives: The {HSJ} Approach and an
+  Illustration Using a Problem in Land Use Planning.
+\newblock {\em Management Science} {\bf 1982}, {\em 28},~221--235.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1287/mnsc.28.3.221}{\detokenize{10.1287/mnsc.28.3.221}}}.
+
+\bibitem[Danna \em{et~al.}(2007)Danna, Fenelon, Gu, and
+  Wunderling]{danna2007multiple}
+Danna, E.; Fenelon, M.; Gu, Z.; Wunderling, R.
+\newblock Generating Multiple Solutions for Mixed Integer Programming Problems.
+\newblock  Integer Programming and Combinatorial Optimization (IPCO 2007);
+  Springer: Berlin, Heidelberg,  2007; Vol. 4513, {\em Lecture Notes in
+  Computer Science}, pp. 280--294.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/978-3-540-72792-7_22}{\detokenize{10.1007/978-3-540-72792-7_22}}}.
+
+\bibitem[Beiranvand \em{et~al.}(2017)Beiranvand, Hare, and
+  Lucet]{beiranvand2017bestpractices}
+Beiranvand, V.; Hare, W.; Lucet, Y.
+\newblock Best Practices for Comparing Optimization Algorithms.
+\newblock {\em Optimization and Engineering} {\bf 2017}, {\em 18},~815--848.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/s11081-017-9366-1}{\detokenize{10.1007/s11081-017-9366-1}}}.
+
+\bibitem[Ulrich(1987)]{ulrich1987critical}
+Ulrich, W.
+\newblock Critical Heuristics of Social Systems Design.
+\newblock {\em European Journal of Operational Research} {\bf 1987}, {\em
+  31},~276--283.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1016/0377-2217(87)90036-1}{\detokenize{10.1016/0377-2217(87)90036-1}}}.
+
+\bibitem[Sterman(2002)]{sterman2002allmodels}
+Sterman, J.D.
+\newblock All Models Are Wrong: Reflections on Becoming a Systems Scientist.
+\newblock {\em System Dynamics Review} {\bf 2002}, {\em 18},~501--531.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1002/sdr.261}{\detokenize{10.1002/sdr.261}}}.
+
+\bibitem[Checkland(2000)]{checkland2000ssm}
+Checkland, P.
+\newblock Soft Systems Methodology: A Thirty Year Retrospective.
+\newblock {\em Systems Research and Behavioral Science} {\bf 2000}, {\em
+  17},~S11--S58.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1002/1099-1743(200011)17:1+<::AID-SRES374>3.0.CO;2-O}{\detokenize{10.1002/1099-1743(200011)17:1+<::AID-SRES374>3.0.CO;2-O}}}.
+
+\bibitem[Huangfu and Hall(2018)]{huangfu2018highs}
+Huangfu, Q.; Hall, J.A.J.
+\newblock Parallelizing the Dual Revised Simplex Method.
+\newblock {\em Mathematical Programming Computation} {\bf 2018}, {\em
+  10},~119--142.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1007/s12532-017-0130-5}{\detokenize{10.1007/s12532-017-0130-5}}}.
+
+\bibitem[Virtanen \em{et~al.}(2020)Virtanen, Gommers, Oliphant, Haberland,
+  Reddy, Cournapeau, Burovski, Peterson, Weckesser, Bright,
+  et~al.]{virtanen2020scipy}
+Virtanen, P.; Gommers, R.; Oliphant, T.E.; Haberland, M.; Reddy, T.;
+  Cournapeau, D.; Burovski, E.; Peterson, P.; Weckesser, W.; Bright, J.;
+  others.
+\newblock {SciPy} 1.0: Fundamental Algorithms for Scientific Computing in
+  {Python}.
+\newblock {\em Nature Methods} {\bf 2020}, {\em 17},~261--272.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1038/s41592-019-0686-2}{\detokenize{10.1038/s41592-019-0686-2}}}.
+
+\bibitem[Kuhn(1955)]{kuhn1955hungarian}
+Kuhn, H.W.
+\newblock The {Hungarian} Method for the Assignment Problem.
+\newblock {\em Naval Research Logistics Quarterly} {\bf 1955}, {\em 2},~83--97.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1002/nav.3800020109}{\detokenize{10.1002/nav.3800020109}}}.
+
+\end{thebibliography}

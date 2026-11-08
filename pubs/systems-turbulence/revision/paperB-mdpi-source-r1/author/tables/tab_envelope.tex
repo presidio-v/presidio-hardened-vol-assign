@@ -1,0 +1,25 @@
+\begin{table}[H]
+\centering
+\caption{Deployment envelope on the repaired model, three instances per size; every method on the same instances. Soft capacity ($\kappa=2$): quality and overload (people beyond free capacity) in the soft model. Hard capacity ($\kappa_f=1.5$): quality in the hard model. Means over solved instances; $s/p$: instances with an incumbent / proven optimal. LS: local search; seeded: NSGA-II seeded with exact solutions of the published model; fallback: exact optimum of the published model. Latency: total decision time of the hard-capacity local search, preparation of scores and load table included (s).\label{tab:envelope}}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lr|rcrrrrr|rcrr}
+\toprule
+& & \multicolumn{7}{c|}{Soft capacity} & \multicolumn{4}{c}{Hard capacity}\\
+Size & Limit & MIP & $s/p$ & LS & NSGA-II & Seeded & Fallback & Overload$^\ast$ & MIP & $s/p$ & LS & Latency\\
+\midrule
+$150\times5$ & 60\,s & 110.2 & 3/3 & 110.4 & 116.8 & 116.5 & 112.4 & 27/25/25/34/25 & 114.2 & 3/3 & 115.6 & 1\\
+$300\times10$ & 60\,s & 100.5 & 3/3 & 100.6 & 121.6 & 109.9 & 107.2 & 67/65/45/63/67 & 106.6 & 3/3 & 108.1 & 3\\
+$600\times20$ & 60\,s & 97.3 & 3/3 & 97.7 & 129.7 & 101.1 & 102.1 & 138/126/65/124/146 & 102.4 & 3/3 & 103.9 & 11\\
+$1000\times25$ & 60\,s & 96.6 & 3/1 & 97.1 & 133.6 & 102.0 & 102.8 & 243/227/111/218/242 & 102.5 & 3/3 & 103.6 & 28\\
+$1500\times40$ & 60\,s & 98.8 & 3/0 & 96.5 & 139.8 & 99.3 & 100.3 & 413/365/149/362/404 & 103.8 & 3/3 & 105.0 & 65\\
+$3000\times50$ & 60\,s & 150.7 & 1/0 & 95.7 & 143.1 & 99.0 & 99.7 & 869/753/329/744/800 & -- & 0/0 & 103.6 & 172\\
+\midrule
+$1000\times25$ & 300\,s & 96.6 & 3/3 & 97.1 & 130.5 & 102.0 & 102.8 & 242/227/108/218/242 & 102.5 & 3/3 & 103.6 & 29\\
+$1500\times40$ & 300\,s & 95.7 & 3/1 & 96.5 & 136.6 & 99.9 & 100.3 & 383/365/147/376/404 & 103.8 & 3/3 & 105.0 & 60\\
+$3000\times50$ & 300\,s & 96.5 & 3/0 & 95.7 & 139.6 & 99.1 & 99.7 & 845/753/339/770/800 & 102.7 & 3/1 & 103.6 & 178\\
+\bottomrule
+\multicolumn{13}{l}{$^\ast$ Overload of MIP / LS / NSGA-II / seeded / fallback, soft model. Hard-capacity methods have zero overload by construction.}\\
+\end{tabular}}
+\end{table}
