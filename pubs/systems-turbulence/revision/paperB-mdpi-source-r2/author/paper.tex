@@ -46,7 +46,7 @@ $^{2}$ \quad Faculty of Economics and Business, University of Granada, Granada, 
 
 \corres{Correspondence: stantchev@computer.org}
 
-\abstract{%Optimisation-based decision-support systems are adopted under turbulence on two untested
+\abstract{Optimisation-based decision-support systems are adopted under turbulence on two untested
 assumptions: that the problem needs their stochastic optimiser, and that their committed decision
 is stable. We audit both, and input fragility, with a five-step protocol on our own published fuzzy
 relief-allocation system on synthetic instances. Its model is separable: a deterministic rule
@@ -76,7 +76,7 @@ analogy of mechanism only.}
 \textbf{What are the implications of the main findings?}
 \begin{itemize}[labelsep=2.5mm,topsep=-3pt]
 \item Before an optimisation-based decision-support system is adopted, its structure, an exact or bounded reference, the multiplicity of near-optimal decisions and its selection rule should be checked; a stochastic optimiser is needed only where these checks leave a gap.
-\item Under input errors, the loss of a noise-free exact decider grows with the error level in every condition tested and is close to additive across fields, which gives a per-input measure of how much data quality matters.
+\item Under input errors, the loss of a noise-free exact decider grows with the error level in almost every condition tested and is close to additive across fields, which gives a per-input measure of how much data quality matters.
 \end{itemize}
 }
 
@@ -432,14 +432,16 @@ implies.
 \subsubsection{Objectives}
 With $\mathrm{FIS}_1$--$\mathrm{FIS}_3$ the per-person and per-pair scores are
 \begin{equation}\label{eq:scores}
-\mathrm{ULPP}_j=\mathrm{FIS}_1(\mathrm{VS}_j,\mathrm{IDL}_j,\mathrm{RTR}_j),\quad
-\mathrm{TIL}_{j,i}=\mathrm{FIS}_2(\mathrm{TD}_{j,i},\mathrm{RWS}_{j,i}),\quad
+\begin{gathered}
+\mathrm{ULPP}_j=\mathrm{FIS}_1(\mathrm{VS}_j,\mathrm{IDL}_j,\mathrm{RTR}_j),\qquad
+\mathrm{TIL}_{j,i}=\mathrm{FIS}_2(\mathrm{TD}_{j,i},\mathrm{RWS}_{j,i}),\\
 \mathrm{CAIL}_{j,i}=\mathrm{FIS}_3(\mathrm{COR}_i,\mathrm{RDR}_i,\mathrm{TD}_{j,i}),
+\end{gathered}
 \end{equation}
 and the three objectives, all minimised, are plain means over the directed people:
 \begin{equation}\label{eq:objectives}
-f_1(d)=\frac{1}{n_{\mathrm{dir}}}\sum_{j\in D}\mathrm{ULPP}_j,\qquad
-f_2(d)=\frac{1}{n_{\mathrm{dir}}}\sum_{j\in D}\mathrm{TIL}_{j,c(j)},\qquad
+f_1(d)=\frac{1}{n_{\mathrm{dir}}}\sum_{j\in D}\mathrm{ULPP}_j,\quad
+f_2(d)=\frac{1}{n_{\mathrm{dir}}}\sum_{j\in D}\mathrm{TIL}_{j,c(j)},\quad
 f_3(d)=\frac{1}{n_{\mathrm{dir}}}\sum_{j\in D}\mathrm{CAIL}_{j,c(j)}.
 \end{equation}
 In the published model $\mathrm{CAIL}_{j,i}$ is the per-pair $\mathrm{FIS}_3$ score at the
@@ -770,9 +772,10 @@ If S1 shows that the model cannot express a property its documentation claims, r
 model minimally and re-run S2. Here the claim is that CAIL penalises concentrating load on
 stressed centres; the repair makes occupancy endogenous,
 \begin{equation}
-\mathrm{COR}'_i(\ell_i) = \min\Bigl(100,\; \mathrm{COR}_i + 100\,\frac{\ell_i}{\mathrm{cap}_i}\Bigr),
-\qquad
+\begin{gathered}
+\mathrm{COR}'_i(\ell_i) = \min\Bigl(100,\; \mathrm{COR}_i + 100\,\frac{\ell_i}{\mathrm{cap}_i}\Bigr),\\
 \mathrm{CAIL}_{j,i} = \mathrm{FIS}_3\bigl(\mathrm{COR}'_i(\ell_i),\, \mathrm{RDR}_i,\, \mathrm{TD}_{j,i}\bigr),
+\end{gathered}
 \label{eq:repair}
 \end{equation}
 where $\ell_i$ is the number of people the decision sends to centre $i$ and
@@ -1476,8 +1479,9 @@ $^d$share of directed people sent elsewhere or not directed (allocation churn); 
 vacancies filled differently, which on the small instance (five vacancies) moves in steps of
 $0.2$; $^f$Jaccard distance of the selected item sets, range over seed pairs $0.07$--$0.16$ at
 $200$ and $0.00$--$0.11$ at $2000$ generations. Cluster-bootstrap 95\% CI for ED.\label{tab:cases}}
-\small
-\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X l l r r l}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\textwidth}{l l >{\raggedright\arraybackslash}X r r l}
 \toprule
 Model, instance & S1 & Solver, budget & Gap & Dominated & Seed floor\\
 \midrule

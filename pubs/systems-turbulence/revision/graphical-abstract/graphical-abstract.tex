@@ -11,8 +11,9 @@
 %   panel 2  seed floor 83-94% churn (audit_summary churn_floor, published settings);
 %            within 1% of the optimum 26-33% (multiplicity/summary.csv);
 %            tie-break: 10 plain solves -> 10 optima, stated rule -> 1 (multiplicity/tiebreak.csv).
-%   panel 3  turbulence_extended/summary.csv, large size, median regret over 36 conditions;
-%            joint/sum of parts 0.78 at level 0.4.
+%   panel 3  (round 2, v0.6.1) turbulence_extended_left_out/summary.csv: corrected ULPP objective,
+%            large size, median regret over 36 conditions; joint/sum of parts 0.81 at level 0.4.
+%            Dashed line: resource time under the published objective (turbulence_extended/summary.csv).
 % Render: pdflatex graphical-abstract.tex && pdftoppm -png -r 300 -singlefile graphical-abstract.pdf graphical-abstract
 \documentclass[border=0pt]{standalone}
 \usepackage[T1]{fontenc}
@@ -102,20 +103,21 @@
 
 % ================= Panel 3: input fragility =================
 \node[q] at (164,114) {Is it fragile under turbulence?};
-\node[ans] at (164,107.5) {Loss of a noise-free exact decider\\as input errors grow};
+\node[ans] at (164,107.5) {Loss of a noise-free exact decider as input\\errors grow, under the corrected objective};
 \begin{axis}[gaxis, scale only axis, at={(177mm,44mm)}, width=55mm, height=48mm,
-  xmin=0, xmax=0.42, ymin=0, ymax=35, xtick={0,0.1,0.2,0.3,0.4}, ytick={0,10,20,30},
+  xmin=0, xmax=0.42, ymin=0, ymax=40, xtick={0,0.1,0.2,0.3,0.4}, ytick={0,10,20,30,40},
   xticklabels={0,0.1,0.2,0.3,0.4},
   xlabel={error level}, ylabel={regret (objective units)},
   every axis plot/.append style={line width=1.1pt, mark size=1.4pt},
   ]
-  \addplot[gorange, mark=*] coordinates {(0,0) (0.05,3.02) (0.1,8.43) (0.2,18.68) (0.4,31.53)};
-  \addplot[gblue, mark=*] coordinates {(0,0) (0.05,0.85) (0.1,2.41) (0.2,4.81) (0.4,6.71)};
-  \addplot[gaqua, mark=*] coordinates {(0,0) (0.05,0.35) (0.1,1.24) (0.2,3.83) (0.4,7.46)};
-  \addplot[gmuted, mark=*] coordinates {(0,0) (0.05,0.22) (0.1,0.75) (0.2,2.52) (0.4,5.68)};
+  \addplot[gorange, mark=*] coordinates {(0,0) (0.05,2.74) (0.1,7.06) (0.2,15.32) (0.4,24.61)};
+  \addplot[gblue, mark=*] coordinates {(0,0) (0.05,0.48) (0.1,1.74) (0.2,4.59) (0.4,9.01)};
+  \addplot[gaqua, mark=*] coordinates {(0,0) (0.05,0.83) (0.1,2.37) (0.2,4.41) (0.4,6.25)};
+  \addplot[gmuted, mark=*] coordinates {(0,0) (0.05,0.15) (0.1,0.54) (0.2,1.68) (0.4,3.21)};
+  \addplot[gmuted, dashed, mark=none, line width=0.8pt] coordinates {(0,0) (0.05,0.35) (0.1,1.24) (0.2,3.83) (0.4,7.46)};
 \end{axis}
-\node[note, anchor=north west, text=gorange, align=left] at (180,91) {\textbf{all fields at once}:\\0.78 of the sum of its parts};
-\node[note, anchor=south east, align=right] at (232,56.5) {single fields: {\color{gaqua}resource time},\\{\color{gblue}travel time}, {\color{gmuted}damage}};
+\node[note, anchor=north west, text=gorange, align=left] at (180,91) {\textbf{all fields at once}:\\0.81 of the sum of its parts};
+\node[note, anchor=north west, align=left] at (180,83) {single fields: {\color{gblue}occupancy},\\{\color{gaqua}travel time}, {\color{gmuted}resource time}\\{\color{gmuted}(dashed: published objective)}};
 \node[note] at (199,30) {regret grows with the error level in all\\36 conditions; errors add up, not amplify};
 
 % ================= bottom strip: the protocol =================
