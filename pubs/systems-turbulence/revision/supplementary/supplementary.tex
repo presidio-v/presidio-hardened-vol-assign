@@ -40,4 +40,13 @@ manifests by their SHA-256 hashes; every method and both time limits use the sam
 \setcounter{table}{9}
 \input{tab_envelope_instances.tex}
 
+\clearpage
+\section*{S3. Input fragility across 36 conditions under the corrected ULPP objective}
+Table~S11 repeats the 36-condition study of Table~10 of the article (six instances per size,
+three demand and two occupancy conditions) with the ULPP objective averaged over the people left
+out (Section~5.5 of the article), next to the published objective. Script:
+\texttt{experiments/analyze\_corrected\_ulpp.py --extended-table}.
+
+\input{tab_extended.tex}
+
 \end{document}

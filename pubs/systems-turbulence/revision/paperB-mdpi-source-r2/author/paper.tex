@@ -1405,7 +1405,16 @@ out of the directed set, the mean over the people left out changes by
 $n_{\mathrm{dir}}/(m - n_{\mathrm{dir}}) = 1/2$ as much as the mean over the people directed, and
 the person-side inputs act on the decision only through ULPP. The decisions still move (churn
 at level $0.4$ falls only from $0.31$ to $0.25$ and from $0.30$ to $0.20$ for resource-time and
-damage noise on the small instance); what falls is their cost in the rescaled objective. A
+damage noise on the small instance); what falls is their cost in the rescaled objective. The
+36-condition study of Table~\ref{tab:rq3}, repeated under the corrected objective (Table~S11 of
+the Supplementary Materials), gives the same picture. At level $0.4$ the median regret of
+resource-time noise falls from $7.4$ to $3.0$ (small) and from $7.5$ to $3.2$ (large), and of
+damage noise from $5.1$ to $1.7$ and from $5.7$ to $2.3$, while occupancy and travel-time noise
+lead. Every noise, missing-value and flip cell still grows with the level in all $36$ conditions
+on the large instances; on the small ones this holds for six of the eight cells, and for
+occupancy noise and occupancy missing values in $33$ and $28$ of $36$ conditions. Joint
+perturbations still add up: all eight cells at once cost $0.75$ (small) and $0.81$ (large) of
+their single-field parts. A
 per-input fragility ranking is
 therefore a property of the objective as much as of the inputs, and it has to be recomputed
 whenever the objective is corrected.
@@ -1416,7 +1425,7 @@ $10.5$--$11.0\%$ (large), overload persists under soft capacity at every $\kappa
 and $70.6$--$89.9$ people), hard capacity removes it, and the separable optimum violates the hard
 limit by $21$--$67$ people. The separable optimum concentrates load even more than before, with
 $45$ of $50$ people at one centre (small) and $86$ of $100$ (large). The evolutionary runs of
-RQ1--RQ2, the near-optimal enumeration and the envelope were not repeated, because their local
+RQ1--RQ2, the repair-form variants of Table~\ref{tab:forms}, the near-optimal enumeration and the envelope were not repeated, because their local
 search and alternative-generation code implement the published form only; their conclusions
 rest on the structure of the model, which the correction does not change, but their numbers are
 those of the published objective.
@@ -1651,8 +1660,9 @@ envelope uses three instances per size, one hardware platform and one configurat
 method, and HiGHS through SciPy cannot be warm-started, so the combination of the fallback with
 the MIP was tested only through the local search. The rule bases are taken as published, apart
 from the stretched variant of Section~\ref{sec:rq4}. Under the corrected ULPP objective we
-repeated RQ3 on the reference instances and the RQ4 grid, but not the evolutionary runs, the
-near-optimal enumeration or the envelope (Section~\ref{sec:corrected}).
+repeated RQ3 on the reference instances and across the $36$ conditions, and the RQ4 grid, but
+not the evolutionary runs, the near-optimal enumeration or the envelope
+(Section~\ref{sec:corrected}).
 
 \section{Conclusions}\label{sec:conclusion}
 Before an optimisation-based decision-support system is trusted with turbulent conditions, ask
@@ -1774,7 +1784,7 @@ audit trail for an exact decider should therefore record the optimal value and t
 rule with its key, not only the allocation.
 
 % =====================================================================
-\supplementary{The following supporting information can be downloaded at: \linksupplementary{s1}. Tables S1--S9: rule bases of the fuzzy inference systems FIS$_1$, FIS$_2$, FIS$_{2a}$, FIS$_{2b}$ and FIS$_3$; Table S10: deployment envelope per instance.}
+\supplementary{The following supporting information can be downloaded at: \linksupplementary{s1}. Tables S1--S9: rule bases of the fuzzy inference systems FIS$_1$, FIS$_2$, FIS$_{2a}$, FIS$_{2b}$ and FIS$_3$; Table S10: deployment envelope per instance; Table S11: RQ3 across 36 conditions under the published and the corrected ULPP objective.}
 
 \authorcontributions{Conceptualization, V.S., P.R.\ and D.A.-A.; methodology, V.S.; software, V.S.; validation, V.S.; formal analysis, V.S.; investigation, V.S.; resources, P.R.; data curation, V.S.; writing---original draft preparation, V.S.; writing---review and editing, V.S., P.R.\ and D.A.-A.; visualization, V.S.; project administration, V.S. All authors have read and agreed to the published version of the manuscript.}
 
@@ -1784,7 +1794,7 @@ rule with its key, not only the allocation.
 
 \informedconsent{Not applicable.}
 
-\dataavailability{The implementation (version 0.5.0), experiment drivers, problem instances and result manifests of this revision are archived at Zenodo, \url{https://doi.org/10.5281/zenodo.24057413}; the version of the submitted manuscript (0.4.0) remains at \url{https://doi.org/10.5281/zenodo.23220061}. The code is developed openly at \url{https://github.com/presidio-v/presidio-hardened-vol-assign}. The reference, alternate and envelope instances are archived files identified by their SHA-256 hashes; per-seed Pareto fronts regenerate bit for bit from the archived code and seeds with the commands listed in \texttt{experiments/README.md}.}
+\dataavailability{The implementation (version 0.6.1), experiment drivers, problem instances and result manifests of this version, including the results under the corrected ULPP objective, are archived at Zenodo, \url{https://doi.org/10.5281/zenodo.24250168}; the versions behind the first revision (0.5.0) and the submitted manuscript (0.4.0) remain at \url{https://doi.org/10.5281/zenodo.24057413} and \url{https://doi.org/10.5281/zenodo.23220061}. The code is developed openly at \url{https://github.com/presidio-v/presidio-hardened-vol-assign}. The reference, alternate and envelope instances are archived files identified by their SHA-256 hashes; per-seed Pareto fronts regenerate bit for bit from the archived code and seeds with the commands listed in \texttt{experiments/README.md}.}
 
 \acknowledgments{Portions of this manuscript and of the accompanying software were deliberated and developed with the assistance of Claude Fable~5.1 and Claude Opus~5.5 (Anthropic), Codex with GPT-5.6-Sol (OpenAI), and Grok~4.6 via the Grok CLI~0.2.114 (xAI); all content was reviewed, verified, and approved by the authors.}
 
