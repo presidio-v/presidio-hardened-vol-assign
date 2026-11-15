@@ -23,7 +23,7 @@ from presidio_vol_assign.allocation.models import (
     ReliefCenter,
     TravelInfo,
 )
-from presidio_vol_assign.allocation.solvers import FISCache, evaluate_pairs
+from presidio_vol_assign.allocation.solvers import FISCache, evaluate_pairs, ulpp_linear_terms
 
 # Pinned normalisers (match the plausible ranges in ``allocation.turbulence``).
 _RTR_MAX = 72.0
@@ -160,14 +160,13 @@ def exact_weighted_sum_pairs(
     w = tuple(weights) if weights is not None else (1.0,) * objectives
     if len(w) != objectives or any(x < 0 for x in w):
         raise ValueError("weights must be one non-negative value per objective")
-    if cache.ulpp_objective != "directed":  # the per-person cost below is the published form
-        raise NotImplementedError("exact deciders implement the published ULPP objective only")
     m = cache.ulpp.shape[0]
     if not 0 < n_dir <= m:  # fail closed on a malformed instance
         raise ValueError("n_dir must be in (0, number of people]")
+    ulpp_coef, _ = ulpp_linear_terms(cache, n_dir)  # published or corrected ULPP objective
 
     pair_cost = sum(wk * term for wk, term in zip(w[1:], pair_terms, strict=True))
     best_center = np.argmin(pair_cost, axis=1)  # first minimum -> lowest index
-    person_cost = w[0] * cache.ulpp + pair_cost[np.arange(m), best_center]
+    person_cost = w[0] * ulpp_coef + pair_cost[np.arange(m), best_center]
     selected = np.lexsort((np.arange(m), person_cost))[:n_dir]
     return [(int(j), int(best_center[j])) for j in selected]

@@ -65,8 +65,8 @@ unfairness of leaving person j behind) over the people **directed**; it should a
 the people **left out**. `AllocationConfig(ulpp_objective="left_out")` (driver flag
 `--ulpp-objective left_out`) implements the corrected objective; the default `"directed"` keeps
 the published one, so the v0.2.0 results still reproduce. The exact deciders (`baselines`,
-`exact_mip`, `multiplicity`, `local_search`) implement the published objective only and refuse
-`"left_out"`.
+`exact_mip`, `multiplicity`, `local_search`) implemented the published objective only and refused
+`"left_out"`; since 0.6.1 the exact greedy and the MIP solve both (Paper B, round 2, below).
 
 `sh experiments/run_correction.sh <v0.2.0 results dir>` runs everything (about 1 h 45 min on
 an M-series laptop):
@@ -80,3 +80,17 @@ an M-series laptop):
 | Figures 1–5 of the article (corrected HV, published CPU times) | `correction_cpu_merge`, `make_figures` (`PVA_RESULTS`, `PVA_FIGURES`, `PVA_H1_MANIFEST`) | `figures_corrected/` (not committed) |
 
 Per-run fronts (`*/rep*/`) are not committed; they regenerate bit for bit from the seeds.
+
+## Paper B revision (R2, November 2026): RQ3 and RQ4 under the corrected ULPP objective
+
+The exact greedy and the MIP accept `ulpp_objective="left_out"` (`solvers.ulpp_linear_terms`);
+the local search and the near-optimal enumeration still refuse it.
+
+| Paper element | Producer | Output |
+|---|---|---|
+| RQ3 reference instances, corrected (Table "corrected") | `run_turbulence_exact --size {small,large} --ulpp-objective left_out --out results/turbulence_exact_left_out/<size>` → `analyze_corrected_ulpp --table <file>` | `results/turbulence_exact_left_out/` (`comparison.csv`) |
+| Trend tests, corrected | `analyze_trend_exact --root results/turbulence_exact_left_out --out results/turbulence_exact_left_out` | `results/turbulence_exact_left_out/trend_tests.csv` |
+| RQ3 across 36 conditions, corrected (Supplementary Table S11) | copy `results/turbulence_extended/instances` into the output root (the generator would recreate the same files), then `run_turbulence_extended --size {small,large} --instance {ref,101..105} --ulpp-objective left_out --out results/turbulence_extended_left_out` → `analyze_turbulence_extended --root results/turbulence_extended_left_out` → `analyze_corrected_ulpp --extended-table <file>` | `results/turbulence_extended_left_out/` |
+| RQ4 grid (Table "rq4"), corrected | `run_repair_sweep --ulpp-objective left_out` | `results/repair/kappa_sweep_left_out.csv` |
+| Supplementary Tables S1–S9 (rule bases) | `make_supplementary_rules --out <file>` | LaTeX |
+

@@ -6,6 +6,30 @@ project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.1] — 2026-11-16
+
+Second-round revision of the allocation-model audit (Systems, systems-4669426).
+
+### Added
+- The exact deciders (`exact_weighted_sum_pairs`, `build_weighted_mip` /
+  `solve_weighted_mip`) solve the corrected ULPP objective
+  (`ulpp_objective="left_out"`): with `n_dir` fixed it is still a per-person
+  term, written by `solvers.ulpp_linear_terms` as a coefficient and a constant
+  offset that `MipResult.objective` includes. Verified against brute-force
+  enumeration. The local search and the near-optimal enumeration still
+  implement the published objective only and refuse the corrected one.
+- `--ulpp-objective` on `run_turbulence_exact`, `run_turbulence_extended`,
+  `run_repair_sweep` and `run_repair_forms`; results under the corrected
+  objective in `experiments/results/{turbulence_exact,turbulence_extended}_left_out/`
+  and `experiments/results/repair/kappa_sweep_left_out.csv`.
+- `experiments/analyze_corrected_ulpp.py` (published vs corrected RQ3 table)
+  and `experiments/make_supplementary_rules.py` (rule bases as LaTeX tables,
+  generated from the rule constants).
+
+### Changed
+- Envelope table captions state that the NSGA-II columns are the best front
+  point by equal-weight sum, not the committed decision.
+
 ## [0.6.0] — 2026-11-08
 
 Security release: Python 3.10 support dropped, which clears every open

@@ -25,7 +25,7 @@ import numpy as np
 from scipy.optimize import Bounds, LinearConstraint, milp
 from scipy.sparse import coo_matrix, csr_matrix
 
-from presidio_vol_assign.allocation.solvers import FISCache
+from presidio_vol_assign.allocation.solvers import FISCache, ulpp_linear_terms
 
 
 @dataclass(frozen=True)
@@ -57,6 +57,7 @@ class MipModel:
     integrality: np.ndarray
     m: int
     n: int
+    offset: float = 0.0  # constant added to cost @ x to give the weighted objective sum
 
     @property
     def n_x(self) -> int:
@@ -114,10 +115,9 @@ def build_weighted_mip(
             cursor += m  # one z per person at this (centre, level)
     n_var = cursor
 
-    if cache.ulpp_objective != "directed":  # the per-person cost below is the published form
-        raise NotImplementedError("exact deciders implement the published ULPP objective only")
+    ulpp_coef, ulpp_offset = ulpp_linear_terms(cache, n_dir)  # published or corrected ULPP
     cost = np.zeros(n_var)
-    cost[:n_x] = ((w[0] * cache.ulpp)[:, None] + pair_static).ravel() / n_dir
+    cost[:n_x] = ((w[0] * ulpp_coef)[:, None] + pair_static).ravel() / n_dir
     for i in range(n):
         for k, (lo, _) in enumerate(levels[i]):
             start = z_index[i][k]
@@ -162,6 +162,7 @@ def build_weighted_mip(
         integrality=integrality,
         m=m,
         n=n,
+        offset=w[0] * ulpp_offset,
     )
 
 
@@ -197,10 +198,11 @@ def solve_weighted_mip(
     pairs = [(int(j), int(i)) for j, i in chosen]
     if len(pairs) != n_dir or len({j for j, _ in pairs}) != n_dir:
         raise RuntimeError("MIP solution is not an integral allocation of n_dir people")
+    # HiGHS reports the gap relative to cost @ x, without the offset of the corrected ULPP
     gap = float(getattr(res, "mip_gap", 0.0) or 0.0)
     return MipResult(
         pairs=pairs,
-        objective=float(res.fun),
+        objective=float(res.fun) + model.offset,
         gap=gap,
         optimal=res.status == 0,
         seconds=seconds,
