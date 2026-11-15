@@ -1,0 +1,43 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{caption}
+\usepackage{float}
+\usepackage[hidelinks]{hyperref}
+\renewcommand{\thetable}{S\arabic{table}}
+\setlength{\parskip}{4pt}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+\begin{center}
+{\Large\bfseries Supplementary Materials}\\[6pt]
+Is the Optimiser Needed? Auditing a Digital Decision-Support System for Necessity, Decision
+Stability and Input Fragility under Turbulence\\[4pt]
+Vladimir Stantchev, Peyman Rabiei and Daniel Arias-Aranda
+\end{center}
+
+\section*{S1. Rule bases of the audited fuzzy systems}
+Tables~S1--S9 give the complete rule bases of the five fuzzy inference systems of the audited
+system, as published in~[10] of the article. They are generated from the rule constants of
+the open implementation (module \texttt{presidio\_vol\_assign.allocation.fis}, script
+\texttt{experiments/make\_supplementary\_rules.py}), so they are the rules every result of the
+article was computed with. Inputs, terms, membership breakpoints, inference and
+defuzzification are given in Table~3 of the article. Output terms: VL very low, L low, M
+moderate, H high, VH very high. FIS$_1$ and FIS$_3$ have three inputs and are shown as one
+grid per level of their first input. The three-objective model of the article uses FIS$_1$,
+FIS$_2$ and FIS$_3$; FIS$_{2a}$ and FIS$_{2b}$ belong to the four-objective model of~[10].
+
+\input{rules.tex}
+
+\clearpage
+\section*{S2. Deployment envelope per instance}
+Table~S10 lists every instance of the deployment envelope (Section~5.4 of the article). The
+instances are generated once by the revised generator, stored, and identified in the archived
+manifests by their SHA-256 hashes; every method and both time limits use the same files.
+
+\setcounter{table}{9}
+\input{tab_envelope_instances.tex}
+
+\end{document}
