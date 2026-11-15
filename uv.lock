@@ -1494,7 +1494,7 @@ wheels = [
 
 [[package]]
 name = "presidio-hardened-vol-assign"
-version = "0.6.0"
+version = "0.6.1"
 source = { editable = "." }
 dependencies = [
     { name = "deap" },
@@ -1543,7 +1543,7 @@ requires-dist = [
     { name = "networkx", specifier = ">=3.0" },
     { name = "numpy", specifier = ">=1.24" },
     { name = "pandas", specifier = ">=2.0" },
-    { name = "pillow", marker = "python_full_version >= '3.11'", specifier = ">=13.0.0" },
+    { name = "pillow", specifier = ">=13.0.0" },
     { name = "pip-audit", marker = "extra == 'dev'" },
     { name = "presidio-hardened-fastapi", marker = "extra == 'dev'", specifier = ">=0.2" },
     { name = "presidio-hardened-fastapi", marker = "extra == 'web'", specifier = ">=0.2" },

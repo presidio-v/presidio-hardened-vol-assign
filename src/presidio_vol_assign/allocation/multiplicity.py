@@ -82,6 +82,8 @@ def model_for(
     max_load: np.ndarray | None = None,
 ) -> MipModel:
     """The static model when the cache has no load table, else the load-coupled MIP."""
+    if cache.ulpp_objective != "directed":  # the quality bounds assume the published form
+        raise NotImplementedError("near-optimal enumeration implements the published ULPP only")
     if cache.cail_load is None:
         if max_load is not None:
             raise ValueError("hard capacity needs a load-coupled cache")

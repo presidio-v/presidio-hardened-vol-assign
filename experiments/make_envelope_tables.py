@@ -49,7 +49,7 @@ def table_main(rows: list[dict]) -> str:
         r" the same instances. Soft capacity ($\kappa=2$): quality and overload (people beyond free"
         r" capacity) in the soft model. Hard capacity ($\kappa_f=1.5$): quality in the hard model."
         r" Means over solved instances; $s/p$: instances with an incumbent / proven optimal. LS: local"
-        r" search; seeded: NSGA-II seeded with exact solutions of the published model; fallback: exact"
+        r" search; seeded: NSGA-II seeded with exact solutions of the published model; NSGA-II and seeded: the best point of the final front by equal-weight objective sum, not the committed decision of Eq.~(\ref{eq:committal}). Fallback: exact"
         r" optimum of the published model. Latency: total decision time of the hard-capacity local"
         r" search, preparation of scores and load table included (s).\label{tab:envelope}}",
         r"\scriptsize",
@@ -127,7 +127,7 @@ def table_instances(rows: list[dict]) -> str:
         r"\centering",
         r"\caption{Deployment envelope per instance. Quality (soft model for soft methods, hard model"
         r" for hard ones); --: no incumbent within the limit; $^\dagger$: not proven optimal."
-        r" Instances identified by size and seed $s$; their SHA-256 hashes are in the archived manifests.\label{tab:envelope-instances}}",
+        r" NSGA-II and seeded: the best point of the final front by equal-weight objective sum, not the committed decision of Eq.~(\ref{eq:committal}). Instances identified by size and seed $s$; their SHA-256 hashes are in the archived manifests.\label{tab:envelope-instances}}",
         r"\scriptsize",
         r"\setlength{\tabcolsep}{3pt}",
         r"\begin{tabular}{lrr" + "r" * len(methods) + "}",

@@ -13,10 +13,11 @@ from presidio_vol_assign.allocation.load_coupling import precompute_load_coupled
 from presidio_vol_assign.allocation.solvers import evaluate_pairs
 
 
+@pytest.mark.parametrize("ulpp_objective", ["directed", "left_out"])
 @pytest.mark.parametrize("objectives", [3, 4])
 @pytest.mark.parametrize("kappa", [1.0, 3.0, math.inf])
-def test_mip_matches_brute_force(problem, base_config, objectives, kappa) -> None:
-    config = dataclasses.replace(base_config, objectives=objectives)
+def test_mip_matches_brute_force(problem, base_config, objectives, kappa, ulpp_objective) -> None:
+    config = dataclasses.replace(base_config, objectives=objectives, ulpp_objective=ulpp_objective)
     cache = precompute_load_coupled_cache(problem, config, kappa)
     weights = tuple(float(i + 1) for i in range(objectives))
 

@@ -230,6 +230,25 @@ def evaluate_pairs(
     return (mn_ulpp, mn_til, mn_cail)
 
 
+def ulpp_linear_terms(cache: FISCache, n_dir: int) -> tuple[np.ndarray, float]:
+    """The ULPP objective as ``(coef @ d) / n_dir + offset`` over the directed indicator d.
+
+    The exact deciders write every objective as a mean over the ``n_dir`` directed people.
+    For the published objective that is the ULPP of each directed person, with no offset.
+    For the corrected one (mean over the ``m - n_dir`` people left out), it is
+    ``(sum(ULPP) - ULPP @ d) / (m - n_dir)``: still linear in d, so the model stays
+    separable, with coefficient ``-ULPP * n_dir / (m - n_dir)`` and a constant offset that
+    shifts the objective value but not the optimiser.
+    """
+    if cache.ulpp_objective == "directed":
+        return cache.ulpp, 0.0
+    m = cache.ulpp.shape[0]
+    if not 0 < n_dir < m:  # nobody left out: the corrected mean is undefined
+        raise ValueError("the left-out ULPP objective needs 0 < n_dir < number of people")
+    left = m - n_dir
+    return -cache.ulpp * (n_dir / left), float(cache.ulpp.sum()) / left
+
+
 def _mean_ulpp(cache: FISCache, persons: np.ndarray) -> float:
     """The ULPP objective: mean over the directed people, or over those left out."""
     if cache.ulpp_objective == "directed":

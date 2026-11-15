@@ -140,6 +140,7 @@ Both implemented via DEAP:
 | v0.5.0 | Released | Near-optimal multiplicity and tie-breaking, capacity-aware local search, solver time budget and seeding, repair forms; reproducible instance generator; drivers and results for the allocation-model audit (MDPI *Systems*) |
 | v0.5.1 | Released | Corrected ULPP objective (`ulpp_objective="left_out"`) and the reruns behind the correction to *Appl. Sci.* 2026, 16, 7581 |
 | v0.6.0 | Released | Python 3.11+ (clears every open dependency advisory); string enums are `StrEnum`; single `ci-ok` CI gate |
+| v0.6.1 | Released | Exact deciders solve the corrected ULPP objective; round-2 audit experiments and supplementary rule tables |
 | next | Planned | Real-world data connectors (`pva import`); bring-your-own-CSV in the demo GUI |
 
 See **Version Deliberations** below for full rationale, and

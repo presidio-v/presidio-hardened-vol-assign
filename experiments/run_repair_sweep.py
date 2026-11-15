@@ -8,7 +8,9 @@ published model's exact optimum in the repaired model. Writes
 
 from __future__ import annotations
 
+import argparse
 import csv
+import dataclasses
 import math
 from collections import Counter
 from pathlib import Path
@@ -26,13 +28,26 @@ from presidio_vol_assign.allocation.load_coupling import (
     overload,
     precompute_load_coupled_cache,
 )
+from presidio_vol_assign.allocation.models import ULPP_OBJECTIVES
 from presidio_vol_assign.allocation.solvers import evaluate_pairs
 from presidio_vol_assign.allocation.validation import load_allocation_problem
 
 OUT = Path("experiments/results/repair")
 
 
+def _suffix(ulpp_objective: str) -> str:
+    return "" if ulpp_objective == "directed" else f"_{ulpp_objective}"
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--ulpp-objective",
+        default="directed",
+        choices=ULPP_OBJECTIVES,
+        help="'directed' = published objective; 'left_out' = corrected (revision R2.1)",
+    )
+    args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     rows = []
     for size in ("small", "large"):
@@ -40,7 +55,7 @@ def main() -> None:
         problem = load_allocation_problem(
             base / "people.csv", base / "centers.csv", base / "travel.csv", n_dir=SIZES[size].n_dir
         )
-        cfg = _config(100, 150)
+        cfg = dataclasses.replace(_config(100, 150), ulpp_objective=args.ulpp_objective)
         static = precompute_fis_cache_fast(problem, cfg)
         published = exact_weighted_sum_pairs(static, problem.n_dir, OBJECTIVES)
         variants = [("soft", k, k, None) for k in (math.inf, 1.0, 2.0, 3.0)]
@@ -69,7 +84,7 @@ def main() -> None:
             }
             rows.append(row)
             print(row, flush=True)
-    with (OUT / "kappa_sweep.csv").open("w", newline="") as fh:
+    with (OUT / f"kappa_sweep{_suffix(args.ulpp_objective)}.csv").open("w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)

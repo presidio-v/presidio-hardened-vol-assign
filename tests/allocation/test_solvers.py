@@ -170,11 +170,45 @@ class TestUlppObjective:
         pairs = [(j, j % problem.n_centers) for j in range(problem.n_dir)]
         assert evaluate_pairs(pairs, base, 4)[1:] == evaluate_pairs(pairs, fixed, 4)[1:]
 
-    def test_exact_decider_refuses_corrected_mode(self, problem, base_config):
+    @pytest.mark.parametrize("objectives", [3, 4])
+    def test_exact_decider_optimal_under_corrected_mode(self, problem, base_config, objectives):
+        """The corrected objective is still separable; the greedy reaches the brute force."""
+        import itertools
+
         from presidio_vol_assign.allocation.baselines import exact_weighted_sum_pairs
+
+        cfg = dataclasses.replace(base_config, objectives=objectives)
+        fixed = dataclasses.replace(precompute_fis_cache(problem, cfg), ulpp_objective="left_out")
+        weights = tuple(float(i + 1) for i in range(objectives))
+
+        def cost(pairs):
+            return sum(w * f for w, f in zip(weights, evaluate_pairs(pairs, fixed, objectives)))
+
+        best = min(
+            cost(list(zip(people, centres, strict=True)))
+            for people in itertools.combinations(range(problem.n_people), problem.n_dir)
+            for centres in itertools.product(range(problem.n_centers), repeat=problem.n_dir)
+        )
+        pairs = exact_weighted_sum_pairs(fixed, problem.n_dir, objectives, weights)
+        assert cost(pairs) == pytest.approx(best, abs=1e-9)
+
+    def test_corrected_mode_needs_someone_left_out(self, problem, base_config):
+        from presidio_vol_assign.allocation.solvers import ulpp_linear_terms
 
         fixed = dataclasses.replace(
             precompute_fis_cache(problem, base_config), ulpp_objective="left_out"
         )
+        with pytest.raises(ValueError):
+            ulpp_linear_terms(fixed, problem.n_people)
+
+    def test_local_search_and_enumeration_refuse_corrected_mode(self, problem, base_config):
+        from presidio_vol_assign.allocation.load_coupling import precompute_load_coupled_cache
+        from presidio_vol_assign.allocation.local_search import capacity_greedy
+        from presidio_vol_assign.allocation.multiplicity import model_for
+
+        cfg = dataclasses.replace(base_config, ulpp_objective="left_out")
+        cache = precompute_load_coupled_cache(problem, cfg, 2.0)
         with pytest.raises(NotImplementedError):
-            exact_weighted_sum_pairs(fixed, problem.n_dir, 4)
+            capacity_greedy(cache, problem.n_dir, 4, [problem.n_dir] * problem.n_centers)
+        with pytest.raises(NotImplementedError):
+            model_for(cache, problem.n_dir, 4)

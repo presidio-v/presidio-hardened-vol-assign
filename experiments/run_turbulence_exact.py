@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import dataclasses
 from pathlib import Path
 
 import numpy as np
@@ -29,6 +30,7 @@ from experiments.run_turbulence import OBJECTIVES, _config
 from presidio_vol_assign.allocation.baselines import crisp_greedy_pairs, exact_weighted_sum_pairs
 from presidio_vol_assign.allocation.decisions import decision_stability
 from presidio_vol_assign.allocation.fast_fis import precompute_fis_cache_fast
+from presidio_vol_assign.allocation.models import ULPP_OBJECTIVES
 from presidio_vol_assign.allocation.turbulence import (
     PerturbationSpec,
     TurbulenceMode,
@@ -56,6 +58,12 @@ def main() -> None:
     parser.add_argument("--realizations", type=int, default=50)
     parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--cell", default=None, help="one cell only, e.g. travel_duration_noise")
+    parser.add_argument(
+        "--ulpp-objective",
+        default="directed",
+        choices=ULPP_OBJECTIVES,
+        help="'directed' = published objective; 'left_out' = corrected (revision R2.1)",
+    )
     args = parser.parse_args()
     cells = [c for c in CELLS if args.cell in (None, f"{c[0]}_{c[1]}")]
     if not cells:
@@ -67,7 +75,8 @@ def main() -> None:
     problem = load_allocation_problem(
         base / "people.csv", base / "centers.csv", base / "travel.csv", n_dir=SIZES[args.size].n_dir
     )
-    cfg = _config(100, 150)  # solver budget is irrelevant here; only FIS settings are used
+    # solver budget is irrelevant here; only the FIS settings and the ULPP objective are used
+    cfg = dataclasses.replace(_config(100, 150), ulpp_objective=args.ulpp_objective)
     clean_cache = precompute_fis_cache_fast(problem, cfg)
     n_dir, n_centers = problem.n_dir, problem.n_centers
     clean = {

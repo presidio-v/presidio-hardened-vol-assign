@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import dataclasses
 from pathlib import Path
 
 import numpy as np
@@ -38,6 +39,7 @@ from experiments.run_turbulence import OBJECTIVES, _config
 from presidio_vol_assign.allocation.baselines import exact_weighted_sum_pairs
 from presidio_vol_assign.allocation.decisions import decision_stability
 from presidio_vol_assign.allocation.fast_fis import precompute_fis_cache_fast
+from presidio_vol_assign.allocation.models import ULPP_OBJECTIVES
 from presidio_vol_assign.allocation.turbulence import (
     PerturbationSpec,
     TurbulenceMode,
@@ -107,11 +109,17 @@ def main() -> None:
     parser.add_argument("--size", default="small", choices=("small", "large"))
     parser.add_argument("--instance", default="ref", help="'ref' or a generator seed")
     parser.add_argument("--out", type=Path, default=Path("experiments/results/turbulence_extended"))
+    parser.add_argument(
+        "--ulpp-objective",
+        default="directed",
+        choices=ULPP_OBJECTIVES,
+        help="'directed' = published objective; 'left_out' = corrected (revision R2.1)",
+    )
     args = parser.parse_args()
     base = _load(args.size, args.instance, args.out / "instances")
     out = args.out / args.size
     out.mkdir(parents=True, exist_ok=True)
-    cfg = _config(100, 150)
+    cfg = dataclasses.replace(_config(100, 150), ulpp_objective=args.ulpp_objective)
 
     with (out / f"manifest_{args.instance}.csv").open("w", newline="") as fh:
         writer = csv.writer(fh)

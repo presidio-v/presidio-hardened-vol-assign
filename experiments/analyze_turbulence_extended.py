@@ -7,12 +7,13 @@ one realisation per level and is tested across levels only). Holm correction run
 (condition, cell) tests of a size. For the joint cells it compares the regret with the sum of the
 regrets of their single-field parts in the same condition, to show whether errors interact.
 
-Writes ``experiments/results/turbulence_extended/summary.csv`` (per cell and level, across
-conditions) and ``trends.csv`` (per condition and cell).
+Writes ``<root>/summary.csv`` (per cell and level, across conditions) and ``trends.csv`` (per
+condition and cell); the default root is ``experiments/results/turbulence_extended``.
 """
 
 from __future__ import annotations
 
+import argparse
 import csv
 from collections import defaultdict
 from pathlib import Path
@@ -26,10 +27,10 @@ from experiments.run_turbulence_extended import JOINT
 ROOT = Path("experiments/results/turbulence_extended")
 
 
-def _load(size: str) -> dict[tuple, list[tuple[float, float, float]]]:
+def _load(root: Path, size: str) -> dict[tuple, list[tuple[float, float, float]]]:
     """(instance, demand, occupancy, cell) -> [(level, regret, churn), ...]."""
     data: dict[tuple, list[tuple[float, float, float]]] = defaultdict(list)
-    for path in sorted((ROOT / size).glob("manifest_*.csv")):
+    for path in sorted((root / size).glob("manifest_*.csv")):
         for r in csv.DictReader(path.open()):
             key = (r["instance"], r["demand"], r["occupancy"], r["cell"])
             data[key].append((float(r["level"]), float(r["regret"]), float(r["churn"])))
@@ -37,9 +38,12 @@ def _load(size: str) -> dict[tuple, list[tuple[float, float, float]]]:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path, default=ROOT, help="manifests in <root>/<size>/")
+    args = parser.parse_args()
     summary, trends = [], []
     for size in ("small", "large"):
-        data = _load(size)
+        data = _load(args.root, size)
         if not data:
             continue
         conditions = sorted({k[:3] for k in data})
@@ -122,7 +126,7 @@ def main() -> None:
             {k for r in rows for k in r},
             key=lambda k: list(rows[0]).index(k) if k in rows[0] else 99,
         )
-        with (ROOT / f"{name}.csv").open("w", newline="") as fh:
+        with (args.root / f"{name}.csv").open("w", newline="") as fh:
             writer = csv.DictWriter(fh, fieldnames=fields)
             writer.writeheader()
             writer.writerows(rows)

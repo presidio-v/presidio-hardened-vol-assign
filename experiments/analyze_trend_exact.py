@@ -32,6 +32,7 @@ def holm(p: np.ndarray) -> np.ndarray:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path("experiments/results/turbulence_exact"))
+    parser.add_argument("--out", type=Path, default=Path("experiments/results/turbulence_exact"))
     args = parser.parse_args()
     rows = []
     for size in ("small", "large"):
@@ -65,7 +66,7 @@ def main() -> None:
             f"level 0 included={include_zero}: n={sub[0]['n']} per cell, "
             f"rho {min(rhos):.2f}-{max(rhos):.2f}, max Holm p {max(r['p_holm'] for r in sub):.2e}"
         )
-    out = Path("experiments/results/turbulence_exact")
+    out = args.out
     out.mkdir(parents=True, exist_ok=True)
     with (out / "trend_tests.csv").open("w", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=list(rows[0]))
