@@ -4,6 +4,7 @@
 \usepackage{amsmath}
 \usepackage{caption}
 \usepackage{float}
+\usepackage[hyphens]{url}
 \usepackage[hidelinks]{hyperref}
 \renewcommand{\thetable}{S\arabic{table}}
 \setlength{\parskip}{4pt}
@@ -21,8 +22,8 @@ Vladimir Stantchev, Peyman Rabiei and Daniel Arias-Aranda
 \section*{S1. Rule bases of the audited fuzzy systems}
 Tables~S1--S9 give the complete rule bases of the five fuzzy inference systems of the audited
 system, as published in~[10] of the article. They are generated from the rule constants of
-the open implementation (module \texttt{presidio\_vol\_assign.allocation.fis}, script
-\texttt{experiments/make\_supplementary\_rules.py}), so they are the rules every result of the
+the open implementation (module \nolinkurl{presidio_vol_assign.allocation.fis}, script
+\nolinkurl{experiments/make_supplementary_rules.py}), so they are the rules every result of the
 article was computed with. Inputs, terms, membership breakpoints, inference and
 defuzzification are given in Table~3 of the article. Output terms: VL very low, L low, M
 moderate, H high, VH very high. FIS$_1$ and FIS$_3$ have three inputs and are shown as one
@@ -44,8 +45,9 @@ manifests by their SHA-256 hashes; every method and both time limits use the sam
 \section*{S3. Input fragility across 36 conditions under the corrected ULPP objective}
 Table~S11 repeats the 36-condition study of Table~10 of the article (six instances per size,
 three demand and two occupancy conditions) with the ULPP objective averaged over the people left
-out (Section~5.5 of the article), next to the published objective. Script:
-\texttt{experiments/analyze\_corrected\_ulpp.py --extended-table}.
+out (Section~5.5 of the article), next to the published objective.
+
+Script: \nolinkurl{experiments/analyze_corrected_ulpp.py} \nolinkurl{--extended-table}.
 
 \input{tab_extended.tex}
 
