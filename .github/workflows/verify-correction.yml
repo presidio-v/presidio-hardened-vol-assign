@@ -8,7 +8,7 @@ name: Verify Paper A correction (v0.5.1)
 #      for the original objective, with the archived May 2026 runs of the article.
 #
 # Two platforms run in parallel:
-#   macos-14      Apple silicon, the platform of the article (Section 5.1). Every value
+#   macos-latest  Apple silicon, the platform of the article (Section 5.1). Every value
 #                 must match; a difference fails the run.
 #   ubuntu-24.04  x86-64 Linux, a cross-platform check. Floating-point differences between
 #                 platforms change the trajectory of a few genetic-algorithm runs, so a few
@@ -38,7 +38,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14
+          - os: macos-latest
             reference: true
           - os: ubuntu-24.04
             reference: false
