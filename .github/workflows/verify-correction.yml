@@ -1,13 +1,21 @@
 name: Verify Paper A correction (v0.5.1)
 
 # Independent check of the correction to Rabiei, Arias-Aranda, Stantchev,
-# Appl. Sci. 2026, 16, 7581, on a fresh GitHub-hosted machine:
+# Appl. Sci. 2026, 16, 7581, on fresh GitHub-hosted machines:
 #   1. clone the signed release tag v0.5.1 and check its commit;
 #   2. rerun every experiment of the correction with the released script, unchanged;
 #   3. compare the rerun, value by value, with the results shipped in the tag and,
 #      for the original objective, with the archived May 2026 runs of the article.
+#
+# Two platforms run in parallel:
+#   macos-14      Apple silicon, the platform of the article (Section 5.1). Every value
+#                 must match; a difference fails the run.
+#   ubuntu-24.04  x86-64 Linux, a cross-platform check. Floating-point differences between
+#                 platforms change the trajectory of a few genetic-algorithm runs, so a few
+#                 values are expected to differ. The job reports them and does not fail
+#                 the run; the full results are uploaded for the comparison.
 # Steps and comparison are documented in experiments/verification/VERIFY.md.
-# Started by hand only; the run log and the report are public.
+# Started by hand only; the run logs, the reports and the results are public.
 
 on:
   workflow_dispatch:
@@ -26,7 +34,16 @@ env:
 
 jobs:
   verify:
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            reference: true
+          - os: ubuntu-24.04
+            reference: false
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ !matrix.reference }}
     timeout-minutes: 355
     steps:
       - name: Check out the verification kit
@@ -53,16 +70,15 @@ jobs:
         run: |
           uv sync --frozen --python 3.12
           .venv/bin/python -c "import numpy, scipy, pymoo; print(numpy.__version__, scipy.__version__, pymoo.__version__)"
-          nproc
-          lscpu | grep -E 'Model name|^CPU\(s\)'
+          .venv/bin/python -c "import os, platform; print(platform.platform(), platform.machine(), platform.processor(), os.cpu_count(), 'CPUs')"
 
       - name: Unpack the archived runs and check their checksums
         run: |
           K=kit/experiments/verification
-          sha256sum "$K"/paperA-v0.2.0-archived-manifests.zip "$K"/verify_correction.py
+          shasum -a 256 "$K"/paperA-v0.2.0-archived-manifests.zip "$K"/verify_correction.py
           mkdir archive
           unzip -q "$K"/paperA-v0.2.0-archived-manifests.zip -d archive
-          (cd archive && sha256sum -c "$GITHUB_WORKSPACE/$K/archived-manifests.sha256")
+          (cd archive && shasum -a 256 -c "$GITHUB_WORKSPACE/$K/archived-manifests.sha256")
 
       - name: Rerun the correction experiments
         working-directory: code
@@ -77,16 +93,21 @@ jobs:
           rc=0
           code/.venv/bin/python -I kit/experiments/verification/verify_correction.py \
             --clone code --archive archive || rc=$?
-          { echo '```'; cat code/verification-report.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "### ${{ matrix.os }} (reference platform: ${{ matrix.reference }})"
+            echo '```'
+            cat code/verification-report.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
           exit "$rc"
 
-      - name: Upload the report and logs
+      - name: Upload the report, logs and results
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: verification-${{ env.TAG }}
+          name: verification-${{ env.TAG }}-${{ matrix.os }}
           path: |
             code/verification-report.txt
-            code/experiments/results/correction/logs/
+            code/experiments/results/correction/
           if-no-files-found: warn
           retention-days: 90
