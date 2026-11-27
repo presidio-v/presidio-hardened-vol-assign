@@ -56,7 +56,11 @@ def _grid(rules, row_name: str, col_name: str, caption: str, label: str) -> str:
         r"\small",
         r"\begin{tabular}{l" + "c" * len(cols) + "}",
         r"\toprule",
-        rf"{row_name} $\backslash$ {col_name} & " + " & ".join(_in(c) for c in cols) + r"\\",
+        # Two inputs: the corner cell names both ("TD \ RWS"). One input: the column holds the
+        # output, so the header is two plain labels ("TD", "RPD").
+        (rf"{row_name} $\backslash$ {col_name} & " if col_name else f"{row_name} & ")
+        + " & ".join(_in(c) for c in cols)
+        + r"\\",
         r"\midrule",
     ]
     for r in rows:
@@ -98,7 +102,7 @@ def build() -> str:
     )
     parts.append(
         _grid(
-            [(t, "rpd", o) for t, o in FIS2B_RPD_RULES],
+            [(t, "RPD", o) for t, o in FIS2B_RPD_RULES],
             "TD",
             "",
             r"FIS$_{2b}$ (TD $\to$ RPD), four-objective model.",
