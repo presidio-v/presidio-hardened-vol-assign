@@ -1,0 +1,92 @@
+name: Verify Paper A correction (v0.5.1)
+
+# Independent check of the correction to Rabiei, Arias-Aranda, Stantchev,
+# Appl. Sci. 2026, 16, 7581, on a fresh GitHub-hosted machine:
+#   1. clone the signed release tag v0.5.1 and check its commit;
+#   2. rerun every experiment of the correction with the released script, unchanged;
+#   3. compare the rerun, value by value, with the results shipped in the tag and,
+#      for the original objective, with the archived May 2026 runs of the article.
+# Steps and comparison are documented in experiments/verification/VERIFY.md.
+# Started by hand only; the run log and the report are public.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-correction
+  cancel-in-progress: false
+
+env:
+  TAG: v0.5.1
+  TAG_COMMIT: 344b0a37c6603826c3b9e548314fda0e1a73df1e
+  REPO_URL: https://github.com/presidio-v/presidio-hardened-vol-assign.git
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 355
+    steps:
+      - name: Check out the verification kit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: kit
+          persist-credentials: false
+
+      - name: Clone the release tag
+        run: |
+          git clone --branch "$TAG" --depth 1 "$REPO_URL" code
+          got=$(git -C code rev-parse "$TAG^{commit}")
+          echo "Tag $TAG points to $got"
+          test "$got" = "$TAG_COMMIT"
+          git -C code cat-file -p "$TAG" | sed -n '1,/^$/p'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "latest"
+
+      - name: Install the locked environment
+        working-directory: code
+        run: |
+          uv sync --frozen --python 3.12
+          .venv/bin/python -c "import numpy, scipy, pymoo; print(numpy.__version__, scipy.__version__, pymoo.__version__)"
+          nproc
+          lscpu | grep -E 'Model name|^CPU\(s\)'
+
+      - name: Unpack the archived runs and check their checksums
+        run: |
+          K=kit/experiments/verification
+          sha256sum "$K"/paperA-v0.2.0-archived-manifests.zip "$K"/verify_correction.py
+          mkdir archive
+          unzip -q "$K"/paperA-v0.2.0-archived-manifests.zip -d archive
+          (cd archive && sha256sum -c "$GITHUB_WORKSPACE/$K/archived-manifests.sha256")
+
+      - name: Rerun the correction experiments
+        working-directory: code
+        run: |
+          start=$(date -u +%s)
+          sh experiments/run_correction.sh "$GITHUB_WORKSPACE/archive"
+          echo "run_correction.sh finished in $(( ($(date -u +%s) - start) / 60 )) min"
+          tail -n 2 experiments/results/correction/logs/*.log
+
+      - name: Compare with the released results
+        run: |
+          rc=0
+          code/.venv/bin/python -I kit/experiments/verification/verify_correction.py \
+            --clone code --archive archive || rc=$?
+          { echo '```'; cat code/verification-report.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit "$rc"
+
+      - name: Upload the report and logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: verification-${{ env.TAG }}
+          path: |
+            code/verification-report.txt
+            code/experiments/results/correction/logs/
+          if-no-files-found: warn
+          retention-days: 90
