@@ -26,6 +26,8 @@ Only CPU and wall times are not compared, since they depend on the machine. Ever
 
 Keep the machine awake and plugged in for the whole run. On a Mac, use the `caffeinate` command shown below. On Windows, set the power plan so the computer does not sleep.
 
+Platform: the article's experiments ran on Apple silicon under macOS (Section 5.1), and on that platform every value must match. On other platforms, for example x86-64 Linux, floating-point results differ in the last digits, and in a few genetic-algorithm runs that is enough to change the trajectory; the comparison then reports a few differing values. The workflow `.github/workflows/verify-correction.yml` runs both platforms and publishes both results.
+
 Operating system: macOS or Linux work directly. On Windows, use WSL (Ubuntu): open PowerShell as administrator, run `wsl --install`, restart, open "Ubuntu", and follow the Linux steps inside it.
 
 ## 1. Install the tools
